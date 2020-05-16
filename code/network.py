@@ -1,6 +1,4 @@
 import numpy as np
-from PIL.ImImagePlugin import number
-from statsmodels.sandbox.tsa.diffusion2 import VG
 np.set_printoptions(precision=1, suppress=True, linewidth=2000)
 import random
 from matplotlib import pyplot as plt
@@ -40,6 +38,7 @@ class POD:
         return self.name    
        
 def readPODsFromFile(filename, mvpFreeDay, mvpFixedDay, ruralT, urbanT):
+    '''Reads in location information from an input CSV file.'''
     PODs = []
     roadDistances = []
     data = open(filename,'r')
@@ -93,7 +92,7 @@ def readPODsFromFile(filename, mvpFreeDay, mvpFixedDay, ruralT, urbanT):
     roadDistances = np.array(roadDistances)
     return PODs, roadDistances
     
-
+    
 def findDC(PODs, podDistances):
     #maxInRow[i] stores the maximum distance from location i to any other location
     maxInRow = np.zeros(len(PODs))
@@ -1272,8 +1271,8 @@ def simulate(filename='Likasi.csv'):
 #             Vactots[t] += plots[podI][5][t]  
 #             Stots[t] += plots[podI][0][t]  
 #             Itots[t] += plots[podI][2][t]
-                        
     return deaths, vaccineCost + deliveryCost, totVaccsGiven, totExpired#, vaccsPerDay #,Vactots,Stots
+
 
 simulationRuntime = 150             #days to run the simulation for
 #Parameters    ========================================================================
@@ -1314,7 +1313,7 @@ costPerDose10 = 1.284               #the cost per dose of 10-dose measles vaccin
 costPerFlight = 17                  #$17 per drone flight
 #strategies
 strategy = 'I'                      #I = infections, S = Susceptible, N = Total Pop., EPE = Expected Prevented Exposures
-teamStrategy = 'N'                #I, S, N, I/N, spread
+teamStrategy = 'N'                  #I, S, N, I/N, spread
 deliveryType = 'vehicle'            #"none", "drone" or "vehicle", or "combined"
 maxTripLength = 180                 #if deliveryType = combined, this is the cutoff in mins for vehicle trip length
 
