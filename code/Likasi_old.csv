@@ -1,0 +1,50 @@
+﻿Location,"Potential DC? 1 if yes, 0 if no",x,y,N (under 15 - 46%),S (50% vacc rate),E (made up),I,R,deaths,,,,,,
+Fungurume 1,1,7.114285714,105.6857143,9200,4600,0,0,4600,0,,,,,,
+Fungurume 2,0,7.885714286,102.1714286,9200,4600,0,0,4600,0,,,,,,
+Guba,0,17.82857143,100.0285714,920,460,0,0,460,0,,,,,,
+Kakanda,0,16.54285714,88.54285714,9200,4600,0,0,4600,0,,,,,,
+Mulungwishi,1,39.42857143,86.82857143,4600,2300,0,0,2300,0,,,,,,
+Kambove,1,36.6,75.85714286,17020,8510,0,0,8510,0,,,,,,
+Chinkolobwe,0,33.68571429,62.14285714,184,92,0,0,92,0,,,,,,
+Likasi 1,1,48.6,64.71428571,55200,27600,20,5,27575,0,,,,,,
+Likasi 2,0,51.6,65.74285714,82800,41400,0,0,41400,0,,,,,,
+Likasi 3,0,53.82857143,62.82857143,69000,34500,0,0,34500,0,,,,,,
+Kapolowe,1,72.68571429,69.17142857,6440,3220,0,0,3220,0,,,,,,
+Mwandingusha,0,106.4571429,90,1840,920,0,0,920,0,,,,,,
+Galu,0,33.6,26.4,276,138,0,0,138,0,,,,,,
+Goami,0,53.74285714,27.85714286,92,46,0,0,46,0,,,,,,
+Lupoto,0,75,36.42857143,230,115,0,0,115,0,,,,,,
+Road Times (minutes),"No value if there is no road between the cities. These times have been estimated with the assistance of Google Maps. Galu, Goami and Lupoto are guesses, since they are only reachable by foot",,,,,,,,,,,,,,
+,Fungurume 1,Fungurume 2,Guba,Kakanda,Mulungwishi,Kambove,Chinkolobwe,Likasi 1,Likasi 2,Likasi 3,Kapolowe,Mwandingusha,Galu,Goami,Lupoto
+Fungurume 1,,5,14,35,,,,,,,,,,,
+Fungurume 2,5,,14,36,,,,,,,,,,,
+Guba,14,14,,31,22,,,,,,,,,,
+Kakanda,35,36,31,,29,43,,,,,,,,,
+Mulungwishi,,,22,29,,,,25,,,,93,,,
+Kambove,,,,43,,,50,25,,,,,,,
+Chinkolobwe,,,,,,50,,35,,,,,,,
+Likasi 1,,,,,25,25,35,,9,,,,,,
+Likasi 2,,,,,,,,9,,8,,,,,
+Likasi 3,,,,,,,,,8,,40,84,150,300,250
+Kapolowe,,,,,,,,,,40,,76,,,230
+Mwandingusha,,,,,93,,,,,84,76,,,,214
+Galu,,,,,,,,,,150,,,,200,
+Goami,,,,,,,,,,300,,,200,,450
+Lupoto,,,,,,,,,,250,175,214,,450,
+Probability Unreachable,,,"If a cell is empty, there is no direct road between the towns I and J",,,,,,,,,,,,
+,Fungurume 1,Fungurume 2,Guba,Kakanda,Mulungwishi,Kambove,Chinkolobwe,Likasi 1,Likasi 2,Likasi 3,Kapolowe,Mwandingusha,Galu,Goami,Lupoto
+Fungurume 1,0,0,0.04,0.1,,,,,,,,,,,
+Fungurume 2,0,0,0.04,0.1,,,,,,,,,,,
+Guba,0.04,0.04,0,0.08,0.05,,,,,,,,,,
+Kakanda,0.1,0.1,0.08,0,0.08,0.06,,,,,,,,,
+Mulungwishi,,,0.05,0.08,0,,,0.06,,,,,,,
+Kambove,,,,0.06,,0,0.3,0.05,,,,,,,
+Chinkolobwe,,,,,,0.3,0,0.25,,,,,,,
+Likasi 1,,,,,0.06,0.05,0.25,0,0,,,,,,
+Likasi 2,,,,,,,,0,0,0,,,,,
+Likasi 3,,,,,,,,,0,0,0.15,0.1,0.6,0.8,0.7
+Kapolowe,,,,,,,,,,0.15,0,0.3,,,0.8
+Mwandingusha,,,,,,,,,,0.1,0.3,0,,,0.85
+Galu,,,,,,,,,,0.6,,,0,0.6,
+Goami,,,,,,,,,,0.8,,,0.6,0,0.7
+Lupoto,,,,,,,,,,0.7,0.8,0.85,,0.7,0
