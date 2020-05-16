@@ -1,0 +1,552 @@
+#===============================================================================
+# Overnight copy pastes below, to run all sims
+#===============================================================================
+print("=======================================================VEHICLES CASE")
+deliveryType = 'vehicle'
+for strategy in ['I','S','N','EPE']:
+    print("========================== strategy", strategy)
+    for teamStrategy in ['S','I','I/N','spread','N']:
+        print("======== team strategy", teamStrategy)
+        numSims = 500
+        deaths = np.zeros(numSims)
+        costs = np.zeros(numSims)
+        vaccs = np.zeros(numSims)
+        expired = np.zeros(numSims)
+        for i in range(0,numSims):
+            deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+        
+        print("Results for metrics: \nMean: \tS: \tN:")
+        for metricArr in [deaths,costs,vaccs,expired]:
+            xbar = np.average(metricArr)
+            s = np.std(metricArr, ddof=1)
+            if xbar > 0:
+                Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+            else:
+                Nsim = "n/a"
+            print(xbar, "\t", s, "\t", Nsim)
+    
+strategy = 'I'
+teamStrategy = 'N'
+deliveryType = 'vehicle'
+
+
+
+
+for interventionLeadTime in [10,14,15,16,20]:
+    print("Intervention LeadTime", interventionLeadTime)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+interventionLeadTime = 15
+
+
+
+for interventionCaseRatio in [0.02,0.01,0.0075,0.005,0.0025,0.001]:
+    print("Intervention CR", interventionCaseRatio)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+interventionCaseRatio = 0.005
+
+
+
+
+for interventionLength in [7,14,21,25,28,31,35,42,49]:
+    print("Intervention Length", interventionLength)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+interventionLength = 28
+
+
+
+
+for workingMinutesPerDay in [480,600,630,660,690,720,780]:
+    print("Work mins per day", workingMinutesPerDay)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+workingMinutesPerDay = 660
+
+
+
+
+
+for workDaysPerWeek in [5,6,7]:
+    print("Workdays per week", workDaysPerWeek)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+workDaysPerWeek = 7
+
+
+
+
+for numTeams in [5,10,12,14,15,16,18,20,25]:
+    print("Number of teams", numTeams)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+numTeams = 15
+
+
+
+
+for numVehicles in [1,2,3,5,10]:
+    print("Number of vehicles", numVehicles)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+numVehicles = 2
+
+
+
+
+for maxTripLength in [60,120,150,180,210,240,300]:
+    print("Ve Max trip length", maxTripLength)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+maxTripLength = 180
+
+
+
+
+
+
+#===============================================================================
+# Drones case
+#===============================================================================
+print("=======================================================DRONES CASE")
+deliveryType = 'drone'
+for strategy in ['I','S','N','EPE']:
+    print("========================== strategy", strategy)
+    for teamStrategy in ['S','I','I/N','spread','N']:
+        print("======== team strategy", teamStrategy)
+        numSims = 500
+        deaths = np.zeros(numSims)
+        costs = np.zeros(numSims)
+        vaccs = np.zeros(numSims)
+        expired = np.zeros(numSims)
+        for i in range(0,numSims):
+            deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+        
+        print("Results for metrics: \nMean: \tS: \tN:")
+        for metricArr in [deaths,costs,vaccs,expired]:
+            xbar = np.average(metricArr)
+            s = np.std(metricArr, ddof=1)
+            if xbar > 0:
+                Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+            else:
+                Nsim = "n/a"
+            print(xbar, "\t", s, "\t", Nsim)
+    
+strategy = 'I'
+teamStrategy = 'N'
+
+
+for numberOfDrones in [1,2,5,10,15]:
+    print("Number of drones", numberOfDrones)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+numberOfDrones = 2
+
+
+
+
+
+#===============================================================================
+# Combined case
+#===============================================================================
+print("=======================================================COMBINED CASE")
+deliveryType = 'combined'
+numberOfDrones = 1
+numVehicles = 1
+for strategy in ['I','S','N','EPE']:
+    print("========================== strategy", strategy)
+    for teamStrategy in ['S','I','I/N','spread','N']:
+        print("======== team strategy", teamStrategy)
+        numSims = 500
+        deaths = np.zeros(numSims)
+        costs = np.zeros(numSims)
+        vaccs = np.zeros(numSims)
+        expired = np.zeros(numSims)
+        for i in range(0,numSims):
+            deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+        
+        print("Results for metrics: \nMean: \tS: \tN:")
+        for metricArr in [deaths,costs,vaccs,expired]:
+            xbar = np.average(metricArr)
+            s = np.std(metricArr, ddof=1)
+            if xbar > 0:
+                Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+            else:
+                Nsim = "n/a"
+            print(xbar, "\t", s, "\t", Nsim)
+    
+strategy = 'I'
+teamStrategy = 'N'
+
+
+
+#max trip length comboinaed
+numberOfDrones = 1
+numVehicles = 1
+deliveryType = 'combined'
+for maxTripLength in [60,120,150,180,210,240,300]:
+    print("Co Max trip length", maxTripLength)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+maxTripLength = 180
+numberOfDrones = 2
+numVehicles = 2
+
+
+for maxVaccsFixedPODday in [100,300,400,440,450,460,500,600,800]:
+    print("mvFixed POD day:", maxVaccsFixedPODday)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+maxVaccsFixedPODday = 450
+
+
+
+
+
+for maxVaccsFreePODday in [50,100,200,240,250,260,300,400,450]:
+    print("mvFree POD day:", maxVaccsFreePODday)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+maxVaccsFreePODday = 250
+
+
+
+
+
+
+for ruralTnt in [100,300,400,440,450,460,500,600,800]:
+    print("Rural turnout:", ruralTnt)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+ruralTnt = 450         
+
+
+
+for urbanTnt in [400,600,800,890,900,910,1000,1200,1400]:
+    print("Urban turnout:", urbanTnt)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+urbanTnt = 450   
+
+
+
+deliveryType = 'drone'
+for droneSpeed in [20,50,80,90,100,110,120,150,180]:
+    print("Drone speed:", droneSpeed)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+droneSpeed = 450   
+deliveryType = 'vehicle'
+
+
+
+
+deliveryType = 'drone'
+for droneVaccineCapacity in [10,30,50,55,60,65,70,100,200]:
+    print("drone vacc capacity:", droneVaccineCapacity)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+droneVaccineCapacity = 60
+deliveryType = 'vehicle'
+
+  
+
+for vehicleCapacities in [[200,200],[500,200],[900,200],[1000,200],[1050,200],[1100,200],[1200,200],[1600,200],[2100,200],
+                          [1050,50],[1050,100],[1050,150],[1050,190],[1050,200],[1050,210],[1050,250],[1050,300],[1050,500]]:
+    print("Vechiel capacity pair:", vehicleCapacities)
+    numSims = 500
+    deaths = np.zeros(numSims)
+    costs = np.zeros(numSims)
+    vaccs = np.zeros(numSims)
+    expired = np.zeros(numSims)
+    for i in range(0,numSims):
+        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
+    
+    print("Results for metrics: \nMean: \tS: \tN:")
+    for metricArr in [deaths,costs,vaccs,expired]:
+        xbar = np.average(metricArr)
+        s = np.std(metricArr, ddof=1)
+        if xbar > 0:
+            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+        else:
+            Nsim = "n/a"
+        print(xbar, "\t", s, "\t", Nsim)
+
+#restore to before.
+vehicleCapacities = [1050,200] 
+
+
+

@@ -1,0 +1,54 @@
+simulationRuntime=118   #from 24 oct to 19 feb. Intervention should be on day 68-75
+interventionLength = 14
+interventionLeadTime = 7
+interventionCaseRatio = 0.0005
+R0 = 14
+deathRate = 0.02 / infectiousDays
+params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
+numTeams = 18
+migrationIntensity = 2
+deliveryType = 'vehicle'
+#print(simulate("Matadi.csv"))
+
+print(simulationRuntime)
+numSims = 5000
+Is = np.zeros(simulationRuntime)
+deaths = []
+costs = []
+vaccs = []
+expired = []
+numNonzeros = 0
+for i in range(0,numSims):
+    d,c,v,e, I = simulate("Matadi.csv")
+    Is += I
+    if I[-1] != 0:
+        numNonzeros += 1
+        deaths.append(d)
+        costs.append(c)
+        vaccs.append(v)
+        expired.append(e)
+        
+deaths = np.array(deaths)
+costs = np.array(costs)
+vaccs = np.array(vaccs)
+expired = np.array(expired)
+        
+print("Results for metrics: \nMean: \tS: \tN:")
+for metricArr in [deaths,costs,vaccs,expired]:
+    xbar = np.average(metricArr)
+    s = np.std(metricArr, ddof=1)
+    if xbar > 0:
+        Nsim = (1.96 * s / (0.05 * xbar)) ** 2
+    else:
+        Nsim = "n/a"
+    print(xbar, "\t", s, "\t", Nsim)    
+    
+    
+print(numNonzeros, "non-zero simulation runs -- only the nonzeros considered.")
+avgIs = Is / numNonzeros
+print(avgIs)
+plt.plot(np.arange(simulationRuntime), avgIs, label='Infectious')
+plt.show()
+
+#you have to change back the migration weights to 0.25,0.25 for Matadi, and 0.5,0.5 for Likasi
+

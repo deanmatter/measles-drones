@@ -1,0 +1,79 @@
+\chapter{Simulation Output}
+\label{app:simOut}
+
+Tables \ref{tab:vehicle_stratPairs}, \ref{tab:UAV_stratPairs}, and \ref{tab:Combined_stratPairs} are all in the same format, and contain simulation results for 500 simulations of interventions with vehicle deliveries, UAV deliveries and a combination of both types, respectively. The average values for Deaths and Cost are rounded to the nearest integer.
+
+\begin{table}[ht!]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+ & \multicolumn{12}{c|}{Team  Allocation Strategy} \\ \cline{2-13} 
+ & \multicolumn{2}{c|}{S} & \multicolumn{2}{c|}{I} & \multicolumn{2}{c|}{I/N} & \multicolumn{2}{c|}{Spread} & \multicolumn{2}{c|}{N} & \multicolumn{2}{c|}{EPE} \\ \hline
+\multicolumn{1}{|c|}{\begin{tabular}[c]{@{}c@{}}Vaccine delivery \\ strategy\end{tabular}} & Deaths & Cost & Deaths & Cost & Deaths & Cost & Deaths & Cost & Deaths & Cost & Deaths & Cost \\ \hline
+\multicolumn{1}{|c|}{I} & 2214 & 313015 & 2193 & 374497 & 3919 & 181579 & 4518 & 128945 & 2212 & 362523 & 2217 & 280979 \\ \cline{1-1}
+\multicolumn{1}{|c|}{S} & 2210 & 315931 & 2217 & 375791 & 3915 & 181326 & 4534 & 128489 & 2216 & 362801 & 2204 & 280735 \\ \cline{1-1}
+\multicolumn{1}{|c|}{N} & 2201 & 312711 & 2205 & 375372 & 3934 & 181577 & 4513 & 128953 & 2184 & 361751 & 2237 & 280786 \\ \cline{1-1}
+\multicolumn{1}{|c|}{EPE} & 2224 & 317410 & 2200 & 375490 & 3930 & 182129 & 4516 & 132264 & 2193 & 362290 & 2227 & 281332 \\ \hline
+\end{tabular}
+}
+\caption{Average number of deaths and total cost of different strategy pairs for vehicle deliveries.}
+\label{tab:vehicle_stratPairs}
+\end{table}
+
+\begin{table}[ht!]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+ & \multicolumn{12}{c|}{Team  Allocation Strategy} \\ \cline{2-13} 
+ & \multicolumn{2}{c|}{S} & \multicolumn{2}{c|}{I} & \multicolumn{2}{c|}{I/N} & \multicolumn{2}{c|}{Spread} & \multicolumn{2}{c|}{N} & \multicolumn{2}{c|}{EPE} \\ \hline
+\multicolumn{1}{|c|}{\begin{tabular}[c]{@{}c@{}}Vaccine delivery \\ strategy\end{tabular}} & Deaths & Cost & Deaths & Cost & Deaths & Cost & Deaths & Cost & Deaths & Cost & Deaths & Cost \\ \hline
+\multicolumn{1}{|c|}{I} & 2311 & 325608 & 2203 & 376258 & 3895 & 196581 & 4555 & 140089 & 2204 & 364479 & 2280 & 286526 \\ \cline{1-1}
+\multicolumn{1}{|c|}{S} & 2321 & 325669 & 2242 & 378343 & 3979 & 189166 & 4605 & 136885 & 2252 & 363925 & 2311 & 285438 \\ \cline{1-1}
+\multicolumn{1}{|c|}{N} & 2316 & 324547 & 2222 & 377632 & 3981 & 192240 & 4616 & 140762 & 2229 & 361833 & 2326 & 287541 \\ \cline{1-1}
+\multicolumn{1}{|c|}{EPE} & 2343 & 283794 & 2207 & 350188 & 3829 & 177802 & 4570 & 116032 & 2216 & 343145 & 2320 & 277131 \\ \hline
+\end{tabular}
+}
+\caption{Average number of deaths and total cost of different strategy pairs for UAV deliveries.}
+\label{tab:UAV_stratPairs}
+\end{table}
+
+\begin{table}[ht!]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\cline{2-13}
+ & \multicolumn{12}{c|}{Team  Allocation Strategy} \\ \cline{2-13} 
+ & \multicolumn{2}{c|}{S} & \multicolumn{2}{c|}{I} & \multicolumn{2}{c|}{I/N} & \multicolumn{2}{c|}{Spread} & \multicolumn{2}{c|}{N} & \multicolumn{2}{c|}{EPE} \\ \hline
+\multicolumn{1}{|c|}{\begin{tabular}[c]{@{}c@{}}Vaccine delivery \\ strategy\end{tabular}} & Deaths & Cost & Deaths & Cost & Deaths & Cost & Deaths & Cost & Deaths & Cost & Deaths & Cost \\ \hline
+\multicolumn{1}{|c|}{I} & 2215 & 333434 & 2213 & 375683 & 3728 & 208920 & 4513 & 137884 & 2220 & 364370 & 2241 & 281764 \\ \cline{1-1}
+\multicolumn{1}{|c|}{S} & 2190 & 333093 & 2206 & 375210 & 3734 & 209047 & 4510 & 138409 & 2213 & 363961 & 2215 & 281649 \\ \cline{1-1}
+\multicolumn{1}{|c|}{N} & 2208 & 333461 & 2181 & 374412 & 3697 & 210235 & 4519 & 138583 & 2218 & 364035 & 2223 & 282259 \\ \cline{1-1}
+\multicolumn{1}{|c|}{EPE} & 2199 & 323589 & 2211 & 374845 & 3704 & 202595 & 4500 & 129720 & 2207 & 361129 & 2216 & 280085 \\ \hline
+\end{tabular}%
+}
+\caption{Average deaths and cost of different strategy pairs for a combined delivery network.}
+\label{tab:Combined_stratPairs}
+\end{table}
+
+Table \ref{tab:combiSims} contains simulation results (the average of deaths and cost from 500 simulations) for different numbers of UAVs and vehicles used in the combined delivery strategy. The case where there are either 0 UAVs or 0 vehicles is excluded since that would be a UAV-only or vehicle-only network.
+
+\begin{table}[t!]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\multicolumn{1}{|c|}{Vehicles} & UAVs & \multicolumn{1}{c|}{Average Deaths} & Average Cost \\ \hline
+1 & 1 & 2215 & 364082 \\
+2 & 1 & 2211 & 363611 \\
+2 & 2 & 2220 & 364548 \\
+1 & 2 & 2228 & 365087 \\
+3 & 1 & 2190 & 362540 \\
+1 & 3 & 2205 & 364064 \\
+3 & 3 & 2199 & 363459 \\
+5 & 5 & 2201 & 363853 \\ \hline
+\end{tabular}%
+
+\caption{Comparison of different numbers of vehicles and UAVs in the combined delivery strategy.}
+\label{tab:combiSims}
+\end{table}

@@ -1,0 +1,42 @@
+simulationRuntime = 150             #days to run the simulation for
+# Parameters    ========================================================================
+#Measles SEIR parameters
+exposedDays = 10                    #number of days a patient is exposed for without symptoms
+infectiousDays = 8                  #number of days a patient is infectious for
+deathRate = 0.10 * 1/infectiousDays #the proportion of infected patients that die per day
+R0 = 15                             #basic reproductive number of the epidemic
+params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
+migrationIntensity = 1              #factor by which migration is multiplied. 2 means more migration.
+#vaccine parameters
+vaccineEffectiveness = 0.95         #probability the vaccine works (for non-exposed)
+prophylaxis72hrSuccessRate = 0.83   #probability the vaccine works (for exposed, within 72hrs)
+monoDaysPotency = 3                 #number of days for which the vaccine lasts outside of cold-chain
+TenDaysPotency = 5                  #number of days the 10-dose vaccine lasts outside of cold-chain
+#intervention parameters
+interventionLeadTime = 15           #number of days before vaccination starts
+interventionCaseRatio = 0.005       #ratio of I/S in a town before detection
+interventionLength = 28             #number of days the intervention lasts for
+workingMinutesPerDay = 660          #11 working hours per day: 7am to 6pm
+workDaysPerWeek = 7                 #number of working days per week for MSF teams
+numTeams = 15                       #number of vaccination teams in the field
+maxVaccsFixedPODday = 450           #fixed teams can vaccinate up to 450 per day
+maxVaccsFreePODday = 250            #free teams can vaccinate up to 250 per day
+ruralTnt = 450                      #rural areas, turnout is 300-600
+urbanTnt = 900                      #urban areas, turnout is 800-1000
+#delivery details
+flightLaunchTime = 10               #minutes per flight, to set up takeoff
+droneSpeed = 100                    #100 kilometres per hour     
+numberOfDrones = 1                  #number of drones
+numVehicles = 2                     #number of land-based delivery vehicles
+droneVaccineCapacity = 60           #number of vaccine doses per drone
+vehicleCapacities = [1050,200]      #number of vaccine doses per vehicle
+roadCloseFactor = 1                 #prob that road is open is divided by this factor. 1<rCF
+#costs
+costPerDoseMono = 2.85 #made up     #the cost per dose of monodose measles vaccine
+costPerDose10 = 1.284 #made up      #the cost per dose of 10-dose measles vaccine
+costPerFlight = 17                  #$17 per drone flight
+#strategies
+strategy = 'I'                      #I = infections, S = Susceptible, N = Total Pop., EPE = Expected Prevented Exposures
+teamStrategy = 'I'                  #I, S, N, I/N, spread
+deliveryType = 'vehicle'            #"none", "drone" or "vehicle", or "combined"
+maxTripLength = 180                 #if deliveryType = combined, this is the cutoff in mins for vehicle trip length

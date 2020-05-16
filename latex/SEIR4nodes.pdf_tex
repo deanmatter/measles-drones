@@ -1,0 +1,95 @@
+%% Creator: Inkscape inkscape 0.92.3, www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'SEIR4nodes.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \newcommand*\fsize{\dimexpr\f@size pt\relax}%
+  \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{665.41948934bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.47297621)%
+    \lineheight{1}%
+    \setlength\tabcolsep{0pt}%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{SEIR4nodes.pdf}}%
+    \put(0.57635519,0.03258215){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\Huge 2\end{tabular}}}}%
+    \put(0.52371321,0.31870267){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\Huge 3\end{tabular}}}}%
+    \put(0.22060803,0.18906213){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\Huge 1\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=2]{SEIR4nodes.pdf}}%
+    \put(0.59981091,0.32748876){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\huge S\end{tabular}}}}%
+    \put(0.70922416,0.3275926){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\huge E\end{tabular}}}}%
+    \put(0.82311197,0.32863802){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\huge I\end{tabular}}}}%
+    \put(0.9337384,0.32863802){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\huge R\end{tabular}}}}%
+    \put(0.82042085,0.42435876){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\huge V\end{tabular}}}}%
+    \put(0.92991521,0.23446158){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\huge D\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{SEIR4nodes.pdf}}%
+    \put(0.31841927,0.22057577){\color[rgb]{0,0,0}\rotatebox{22.124785}{\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Migration between 1 and 3\end{tabular}}}}}%
+    \put(0.32756467,0.12768048){\color[rgb]{0,0,0}\rotatebox{-17.045666}{\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Migration between 1 and 2\end{tabular}}}}}%
+    \put(0.53183885,0.2791723){\color[rgb]{0,0,0}\rotatebox{-77.200268}{\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Migration between 2 and 3\end{tabular}}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{SEIR4nodes.pdf}}%
+    \put(0.63740793,0.3961226){\color[rgb]{0,0,0}\rotatebox{22.124785}{\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Vaccinations\end{tabular}}}}}%
+    \put(0.69329906,0.37519879){\color[rgb]{0,0,0}\rotatebox{26.172022}{\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Prophylaxis\end{tabular}}}}}%
+    \put(0.89768941,0.44356496){\color[rgb]{0,0,0}\rotatebox{-37.92441}{\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Vaccinations\end{tabular}}}}}%
+    \put(0.6562245,0.32805174){\color[rgb]{0,0,0}\rotatebox{-46.925388}{\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Exposures\end{tabular}}}}}%
+    \put(0.76804562,0.32263222){\color[rgb]{0,0,0}\rotatebox{-45.843586}{\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Infections\end{tabular}}}}}%
+    \put(0.87466468,0.30664164){\color[rgb]{0,0,0}\rotatebox{-17.69389}{\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Recoveries\end{tabular}}}}}%
+    \put(0.85757229,0.27408905){\color[rgb]{0,0,0}\rotatebox{-28.094205}{\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Deaths\end{tabular}}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=5]{SEIR4nodes.pdf}}%
+    \put(0.64258872,0.05659227){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}{\Large S}\end{tabular}}}}%
+    \put(0.69611563,0.05664148){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}{\Large E}\end{tabular}}}}%
+    \put(0.75357338,0.05621019){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}{\Large I}\end{tabular}}}}%
+    \put(0.80264125,0.05621019){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}{\Large R}\end{tabular}}}}%
+    \put(0.74786904,0.10063182){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}{\Large V}\end{tabular}}}}%
+    \put(0.80159537,0.01066729){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}{\Large D}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=6]{SEIR4nodes.pdf}}%
+    \put(0.01066967,0.16482457){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}{\Large S}\end{tabular}}}}%
+    \put(0.06214364,0.16386742){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}{\Large E}\end{tabular}}}}%
+    \put(0.11778999,0.16383869){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}{\Large I}\end{tabular}}}}%
+    \put(0.16931331,0.16202729){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}{\Large R}\end{tabular}}}}%
+    \put(0.11522542,0.20866288){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}{\Large V}\end{tabular}}}}%
+    \put(0.06195694,0.1217174){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}{\Large D}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=7]{SEIR4nodes.pdf}}%
+  \end{picture}%
+\endgroup%
