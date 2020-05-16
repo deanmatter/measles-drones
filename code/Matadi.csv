@@ -1,0 +1,25 @@
+﻿Location,"Urban? 1 if yes, 0 if no",x (coordinates x 30),y,N (under 15 - 46%),S (87.5% vacc rate),E,I,R,V,mapX,mapY
+Petrocongo,0,-759.07,1746.68,2000,250,0,0,0,1750,-758,1747
+Cite Thys,1,-755.69,1751.36,3000,375,0,0,0,2625,-755,1751
+Kinzao,0,-760.188,1753.05,1000,125,0,0,0,875,-759,1752
+Bruxelles Sud,1,-757.57,1750.45,15000,1875,0,0,0,13120,-758,1750
+Kala-Kala,0,-757.9,1748.11,4000,500,0,0,0,3500,-758,1748
+Kinkanda,1,-758.94,1747.98,9000,1125,0,0,0,7875,-759,1748
+Cite Manucongo,1,-758.004,1749.54,15000,1875,0,1,0,13120,-758,1750
+Bruxelles Nord,1,-757.25,1752.478,15000,1875,0,0,0,13125,-757,1752
+Fuka-Fuka,1,-757.25,1749.54,10840,1355,0,0,0,9485,-757,1750
+Kitomesa,1,-756.86,1750.58,15000,1875,0,0,0,13125,-757,1751
+Zanza,1,-756.47,1751.23,4000,500,0,0,0,3500,-756,1751
+#Road Distances (km),No value if there is no road between the cities. These times have been estimated with the assistance of Google Maps. ,,,,,,,,,,
+,Petrocongo,Cite Thys,Kinzao,Bruxelles Sud,Kala-Kala,Kinkanda,Cite Manucongo,Bruxelles Nord,Fuka-Fuka,Kitomesa,Zanza
+Petrocongo,0,22,26,17,13,8,13,21,15,16,19
+Cite Thys,22,0,24,11,18,17,9,5,8,8,8
+Kinzao,26,24,0,20,25,23,16,20,20,21,24
+Bruxelles Sud,17,11,20,0,16,14,6,5,6,4,6
+Kala-Kala,13,18,25,16,0,7,11,19,14,15,17
+Kinkanda,8,17,23,14,7,0,8,16,11,11,15
+Cite Manucongo,13,9,16,6,11,8,0,10,3,6,9
+Bruxelles Nord,21,5,20,5,19,16,10,0,10,6,8
+Fuka-Fuka,15,8,20,6,14,11,3,10,0,6,10
+Kitomesa,16,8,21,4,15,11,6,6,6,0,4
+Zanza,19,8,24,6,17,15,9,8,10,4,0

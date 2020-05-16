@@ -1,6 +1,7 @@
 import numpy as np
 from PIL.ImImagePlugin import number
-np.set_printoptions(precision=3, suppress=True, linewidth=200)
+from statsmodels.sandbox.tsa.diffusion2 import VG
+np.set_printoptions(precision=1, suppress=True, linewidth=2000)
 import random
 from matplotlib import pyplot as plt
 from matplotlib import patches
@@ -144,19 +145,23 @@ def calcMigrationFactor(PODs, i, j, podDistances, weights):
 
 def calcMigration(PODs, podDistances, migrationIntensity):
     '''Uses the gravity model of migration to calculate population proportions moving from POD i to j'''
-    weights = [0.5, 0.5, 2, migrationIntensity]
+    #weights = [0.25, 0.25, 2, migrationIntensity]       #-- Matadi
+    weights = [0.5, 0.5, 2, migrationIntensity]        #--- Likasi
     migrations = np.zeros(np.shape(podDistances))
     for i in range(0,len(migrations)):
         for j in range(0,len(migrations[i])):
-            migrations[i][j] = calcMigrationFactor(PODs, i, j, podDistances, weights)
+            migrations[i][j] = min(calcMigrationFactor(PODs, i, j, podDistances, weights), PODs[i].N)
         migrations[i] /= PODs[i].N
-        migrations[i][i] = 1 - sum(migrations[i])
+        migrations[i][i] = max(1 - sum(migrations[i]),0)
+    #print(migrations)
     return migrations
 
 def calcRoadTimes(PODs, roadDistances, podDistances, roadCloseFactor):
     '''Returns two nxn matrices, with i-j entries =1 if the road i-j is open, and =0 if the road is closed. Also, road times'''
     roadTimes = np.zeros(np.shape(roadDistances))
     openRoads = np.zeros(np.shape(roadDistances))
+    
+    numClosedRoads = 0
     for r in range(0,len(PODs)):
         for c in range(0, len(PODs)):
             if roadDistances[r][c] == np.inf:
@@ -165,20 +170,25 @@ def calcRoadTimes(PODs, roadDistances, podDistances, roadCloseFactor):
             elif PODs[r].isUrban == True and PODs[c].isUrban == True:
                 #travel speed is 60kph - between urban and urban
                 roadTimes[r][c] = int(roadDistances[r][c] / 60 * 60)
-                openRoads[r][c] = roundUsingProb(1 / roadCloseFactor)
+                openRoads[r][c] = min(roundUsingProb(1 / roadCloseFactor),1)
             elif PODs[r].isUrban == False and PODs[c].isUrban == False:
                 #travel speed is 20 kph - between rural and rural
                 roadTimes[r][c] = int(roadDistances[r][c] / 20 * 60)
-                openRoads[r][c] = roundUsingProb(0.6 / roadCloseFactor)
+                openRoads[r][c] = min(roundUsingProb(0.6 / roadCloseFactor),1)
             else:
                 #travel speed is 40kph - between rural and urban
                 roadTimes[r][c] = int(roadDistances[r][c] / 40 * 60)
-                openRoads[r][c] = roundUsingProb(0.8 / roadCloseFactor)
+                openRoads[r][c] = min(roundUsingProb(0.8 / roadCloseFactor),1)
             
             if openRoads[r][c] == 0:
                 roadTimes[r][c] = int(podDistances[r][c] / 10 * 60)
+    
+    for r in range(0,len(PODs)):
+        for c in range(0, len(PODs)):
+            if openRoads[r][c] == 0 and roadDistances[r][c] != np.inf:
+                numClosedRoads += 1
             
-    return openRoads, roadTimes
+    return numClosedRoads, openRoads, roadTimes
 
 def calcMaxVaccinesNeeded50(pod, numDays):
     unvaccinated = pod.S + pod.E + pod.R
@@ -186,7 +196,8 @@ def calcMaxVaccinesNeeded50(pod, numDays):
     turnout = pod.averageTurnout * numDays * pod.teamsAtPOD
     stock = pod.vaccinesInStock
     actualValue = max(0, min(unvaccinated, maxVaccsPossible, turnout) - stock)
-    multipleOf50 = np.ceil(actualValue/50) * 50     #since vaccines in boxes of 50
+    #multipleOf50 = np.ceil(actualValue/50) * 50     #since vaccines in boxes of 50
+    multipleOf50 = actualValue
     return int(multipleOf50)
 
 def calcTurnout(pod):
@@ -210,7 +221,7 @@ def progressEpidemicByOneDay(PODs, params, MigrationProportions):
         Rarr[i] = PODs[i].R
         Varr[i] = PODs[i].vaccinated
         deaths += PODs[i].deaths
-    #print(Iarr)
+    #print(sum(Iarr))
           
     i = 0
     for pod in PODs:
@@ -258,6 +269,10 @@ def migratePOD(pod, i, todaysMigration, Sarr, Earr, Iarr, Rarr, Varr):
 def vaccinate(PODs):
     totVaccsGiven = 0
     vaccsGivenDC = 0
+    
+    vaccsGivenAtSpecificNode = 0    
+    specificNodeName = ""         #just for checking a single node's vaccination progression
+    
     for pod in PODs:
         vaccinesGiven = vaccinateOnePOD(pod)
         totVaccsGiven += vaccinesGiven
@@ -265,6 +280,12 @@ def vaccinate(PODs):
             vaccsGivenDC = vaccinesGiven
         #if vaccinesGiven > 0:
             #print(vaccinesGiven, "people vaccinated in", pod.name)
+        if pod.name == specificNodeName:
+            vaccsGivenAtSpecificNode = vaccinesGiven
+    
+    if specificNodeName != "":
+        totVaccsGiven = vaccsGivenAtSpecificNode
+            
     return totVaccsGiven, vaccsGivenDC
 
 def vaccinateOnePOD(pod):    
@@ -292,7 +313,8 @@ def vaccinateOnePOD(pod):
     if pod.E > 0:
         propE72hrs = (podE72hrs/pod.E)
         
-    vaccinesGiven = int(min(turnout, pod.vaccinesInStock, maxVaccinations))
+    vaccinesGiven = int(min(turnout, pod.vaccinesInStock, maxVaccinations))      
+    
     numEffectiveSvaccinations = int(vaccinesGiven * SturnoutProp * vaccineEffectiveness)
     numEffectiveEvaccinations = int(vaccinesGiven * EturnoutProp * propE72hrs *  prophylaxis72hrSuccessRate)
     #numRvaccinations = vaccinesGiven - numEffectiveEvaccinations - numEffectiveSvaccinations
@@ -361,7 +383,7 @@ def deliverVaccinesByDroneSimple(strategy, t, PODs, workingMinutesPerDay, droneV
             pod = choosePODtoFlyTo(strategy, PODs, times[drone], workingMinutesPerDay, mdP)
             if pod != -1:
                 times[drone] += pod.flightTime
-                deliveryQty = min(calcMaxVaccinesNeeded50(pod,mdP), droneVC)
+                deliveryQty = min(60*np.ceil(calcMaxVaccinesNeeded50(pod,mdP)/60), droneVC)
                 if deliveryQty == 0:
                     continue
                 pod.vaccinesInStock += deliveryQty
@@ -403,7 +425,7 @@ def deliverVaccinesByDrones(t, PODs, workingMinutes, droneVC, numDrones, params,
             break
         pod = PODs[podIndex]
         
-        deliveryQty = min(calcMaxVaccinesNeeded50(pod,mdP), droneVC)
+        deliveryQty = min(np.ceil(calcMaxVaccinesNeeded50(pod,mdP)/60)*60, droneVC)
         if deliveryQty == 0:
             #the POD does not need any vaccines
             ratios[podIndex] = 0
@@ -669,6 +691,28 @@ def flightPreventedExposures(pod, droneVC, params, numFlights):
     #return the difference between exposure values - how many exposures did the flights prevent
     return max(beforeFlightsPOD.E - afterFlightsPOD.E, 0)
     
+def teamPreventedExposures(pod, teams, params):
+    #create two variations of this POD, with differing numbers of teams
+    noTeamsPOD = copy.deepcopy(pod)
+    afterTeamsPOD = copy.deepcopy(pod)
+    
+    noTeamsPOD.teamsAtPOD = 0
+    noTeamsPOD.maxVaccinationsPerDay = 0
+    
+    afterTeamsPOD.teamsAtPOD = teams
+    afterTeamsPOD.maxVaccinationsPerDay = afterTeamsPOD.vaccsPerTeamDay * afterTeamsPOD.teamsAtPOD
+        
+    #vaccinate both PODs with the vaccines available at each
+    vaccinateOnePOD(noTeamsPOD)
+    vaccinateOnePOD(afterTeamsPOD)
+    
+    #progress both PODs another day
+    progressSinglePOD(noTeamsPOD, params)
+    progressSinglePOD(afterTeamsPOD, params)
+    
+    #return the difference between exposure values - how many exposures did the flights prevent
+    return max(noTeamsPOD.E - afterTeamsPOD.E, 0)
+    
 def findVehicleRoutes(oR, rT, dcI):
     '''Finds routes of minimum time taken, using Clarke-Wright algorithm.
     Also includes routes to-and-from each POD using Dijkstra's shortest path algorithm.'''
@@ -914,6 +958,32 @@ def assignTeams(PODs, numTeams, tStrategy):
             teamsLeft -= PODs[bestINindex].teamsAtPOD
             #print(PODs[bestINindex].teamsAtPOD, "teams at", PODs[bestINindex].name)
             podINs[bestINindex] = 0
+            
+    elif tStrategy == 'EPE':
+        podEPEs = np.zeros((len(PODs),numTeams+1))
+        podEPEperTeam = np.zeros((len(PODs),numTeams+1))
+        podTeamsAssigned = np.zeros(len(PODs),dtype=int)    #current teams assigned to each pod
+        add1teamEPEs = np.zeros(len(PODs))    #array of EPE vals for adding one more team at each pod
+        for nT in range(1,numTeams+1):        #build each column before the row
+            for podI in range(0,len(PODs)):
+                if nT == 1 or podEPEs[podI][1] != 0:        #don't calculate this excessively
+                    podEPEs[podI][nT] = teamPreventedExposures(PODs[podI], nT, params)
+                
+                if podEPEs[podI][1] != 0:      #if adding one team doesn't prevent an exposure, don't add more.
+                    podEPEperTeam[podI][nT] = max(podEPEs[podI][nT] - podEPEs[podI][nT-1], 0)
+                
+                teamsAssignedToPODalready = podTeamsAssigned[podI]
+                add1teamEPEs[podI] = podEPEperTeam[podI][teamsAssignedToPODalready+1]
+            newTeamPODindex = np.argmax(add1teamEPEs)
+            podTeamsAssigned[newTeamPODindex] += 1
+            
+            if sum(podTeamsAssigned) == numTeams:
+                break    
+        
+        for i in range(0,len(PODs)):
+            PODs[i].teamsAtPOD = podTeamsAssigned[i]
+            PODs[i].maxVaccinationsPerDay = PODs[i].vaccsPerTeamDay * podTeamsAssigned[i]
+            
     else:
         print("Invalid selection of team strategy")
         quit()
@@ -978,13 +1048,18 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
         label = label + PODs[i].name + ","
     label = label[:len(label)-1]
     if len(podIndexes) == len(PODs):
-        label = "All PODs"
+        label = "Measles epidemic progression over the whole network,\nwith intervention"
     
     plt.title(label)
     #plt.title("Progression of measles epidemic SEIR model")
     plt.ylabel("Number of People")
-    plt.xlabel("Time Elapsed (Days)")
+    plt.xlabel("Time elapsed in days")
     plt.legend()
+    
+#     import matplotlib as mpl
+#     mpl.rcParams['figure.dpi'] = 150
+#     plt.savefig("SEIRvehicleD.pdf",bbox_inches='tight')
+    
     plt.show()
     
 def plotMap(PODs, t, waitingForIntervention, IstartTime, intOver, 
@@ -1049,13 +1124,14 @@ def plotMap(PODs, t, waitingForIntervention, IstartTime, intOver,
     plt.close()
     
 
-def simulate():
+def simulate(filename='Likasi.csv'):
     #===============================================================================
     # Initial Calculations
     #===============================================================================
-    PODs, roadDistances = readPODsFromFile("Likasi.csv", maxVaccsFreePODday, maxVaccsFixedPODday, ruralTnt, urbanTnt)
+    PODs, roadDistances = readPODsFromFile(filename, maxVaccsFreePODday, maxVaccsFixedPODday, ruralTnt, urbanTnt)
     podDistances = calcPODdistanceMatrix(PODs)
-    openRoads, roadTimes = calcRoadTimes(PODs, roadDistances, podDistances, roadCloseFactor)
+    numRoadsClosed, openRoads, roadTimes = calcRoadTimes(PODs, roadDistances, podDistances, roadCloseFactor)
+    #roadTimes = roadDistances   #for matadi only!
     MigrationProportions = calcMigration(PODs, podDistances, migrationIntensity)
     DCindex = findDC(PODs, podDistances)
     #print("The DC is placed in", PODs[DCindex])
@@ -1072,6 +1148,7 @@ def simulate():
     totExpired = 0                          #total number of vaccines expired    
     totMinsDriven = 0
     totVaccsGiven = 0
+    vaccsPerDay = np.zeros(simulationRuntime)
 
     #===============================================================================
     # Simulation - Main Loop
@@ -1124,6 +1201,7 @@ def simulate():
             #process vaccinations for the day
             if deliveryType != "none":
                 vGiven, vGivenDC = vaccinate(PODs)
+                vaccsPerDay[t] = vGiven
                 totVaccsGiven += vGiven
                 totVaccs += vGivenDC
         elif t >= interventionStartTime + interventionLength:
@@ -1136,14 +1214,14 @@ def simulate():
                     #if a confirmed measles case found in a major town, then decide to intervene.
                     interventionStartTime = t + interventionLeadTime
                     waitingForIntervention = True
-                    #print("The epidemic has been detected in", pod.name, "! Intervention will begin on day", interventionStartTime)
+                    #print("The epidemic has been detected in", pod.name, "! Intervention will begin on day", interventionStartTime)            
                     break
         
         drivingCost = totMinsDriven/60 * 60 * 7/100 * 1.36  #60kph, 7l/100km, $1.36 per litre
         deliveryCost = totDroneDelvs * costPerFlight + drivingCost
         vaccineCost = totVaccs * costPerDoseMono
             
-        #updatePlotHistory(PODs, plots)
+        updatePlotHistory(PODs, plots)
         
         #plot this iteration's png
         #plotMap(PODs, t, waitingForIntervention, interventionStartTime, interventionOver, 
@@ -1177,13 +1255,25 @@ def simulate():
     
     #print("Total number of vaccines administered to patients:", totVaccsGiven)
     
+    #plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10), PODs)
     #plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10,11), PODs)
     #plotPOD(simulationRuntime, plots, 7, "Likasi")
     #plotMap(PODs,  t, waitingForIntervention, interventionStartTime, interventionOver,
      #      totExpired, totVaccs, totVaccsGiven, vaccineCost + deliveryCost)
     
-    return deaths, vaccineCost + deliveryCost, totVaccsGiven, totExpired
-
+    Vactots = np.zeros(simulationRuntime)
+    Stots = np.zeros(simulationRuntime)
+    Itots = np.zeros(simulationRuntime)
+    for t in range(0,simulationRuntime):    
+        Vactots[t] += plots[6][5][t]  #Just for Likasi
+        Stots[t] += plots[6][0][t]  
+        Itots[t] += plots[6][2][t]
+#         for podI in range(0,len(PODs)):        #for all locations
+#             Vactots[t] += plots[podI][5][t]  
+#             Stots[t] += plots[podI][0][t]  
+#             Itots[t] += plots[podI][2][t]
+                        
+    return deaths, vaccineCost + deliveryCost, totVaccsGiven, totExpired#, vaccsPerDay #,Vactots,Stots
 
 simulationRuntime = 150             #days to run the simulation for
 #Parameters    ========================================================================
@@ -1224,222 +1314,10 @@ costPerDose10 = 1.284               #the cost per dose of 10-dose measles vaccin
 costPerFlight = 17                  #$17 per drone flight
 #strategies
 strategy = 'I'                      #I = infections, S = Susceptible, N = Total Pop., EPE = Expected Prevented Exposures
-teamStrategy = 'S'                  #I, S, N, I/N, spread
-deliveryType = 'drone'            #"none", "drone" or "vehicle", or "combined"
+teamStrategy = 'N'                #I, S, N, I/N, spread
+deliveryType = 'vehicle'            #"none", "drone" or "vehicle", or "combined"
 maxTripLength = 180                 #if deliveryType = combined, this is the cutoff in mins for vehicle trip length
 
+#changes made in calcMaxVaccinesNeeded50, and both deliverByDrones methods, using np.ceil to round up to multips of 60
 
-
-for exposedDays in [3,5,7,9,10,11,13,15,18]:
-    print("Exp Days:", exposedDays)
-    numSims = 500
-    deaths = np.zeros(numSims)
-    costs = np.zeros(numSims)
-    vaccs = np.zeros(numSims)
-    expired = np.zeros(numSims)
-    for i in range(0,numSims):
-        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
-    
-    print("Results for metrics: \nMean: \tS: \tN:")
-    for metricArr in [deaths,costs,vaccs,expired]:
-        xbar = np.average(metricArr)
-        s = np.std(metricArr, ddof=1)
-        if xbar > 0:
-            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
-        else:
-            Nsim = "n/a"
-        print(xbar, "\t", s, "\t", Nsim)
-
-#restore to before.
-exposedDays = 10     
-
-
-
-
-
-for infectiousDays in [2,4,6,7,8,9,10,12,14]:
-    print("Inf Days:", infectiousDays)
-    numSims = 500
-    deaths = np.zeros(numSims)
-    costs = np.zeros(numSims)
-    vaccs = np.zeros(numSims)
-    expired = np.zeros(numSims)
-    for i in range(0,numSims):
-        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
-    
-    print("Results for metrics: \nMean: \tS: \tN:")
-    for metricArr in [deaths,costs,vaccs,expired]:
-        xbar = np.average(metricArr)
-        s = np.std(metricArr, ddof=1)
-        if xbar > 0:
-            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
-        else:
-            Nsim = "n/a"
-        print(xbar, "\t", s, "\t", Nsim)
-
-#restore to before.
-infectiousDays =  8
-
-
-
-
-
-
-for dR in [0.01,0.03,0.07,0.09,0.1,0.11,0.13,0.17,0.19]:
-    print("Death rate:", dR)
-    deathRate = dR * 1/infectiousDays
-    numSims = 500
-    deaths = np.zeros(numSims)
-    costs = np.zeros(numSims)
-    vaccs = np.zeros(numSims)
-    expired = np.zeros(numSims)
-    for i in range(0,numSims):
-        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
-    
-    print("Results for metrics: \nMean: \tS: \tN:")
-    for metricArr in [deaths,costs,vaccs,expired]:
-        xbar = np.average(metricArr)
-        s = np.std(metricArr, ddof=1)
-        if xbar > 0:
-            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
-        else:
-            Nsim = "n/a"
-        print(xbar, "\t", s, "\t", Nsim)
-
-#restore to before.
-deathRate = 0.1 * 1/infectiousDays
-
-
-
-for R0 in [2,5,10,13,15,17,20,25,30]:
-    print("Basic reproductive number R0:", R0)
-    numSims = 500
-    deaths = np.zeros(numSims)
-    costs = np.zeros(numSims)
-    vaccs = np.zeros(numSims)
-    expired = np.zeros(numSims)
-    for i in range(0,numSims):
-        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
-    
-    print("Results for metrics: \nMean: \tS: \tN:")
-    for metricArr in [deaths,costs,vaccs,expired]:
-        xbar = np.average(metricArr)
-        s = np.std(metricArr, ddof=1)
-        if xbar > 0:
-            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
-        else:
-            Nsim = "n/a"
-        print(xbar, "\t", s, "\t", Nsim)
-
-#restore to before.
-R0 = 15         
-
-
-
-for migrationIntensity in [0.1,0.25,0.5,0.9,1,1.1,2,4,10]:
-    print("Mig intensity:", migrationIntensity)
-    numSims = 500
-    deaths = np.zeros(numSims)
-    costs = np.zeros(numSims)
-    vaccs = np.zeros(numSims)
-    expired = np.zeros(numSims)
-    for i in range(0,numSims):
-        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
-    
-    print("Results for metrics: \nMean: \tS: \tN:")
-    for metricArr in [deaths,costs,vaccs,expired]:
-        xbar = np.average(metricArr)
-        s = np.std(metricArr, ddof=1)
-        if xbar > 0:
-            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
-        else:
-            Nsim = "n/a"
-        print(xbar, "\t", s, "\t", Nsim)
-
-#restore to before.
-migrationIntensity = 1     
-
-
-
-
-for vaccineEffectiveness in [0.8,0.85,0.9,0.94,0.95,0.96,0.97,0.99,1]:
-    print("vaccine efffectivenvess:", vaccineEffectiveness)
-    numSims = 500
-    deaths = np.zeros(numSims)
-    costs = np.zeros(numSims)
-    vaccs = np.zeros(numSims)
-    expired = np.zeros(numSims)
-    for i in range(0,numSims):
-        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
-    
-    print("Results for metrics: \nMean: \tS: \tN:")
-    for metricArr in [deaths,costs,vaccs,expired]:
-        xbar = np.average(metricArr)
-        s = np.std(metricArr, ddof=1)
-        if xbar > 0:
-            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
-        else:
-            Nsim = "n/a"
-        print(xbar, "\t", s, "\t", Nsim)
-
-#restore to before.
-vaccineEffectiveness = 0.95
-
-
-
-
-
-for prophylaxis72hrSuccessRate in [0.65,0.7,0.75,0.8,0.83,0.85,0.9,0.95,1]:
-    print("Post epxosure propheylaxis succ rate:", prophylaxis72hrSuccessRate)
-    numSims = 500
-    deaths = np.zeros(numSims)
-    costs = np.zeros(numSims)
-    vaccs = np.zeros(numSims)
-    expired = np.zeros(numSims)
-    for i in range(0,numSims):
-        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
-    
-    print("Results for metrics: \nMean: \tS: \tN:")
-    for metricArr in [deaths,costs,vaccs,expired]:
-        xbar = np.average(metricArr)
-        s = np.std(metricArr, ddof=1)
-        if xbar > 0:
-            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
-        else:
-            Nsim = "n/a"
-        print(xbar, "\t", s, "\t", Nsim)
-
-#restore to before.
-prophylaxis72hrSuccessRate = 0.83
-
-
-
-
-
-
-for monoDaysPotency in [0,1,2,3,4,5,7]:
-    print("Mono days potency:", monoDaysPotency)
-    numSims = 500
-    deaths = np.zeros(numSims)
-    costs = np.zeros(numSims)
-    vaccs = np.zeros(numSims)
-    expired = np.zeros(numSims)
-    for i in range(0,numSims):
-        deaths[i], costs[i], vaccs[i], expired[i] = simulate()
-    
-    print("Results for metrics: \nMean: \tS: \tN:")
-    for metricArr in [deaths,costs,vaccs,expired]:
-        xbar = np.average(metricArr)
-        s = np.std(metricArr, ddof=1)
-        if xbar > 0:
-            Nsim = (1.96 * s / (0.05 * xbar)) ** 2
-        else:
-            Nsim = "n/a"
-        print(xbar, "\t", s, "\t", Nsim)
-
-#restore to before.
-monoDaysPotency = 3           
-
-
-
-
+print(simulate())
