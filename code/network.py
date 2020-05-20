@@ -396,7 +396,7 @@ def deliverVaccinesByDroneSimple(strategy, t, PODs, workingMinutesPerDay, droneV
                 dronesFinished[drone] = True
     return deliveries, vaccinesDelivered
 
-def deliverVaccinesByDrones(t, PODs, workingMinutes, droneVC, numDrones, params, mdP):
+def deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, params, mdP):
     deliveries = 0
     vaccinesDelivered = 0
     
@@ -458,7 +458,7 @@ def findAvailDrone(droneAvail, time, pod, workMins):
    
 def deliverByDrone(strategy, t, PODs, workingMinutes, droneVC, numDrones, params, mdP):
     if strategy == 'EPE':     #clever exposure-prevention delivery schedule
-        delivDetails = deliverVaccinesByDrones(t, PODs, workingMinutes, droneVC, numDrones, params, mdP)
+        delivDetails = deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, params, mdP)
     else:                   #simple delivery schedule
         delivDetails = deliverVaccinesByDroneSimple(strategy, t, PODs, workingMinutes, droneVC, numDrones, params, mdP)
     return delivDetails
