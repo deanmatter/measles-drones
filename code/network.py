@@ -371,10 +371,7 @@ def expireVaccines(PODs, t):
 def deliverVaccinesByDroneSimple(strategy, t, PODs, workingMinutesPerDay, droneVC, numDrones, params, mdP):
     deliveries = 0
     vaccinesDelivered = 0
-    times = np.zeros(numDrones)
-    #launch drones in staggered 5-minute intervals
-    for i in range(1,len(times)):
-        times[i] = times[i-1] + 5
+    times = np.zeros(numDrones)     #no launch staggering
     
     dronesFinished = np.full(numDrones, False)
     while all(dronesFinished) == False:
@@ -415,10 +412,10 @@ def deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, param
             podIndex = np.argmax(ratios)
             #ensure flight ends before the end of the day
             while PODs[podIndex].flightTime + time > workingMinutes:
-                ratios[podIndex] = 0
-                podIndex = np.argmax(ratios)
-                if max(ratios) == 0:
-                    time = workingMinutes + 1
+                ratios[podIndex] = 0                # if this drone wouldn't return in time, set EPE/min=0
+                podIndex = np.argmax(ratios)        # choose the second best EPE/min drone
+                if max(ratios) == 0:                # if EPE/min=0 for all drones
+                    time = workingMinutes + 1       # declare the day complete
                     break
         else:
             break
@@ -430,14 +427,14 @@ def deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, param
             ratios[podIndex] = 0
             continue
     
-        droneIndex = findAvailDrone(droneAvail, time, pod, workingMinutes)
+        droneIndex = findAvailDrone(droneAvail, time, pod, workingMinutes)  #find available drone index -- returned, and will complete before workhours finish
         if droneIndex == -1:
             #no drone currently available
-            time += 5
+            time += 1       #check whether a drone will return the next minute
             continue
     
         #perform a drone delivery
-        droneAvail[droneIndex] = time + pod.flightTime
+        droneAvail[droneIndex] = time + pod.flightTime          #set the time that this drone will return
         deliveries += 1
         vaccinesDelivered += deliveryQty
         pod.vaccinesInStock += deliveryQty
@@ -446,15 +443,15 @@ def deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, param
         ratios[podIndex] = flightPreventedExposures(pod, droneVC, params, 1) / pod.flightTime
         displayTime = str(int((droneAvail[droneIndex])/60 + 7)) + ":" + "{:02d}".format((int(droneAvail[droneIndex]))%60)
         #print(displayTime,"- Drone", droneIndex+1, " delivered", deliveryQty,"vaccines to", pod.name)
-        time += 5
+        #time += 5              #there is no need to increase (stagger) the time after a delivery anymore
     return deliveries, vaccinesDelivered
    
 def findAvailDrone(droneAvail, time, pod, workMins):
-    mI = np.argmin(droneAvail)
-    if droneAvail[mI] <= time and time + pod.flightTime <= workMins:
-        return mI
+    mI = np.argmin(droneAvail)  #select the drone that'll be (or has already) returning the soonest
+    if droneAvail[mI] <= time and time + pod.flightTime <= workMins:    # if this drone has already returned and flying with it won't exceed working minutes
+        return mI               #return the index of the drone
     else:
-        return -1
+        return -1               #else return 'no drone available', essentially.
    
 def deliverByDrone(strategy, t, PODs, workingMinutes, droneVC, numDrones, params, mdP):
     if strategy == 'EPE':     #clever exposure-prevention delivery schedule
