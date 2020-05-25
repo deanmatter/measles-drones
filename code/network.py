@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 from matplotlib import patches
 import copy
 from collections import deque
+import os
 
 class vaccineDelivery:
     def __init__(self, d, eD):
@@ -41,7 +42,7 @@ def readPODsFromFile(filename, mvpFreeDay, mvpFixedDay, ruralT, urbanT):
     '''Reads in location information from an input CSV file.'''
     PODs = []
     roadDistances = []
-    data = open(filename,'r')
+    data = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), filename), 'r')
     lineCount = -2
     mode = 0
     
@@ -1268,7 +1269,7 @@ def simulate(filename='Likasi.csv'):
 #             Vactots[t] += plots[podI][5][t]  
 #             Stots[t] += plots[podI][0][t]  
 #             Itots[t] += plots[podI][2][t]
-    return deaths, vaccineCost + deliveryCost, totVaccsGiven, totExpired#, vaccsPerDay #,Vactots,Stots
+    return deaths, totVaccsGiven, totExpired #, vaccsPerDay #,Vactots,Stots
 
 
 simulationRuntime = 150             #days to run the simulation for
@@ -1284,7 +1285,6 @@ migrationIntensity = 1              #factor by which migration is multiplied. 2 
 vaccineEffectiveness = 0.95         #probability the vaccine works (for non-exposed)
 prophylaxis72hrSuccessRate = 0.83   #probability the vaccine works (for exposed, within 72hrs)
 monoDaysPotency = 3                 #number of days for which the vaccine lasts outside of cold-chain
-TenDaysPotency = 5                  #number of days the 10-dose vaccine lasts outside of cold-chain
 #intervention parameters
 interventionLeadTime = 15           #number of days before vaccination starts
 interventionCaseRatio = 0.005       #ratio of I/S in a town before detection
@@ -1314,6 +1314,15 @@ teamStrategy = 'N'                  #I, S, N, I/N, spread
 deliveryType = 'vehicle'            #"none", "drone" or "vehicle", or "combined"
 maxTripLength = 180                 #if deliveryType = combined, this is the cutoff in mins for vehicle trip length
 
-#changes made in calcMaxVaccinesNeeded50, and both deliverByDrones methods, using np.ceil to round up to multips of 60
+print(simulate("Likasi.csv"))
 
-print(simulate())
+#TODO: Remove roadDistances import from code, it's not in the CSVs
+#TODO: Remove urban/rural distinction everywhere.
+#TODO: Build vaccination rate into code. Split population into S and R.
+#TODO: Build targeted/untargeted vaccination into code.
+#TODO: Build map scaling into code according to the max diameter desired (specified in parameters)
+#TODO: Fix death rate. Make it like 1% maybe.
+#TODO: Fix turnout. Maybe remove it as a constraint?
+#TODO: Confirm the delivery-payload-up-to-60 rounding is valid
+#TODO: Implement 'Big-M' vaccine deliveries to ensure vaccine stock is not a constraint - only team allocs
+#TODO: Add delete protection to this branch of the Git repo.

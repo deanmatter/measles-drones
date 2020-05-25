@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="1560"
+   height="1170"
+   viewBox="0 0 412.75 309.56249"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
+   sodipodi:docname="map_rural.svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35"
+     inkscape:cx="742.85714"
+     inkscape:cy="560"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="1366"
+     inkscape:window-height="705"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,12.562438)">
+    <circle
+       id="path20-8"
+       cx="338.12274"
+       cy="150.2695"
+       r="3.567564"
+       style="stroke-width:0.17837819" />
+    <circle
+       id="path20-8-5-3"
+       cx="256.57855"
+       cy="262.25467"
+       r="3.567564"
+       style="stroke-width:0.17837819" />
+    <circle
+       id="path20-8-5-7"
+       cx="103.69431"
+       cy="255.17073"
+       r="3.567564"
+       style="stroke-width:0.17837819" />
+    <circle
+       id="path20-8-5-0"
+       cx="73.115211"
+       cy="137.76692"
+       r="3.567564"
+       style="stroke-width:0.17837819" />
+    <circle
+       id="path20-8-5-09"
+       cx="66.440445"
+       cy="24.701851"
+       r="3.567564"
+       style="stroke-width:0.17837819" />
+    <circle
+       id="path20-8-5-0-5"
+       cx="159.32216"
+       cy="55.390884"
+       r="3.567564"
+       style="stroke-width:0.17837819" />
+    <circle
+       id="path20-8-5-0-0"
+       cx="281.31277"
+       cy="21.14377"
+       r="3.567564"
+       style="stroke-width:0.17837819" />
+    <circle
+       id="path20-8-5-0-4"
+       cx="202.42282"
+       cy="197.04572"
+       r="3.567564"
+       style="stroke-width:0.17837819" />
+    <circle
+       id="path20-8-5-0-9-5"
+       cx="188.00652"
+       cy="120.39647"
+       r="3.567564"
+       style="stroke-width:0.17837819" />
+  </g>
+</svg>
