@@ -14,7 +14,8 @@
    viewBox="0 0 412.75 309.56249"
    version="1.1"
    id="svg8"
-   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)">
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
+   sodipodi:docname="map_monocentric.svg">
   <defs
      id="defs2" />
   <sodipodi:namedview
@@ -31,11 +32,11 @@
      inkscape:current-layer="layer1"
      showgrid="false"
      units="px"
-     inkscape:window-width="1366"
-     inkscape:window-height="705"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
-     inkscape:window-maximized="1" />
+     inkscape:window-width="681"
+     inkscape:window-height="696"
+     inkscape:window-x="676"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0" />
   <metadata
      id="metadata5">
     <rdf:RDF>
@@ -44,7 +45,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -142,6 +143,6 @@
        cx="209.4745"
        cy="136.96487"
        r="11.339286"
-       style="stroke-width:0.56696427" />
+       style="stroke-width:0.56696427;fill:#a02c2c" />
   </g>
 </svg>
