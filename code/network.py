@@ -88,21 +88,16 @@ def readPODsFromFile(filename, maxVaccsTeamDay, turnout, targetedVaccination, va
     
 def scaleCoordinatesAndDistances(unscaledDistances,PODs,maxDistance):
     ''' Returns: scaledDistances, and PODs with updated coordinates.'''
-    print("Unscaled:",unscaledDistances)
+    #Calculate desired scaling factor and scale all distances accordingly.
     scaleFactor = maxDistance * 1.0 / np.amax(unscaledDistances)
-    print("Max unscaled:", np.amax(unscaledDistances))
     scaledDistances = unscaledDistances * scaleFactor
-    print("Scaled:",scaledDistances)
-    print("max of scaled should be",maxDistance)
-    #does this hold valid for coordinates? -- add coordinate scaling
     
-    for i in len(unscaledDistances):
-        row = unscaledDistances[i]
-        for j in len(row):
-            print(row[j])
-    #TODO:implement coordinate scaling to match the scaled euclidean distance?
-
-    quit()    
+    #Scale the coordinates of each pod.
+    for pod in PODs:
+        scaledX = scaleFactor * pod.coordinates[0]
+        scaledY = scaleFactor * pod.coordinates[1]
+        pod.coordinates = (scaledX,scaledY)
+      
     return scaledDistances, PODs
 
 def findDC(PODs, podDistances):
@@ -120,7 +115,7 @@ def findDC(PODs, podDistances):
             DCindex = i
             minimax = maxInRow[i]
     if minimax > 80:
-        print("The best DC placement is at", PODs[DCindex], "but not all PODs are within 80km!")
+        print("The best DC placement is at", PODs[DCindex], "but not all PODs are within 80km.")
     return DCindex
             
 def calcPODdistanceMatrix(PODs):
@@ -924,7 +919,7 @@ def simulate(filename='Likasi.csv'):
 
 
 #Parameters    ========================================================================
-simulationRuntime = 150             #days to run the simulation for
+simulationRuntime = 200             #days to run the simulation for
 #Measles SEIR parameters
 exposedDays = 10                    #number of days a patient is exposed for without symptoms
 infectiousDays = 8                  #number of days a patient is infectious for
@@ -961,7 +956,7 @@ teamStrategy = 'N'                  #I, S, N, I/N, spread
 deliveryType = 'drone'              #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
-maxDistance = 100                   #The distance in km that the max inter-location distance is scaled to
+maxDistance = 30                    #The distance in km that the max inter-location distance is scaled to
 
 print(simulate("Generic_network_city.csv"))
 
