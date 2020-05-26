@@ -37,44 +37,74 @@ class POD:
     def __str__(self):
         return self.name    
        
-def readPODsFromFile(filename, maxVaccsTeamDay, turnout):
+def readPODsFromFile(filename, maxVaccsTeamDay, turnout, targetedVaccination, vaccinationRate):
     '''Reads in location information from an input CSV file.'''
     PODs = []
     data = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), filename), 'r')
-    lineCount = -2
-    mode = 0
+    lineCount = 0
     
     for line in data:
+        if lineCount == 0:
+            # skip the header row
+            lineCount += 1
+            continue
         lineCount += 1
         lineContents = line.strip().split(",")
         
-        if lineCount == -1:
-            mode = 1
-            continue
-        if lineContents[0][:1] in ["#"," "]:
-            break
-        
-        #Mode 1 -- reading in POD details
-        if mode == 1:
-            podName = lineContents[0]
-            podTrnt = turnout
-            podMaxVaccPD = maxVaccsTeamDay
-            podXY = (float(lineContents[2]),float(lineContents[3]))
-            podN = int(lineContents[4])
-            podS = int(lineContents[5])
-            podE = int(lineContents[6])
-            podI = int(lineContents[7])
-            podR = int(lineContents[8])
-            podV = int(lineContents[9])
-            podmapX = int(lineContents[10])
-            podmapY = int(lineContents[11])
-            podfT = np.inf
-            pod = POD(podName,podXY,podN,podS,podE,podI,podR,podV,podfT,podMaxVaccPD,podTrnt,podmapX,podmapY)
-            PODs.append(pod)
-                
+        podName = lineContents[0]
+        podTrnt = turnout
+        podMaxVaccPD = maxVaccsTeamDay
+        podmapX = int(lineContents[1])
+        podmapY = int(lineContents[2])
+        podXY = (podmapX,podmapY)                     #set x- and y- coords to unscaled values.
+
+        #Split the population according to vaccination rate
+        podN = int(lineContents[3])
+        podV, podS, podR = 0,0,0
+        if targetedVaccination:
+            podV = int(podN * vaccinationRate)
+            podS = podN - podV
+        else:
+            podR = int(podN * vaccinationRate)
+            podS = podN - podR
+
+        try: 
+            podE = int(lineContents[4])
+        except ValueError:
+            # if there is a ValueError, set podE = 0
+            podE = 0
+
+        try:
+            podI = int(lineContents[5])
+        except ValueError:
+            # if there is a ValueError, set podI = 0
+            podI = 0
+
+        podflightTime = np.inf
+        pod = POD(podName,podXY,podN,podS,podE,podI,podR,podV,podflightTime,podMaxVaccPD,podTrnt,podmapX,podmapY)
+        PODs.append(pod)
+
     return PODs
     
+def scaleCoordinatesAndDistances(unscaledDistances,PODs,maxDistance):
+    ''' Returns: scaledDistances, and PODs with updated coordinates.'''
+    print("Unscaled:",unscaledDistances)
+    scaleFactor = maxDistance * 1.0 / np.amax(unscaledDistances)
+    print("Max unscaled:", np.amax(unscaledDistances))
+    scaledDistances = unscaledDistances * scaleFactor
+    print("Scaled:",scaledDistances)
+    print("max of scaled should be",maxDistance)
+    #does this hold valid for coordinates? -- add coordinate scaling
     
+    for i in len(unscaledDistances):
+        row = unscaledDistances[i]
+        for j in len(row):
+            print(row[j])
+    #TODO:implement coordinate scaling to match the scaled euclidean distance?
+
+    quit()    
+    return scaledDistances, PODs
+
 def findDC(PODs, podDistances):
     #maxInRow[i] stores the maximum distance from location i to any other location
     maxInRow = np.zeros(len(PODs))
@@ -780,8 +810,9 @@ def simulate(filename='Likasi.csv'):
     #===============================================================================
     # Initial Calculations
     #===============================================================================
-    PODs = readPODsFromFile(filename, maxVaccsTeamDay, turnout)
-    podDistances = calcPODdistanceMatrix(PODs)
+    PODs = readPODsFromFile(filename, maxVaccsTeamDay, turnout, targetedVaccination, vaccinationRate)
+    unscaledDistances = calcPODdistanceMatrix(PODs)
+    podDistances, PODs = scaleCoordinatesAndDistances(unscaledDistances, PODs, maxDistance)
     MigrationProportions = calcMigration(PODs, podDistances, migrationIntensity)
     DCindex = findDC(PODs, podDistances)
     #print("The DC is placed in", PODs[DCindex])
@@ -801,7 +832,7 @@ def simulate(filename='Likasi.csv'):
     vaccsPerDay = np.zeros(simulationRuntime)
 
     #===============================================================================
-    # Simulation - Main Loop
+    # Simulation - Main Daily Loop
     #===============================================================================    
     for t in range(0, simulationRuntime):
         #print("\n",t,":")
@@ -859,9 +890,7 @@ def simulate(filename='Likasi.csv'):
         #plotMap(PODs, t, waitingForIntervention, interventionStartTime, interventionOver, 
         #       totExpired, totVaccs, totVaccsGiven, deliveryCost + vaccineCost)
     
-    #===============================================================================
-    # Result Reporting
-    #===============================================================================
+    # ----------------- Result Reporting
     deaths = 0
     for pod in PODs:
         deaths += pod.deaths
@@ -871,12 +900,11 @@ def simulate(filename='Likasi.csv'):
         droneCost = totDroneDelvs * costPerFlight
         #print("Total drone flight cost: $", droneCost,",for", totDroneDelvs, "flights.")
     
-    
     #print("Total cost of monodose vaccines delivered: $", vaccineCost, ",for", totVaccs, "doses.")
     if totVaccs > 0:
         expiryRatio = totExpired / totVaccs * 100
         #print("Percentage of vaccines expired without use:", round(expiryRatio,2), "%")
-    
+
     #print("Total number of vaccines administered to patients:", totVaccsGiven)
     
     #plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10), PODs)
@@ -892,10 +920,6 @@ def simulate(filename='Likasi.csv'):
         Vactots[t] += plots[6][5][t]  #Just for Likasi
         Stots[t] += plots[6][0][t]  
         Itots[t] += plots[6][2][t]
-#         for podI in range(0,len(PODs)):        #for all locations
-#             Vactots[t] += plots[podI][5][t]  
-#             Stots[t] += plots[podI][0][t]  
-#             Itots[t] += plots[podI][2][t]
     return deaths, totVaccsGiven, totExpired #, vaccsPerDay #,Vactots,Stots
 
 
@@ -912,6 +936,7 @@ migrationIntensity = 1              #factor by which migration is multiplied. 2 
 vaccineEffectiveness = 0.95         #probability the vaccine works (for non-exposed)
 prophylaxis72hrSuccessRate = 0.83   #probability the vaccine works (for exposed, within 72hrs)
 monoDaysPotency = 3                 #number of days for which the vaccine lasts outside of cold-chain
+vaccinationRate = 0.7               #70% vaccination rate at first. Confirm this!
 #intervention parameters
 interventionLeadTime = 15           #number of days before vaccination starts
 interventionCaseRatio = 0.005       #ratio of I/S in a town before detection
@@ -933,17 +958,17 @@ costPerFlight = 17                  #$17 per drone flight
 #strategies
 strategy = 'I'                      #I = infections, S = Susceptible, N = Total Pop., EPE = Expected Prevented Exposures
 teamStrategy = 'N'                  #I, S, N, I/N, spread
-deliveryType = 'drone'            #"none", "drone"
+deliveryType = 'drone'              #"none", "drone"
+targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
+#input dataset
+maxDistance = 100                   #The distance in km that the max inter-location distance is scaled to
 
-print(simulate("Likasi.csv"))
-
-#TODO: Remove urban/rural distinction everywhere.
-#TODO: Build vaccination rate into code. Split population into S and R.
-#TODO: Build targeted/untargeted vaccination into code.
-#TODO: Build map scaling into code according to the max diameter desired (specified in parameters)
+print(simulate("Generic_network_city.csv"))
 
 #TODO: Fix death rate. Make it like 1% maybe.
 #TODO: Fix turnout. Maybe remove it as a constraint?
 #TODO: Confirm the delivery-payload-up-to-60 rounding is valid
+#TODO: Fix the spread team allocation method
 #TODO: Implement 'Big-M' vaccine deliveries to ensure vaccine stock is not a constraint - only team allocs
 #TODO: Add delete protection to this branch of the Git repo.
+#TODO: Ensure validity of parameter values
