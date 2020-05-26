@@ -41,7 +41,6 @@ class POD:
 def readPODsFromFile(filename, mvpFreeDay, mvpFixedDay, ruralT, urbanT):
     '''Reads in location information from an input CSV file.'''
     PODs = []
-    roadDistances = []
     data = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), filename), 'r')
     lineCount = -2
     mode = 0
@@ -53,9 +52,8 @@ def readPODsFromFile(filename, mvpFreeDay, mvpFixedDay, ruralT, urbanT):
         if lineCount == -1:
             mode = 1
             continue
-        if lineContents[0][:1] == "#":
-            mode += 1
-            continue
+        if lineContents[0][:1] in ["#"," "]:
+            break
         
         #Mode 1 -- reading in POD details
         if mode == 1:
@@ -80,18 +78,7 @@ def readPODsFromFile(filename, mvpFreeDay, mvpFixedDay, ruralT, urbanT):
             pod = POD(podName,podUrban,podXY,podN,podS,podE,podI,podR,podV,podfT,podMaxVaccPD,podTrnt,podmapX,podmapY)
             PODs.append(pod)
                 
-        #Mode 2 -- reading in road times details
-        if mode == 2 and lineContents[0] != '':
-            thisRowsRoadDs = []
-            for i in range(1,len(PODs)+1):
-                if(lineContents[i] == ''):
-                    thisRowsRoadDs.append(np.inf)
-                else:
-                    thisRowsRoadDs.append(float(lineContents[i]))
-            roadDistances.append(thisRowsRoadDs)
-            
-    roadDistances = np.array(roadDistances)
-    return PODs, roadDistances
+    return PODs
     
     
 def findDC(PODs, podDistances):
@@ -1125,9 +1112,9 @@ def simulate(filename='Likasi.csv'):
     #===============================================================================
     # Initial Calculations
     #===============================================================================
-    PODs, roadDistances = readPODsFromFile(filename, maxVaccsFreePODday, maxVaccsFixedPODday, ruralTnt, urbanTnt)
+    PODs = readPODsFromFile(filename, maxVaccsFreePODday, maxVaccsFixedPODday, ruralTnt, urbanTnt)
     podDistances = calcPODdistanceMatrix(PODs)
-    numRoadsClosed, openRoads, roadTimes = calcRoadTimes(PODs, roadDistances, podDistances, roadCloseFactor)
+    #numRoadsClosed, openRoads, roadTimes = calcRoadTimes(PODs, roadDistances, podDistances, roadCloseFactor)
     #roadTimes = roadDistances   #for matadi only!
     MigrationProportions = calcMigration(PODs, podDistances, migrationIntensity)
     DCindex = findDC(PODs, podDistances)
@@ -1272,8 +1259,8 @@ def simulate(filename='Likasi.csv'):
     return deaths, totVaccsGiven, totExpired #, vaccsPerDay #,Vactots,Stots
 
 
-simulationRuntime = 150             #days to run the simulation for
 #Parameters    ========================================================================
+simulationRuntime = 150             #days to run the simulation for
 #Measles SEIR parameters
 exposedDays = 10                    #number of days a patient is exposed for without symptoms
 infectiousDays = 8                  #number of days a patient is infectious for
@@ -1316,11 +1303,11 @@ maxTripLength = 180                 #if deliveryType = combined, this is the cut
 
 print(simulate("Likasi.csv"))
 
-#TODO: Remove roadDistances import from code, it's not in the CSVs
 #TODO: Remove urban/rural distinction everywhere.
 #TODO: Build vaccination rate into code. Split population into S and R.
 #TODO: Build targeted/untargeted vaccination into code.
 #TODO: Build map scaling into code according to the max diameter desired (specified in parameters)
+
 #TODO: Fix death rate. Make it like 1% maybe.
 #TODO: Fix turnout. Maybe remove it as a constraint?
 #TODO: Confirm the delivery-payload-up-to-60 rounding is valid
