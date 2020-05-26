@@ -13,9 +13,8 @@ class vaccineDelivery:
         self.expiryDate = eD            #the day t on which this delivery will expire
 
 class POD:
-    def __init__(self, name, urban, cords, N, S, E, I, R, V, fT, mvpd, avt, mX, mY):
+    def __init__(self, name, cords, N, S, E, I, R, V, fT, mvpd, avt, mX, mY):
         self.name = name                #location at which POD is placed
-        self.isUrban = urban           #true/false value of if the DC can be placed at this POD
         self.coordinates = cords        #tuple (x,y) of POD location in network
         self.N = N                      #total population 
         self.S = S                      #number of susceptible people
@@ -38,7 +37,7 @@ class POD:
     def __str__(self):
         return self.name    
        
-def readPODsFromFile(filename, mvpFreeDay, mvpFixedDay, ruralT, urbanT):
+def readPODsFromFile(filename, maxVaccsTeamDay, turnout):
     '''Reads in location information from an input CSV file.'''
     PODs = []
     data = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), filename), 'r')
@@ -58,13 +57,8 @@ def readPODsFromFile(filename, mvpFreeDay, mvpFixedDay, ruralT, urbanT):
         #Mode 1 -- reading in POD details
         if mode == 1:
             podName = lineContents[0]
-            podUrban = False
-            podTrnt = ruralT
-            podMaxVaccPD = mvpFreeDay
-            if int(lineContents[1]) == 1:
-                podUrban = True
-                podTrnt = urbanT
-                podMaxVaccPD = mvpFixedDay
+            podTrnt = turnout
+            podMaxVaccPD = maxVaccsTeamDay
             podXY = (float(lineContents[2]),float(lineContents[3]))
             podN = int(lineContents[4])
             podS = int(lineContents[5])
@@ -75,7 +69,7 @@ def readPODsFromFile(filename, mvpFreeDay, mvpFixedDay, ruralT, urbanT):
             podmapX = int(lineContents[10])
             podmapY = int(lineContents[11])
             podfT = np.inf
-            pod = POD(podName,podUrban,podXY,podN,podS,podE,podI,podR,podV,podfT,podMaxVaccPD,podTrnt,podmapX,podmapY)
+            pod = POD(podName,podXY,podN,podS,podE,podI,podR,podV,podfT,podMaxVaccPD,podTrnt,podmapX,podmapY)
             PODs.append(pod)
                 
     return PODs
@@ -86,10 +80,7 @@ def findDC(PODs, podDistances):
     maxInRow = np.zeros(len(PODs))
     i = 0
     for pod in PODs:
-        if pod.isUrban == True:
-            maxInRow[i] = max(podDistances[i])
-        else:
-            maxInRow[i] = np.inf
+        maxInRow[i] = max(podDistances[i])
         i += 1
     
     DCindex = -1   
@@ -142,40 +133,6 @@ def calcMigration(PODs, podDistances, migrationIntensity):
         migrations[i][i] = max(1 - sum(migrations[i]),0)
     #print(migrations)
     return migrations
-
-def calcRoadTimes(PODs, roadDistances, podDistances, roadCloseFactor):
-    '''Returns two nxn matrices, with i-j entries =1 if the road i-j is open, and =0 if the road is closed. Also, road times'''
-    roadTimes = np.zeros(np.shape(roadDistances))
-    openRoads = np.zeros(np.shape(roadDistances))
-    
-    numClosedRoads = 0
-    for r in range(0,len(PODs)):
-        for c in range(0, len(PODs)):
-            if roadDistances[r][c] == np.inf:
-                #there is no road between r and c - 10kph travel speed by foot
-                openRoads[r][c] = 0
-            elif PODs[r].isUrban == True and PODs[c].isUrban == True:
-                #travel speed is 60kph - between urban and urban
-                roadTimes[r][c] = int(roadDistances[r][c] / 60 * 60)
-                openRoads[r][c] = min(roundUsingProb(1 / roadCloseFactor),1)
-            elif PODs[r].isUrban == False and PODs[c].isUrban == False:
-                #travel speed is 20 kph - between rural and rural
-                roadTimes[r][c] = int(roadDistances[r][c] / 20 * 60)
-                openRoads[r][c] = min(roundUsingProb(0.6 / roadCloseFactor),1)
-            else:
-                #travel speed is 40kph - between rural and urban
-                roadTimes[r][c] = int(roadDistances[r][c] / 40 * 60)
-                openRoads[r][c] = min(roundUsingProb(0.8 / roadCloseFactor),1)
-            
-            if openRoads[r][c] == 0:
-                roadTimes[r][c] = int(podDistances[r][c] / 10 * 60)
-    
-    for r in range(0,len(PODs)):
-        for c in range(0, len(PODs)):
-            if openRoads[r][c] == 0 and roadDistances[r][c] != np.inf:
-                numClosedRoads += 1
-            
-    return numClosedRoads, openRoads, roadTimes
 
 def calcMaxVaccinesNeeded50(pod, numDays):
     unvaccinated = pod.S + pod.E + pod.R
@@ -448,163 +405,7 @@ def deliverByDrone(strategy, t, PODs, workingMinutes, droneVC, numDrones, params
         delivDetails = deliverVaccinesByDroneSimple(strategy, t, PODs, workingMinutes, droneVC, numDrones, params, mdP)
     return delivDetails
       
-def deliverByVehicle(openRoads, roadTimes, DCindex, strategy, PODs, workMinsPerDay, 
-                     vehicleCapacities, numVehicles, params, mdP, t, maxTripLength, 
-                     deliveryType):
-    #Use Clarke-Wright method to find vehicle routes that could be used
-    routes, routeTimes = findVehicleRoutes(openRoads, roadTimes, DCindex)
-   
-    displayTime = "7:00"
-    totalVDelivered = 0
-    times = np.zeros(numVehicles)
-    
-    vehiclesFinished = np.full(numVehicles, False)
-    while all(vehiclesFinished) == False:
-        for vehicle in range(0,numVehicles):
-            if vehiclesFinished[vehicle] == True:
-                continue
-            #calculate the payoff for each route, acc. to the strategy
-            routePayoffs = []
-            for i in range(0,len(routes)):
-                if times[vehicle] >= workMinsPerDay:
-                    vehiclesFinished[vehicle] = True
-                    routePayoffs.append(-1)
-                    break
-                #disqualify routes where less than 50 vaccines are needed per location, on average
-                if calcVaccinesNeededOnRoute(routes[i], PODs, mdP) <= 50*(len(routes[i])-2):
-                    routePayoffs.append(-1)
-                    continue
-                #disqualify routes (leaving after the first hour) that would exceed the day's working hours.
-                if (times[vehicle] + routeTimes[i]) > workMinsPerDay and times[vehicle] > 60:
-                    routePayoffs.append(-1)
-                    continue
-                #disqualify routes that take too long
-                if routeTimes[i] > maxTripLength and deliveryType == "combined":
-                    #the route is too long for the combined method
-                    routePayoffs.append(-1)
-                    continue
-                
-                if strategy == 'N':
-                    totalN = 0
-                    for node in routes[i]:
-                        if node != DCindex:
-                            totalN += PODs[node].N
-                    routePayoffs.append(totalN / routeTimes[i])
-                elif strategy == 'I':
-                    totalI = 0
-                    for node in routes[i]:
-                        if node != DCindex:
-                            totalI += PODs[node].I
-                    routePayoffs.append(totalI / routeTimes[i])
-                elif strategy == 'S':
-                    totalS = 0
-                    for node in routes[i]:
-                        if node != DCindex:
-                            totalS += PODs[node].S
-                    routePayoffs.append(totalS / routeTimes[i])
-                elif strategy == 'EPE':
-                    #clever method, using expected exposures prevented
-                    vehicleCapacity = vehicleCapacities[0]
-                    if isRouteRural(routes[i], PODs):
-                        vehicleCapacity = vehicleCapacities[1]
-                    
-                    totalEPE = 0
-                    for node in routes[i]:
-                        if node != DCindex:
-                            vaccsNeeded = calcMaxVaccinesNeeded50(PODs[node], mdP)
-                            vaccs = min(vaccsNeeded, vehicleCapacity)                                        
-                            totalEPE += vehiclePreventedExposures(PODs[node], vaccs, params)
-                    routePayoffs.append(totalEPE / routeTimes[i])
-                else:
-                    print("Invalid selection of strategy:", strategy)
-                
-            routeTimes = np.array(routeTimes)
-            routePayoffs = np.array(routePayoffs)
-            
-            if max(routePayoffs) == -1:
-                vehiclesFinished[vehicle] = True
-                break
-                        
-            chosenRouteI = np.argmax(routePayoffs)
-            
-            #setting vehicle capacity for delivery
-            vehicleCapacity = vehicleCapacities[0]  #deliver by default in large carrier
-            if isRouteRural(routes[chosenRouteI], PODs):
-                #deliver in a handheld carrier
-                vehicleCapacity = vehicleCapacities[1]
-                    
-            vDelivered, strippedRoute = deliverRoute(routes[chosenRouteI], PODs, strategy, vehicleCapacity, mdP, t, params)
-            
-            totalVDelivered += sum(vDelivered)
-            times[vehicle] += routeTimes[chosenRouteI]
-            routeNames = []
-            for location in strippedRoute:
-                routeNames.append(PODs[location].name)
-            
-            displayTime = str(int(times[vehicle]/60 + 7)) + ":" + "{:02d}".format(int(times[vehicle]%60))
-            #print(displayTime, "- Vehicle", vehicle+1, "delivered quantities", vDelivered, "to route", routeNames)
-            
-    #print(displayTime,"Day deliveries complete.")
-    totMinsDriven = sum(times)
-    return totalVDelivered, totMinsDriven
-
-def isRouteRural(route, PODs):
-    anyRurals = False
-    for node in route:
-        if PODs[node].isUrban == False:
-            anyRurals = True
-    return anyRurals
-                
-def deliverRoute(totalRoute, PODs, strategy, vehicleCapacity, mdP, t, params):
-    '''Delivers vaccines to the PODs in the route, according to the amount still required at each POD, 
-    with <strategy> determining which POD gets allocated the most vaccines.'''
-    route = totalRoute[1:-1]        #removes DC from route string
-    vaccinesToDeliver = np.zeros(np.shape(route))
-    routeSINC = np.zeros(np.shape(route))   #this routeSINC is the S, I, N or C value for each 
-    routeNeeds = np.zeros(np.shape(route))  #this routeNeeds is the number of vaccines each location needs
-    for i in range(0,len(route)):
-        routeNeeds[i] = calcMaxVaccinesNeeded50(PODs[route[i]], mdP)
-        if strategy == 'S':
-            routeSINC[i] = PODs[route[i]].S
-        elif strategy == 'I':
-            routeSINC[i] = PODs[route[i]].I
-        elif strategy == 'N':
-            routeSINC[i] = PODs[route[i]].N
-        elif strategy == 'EPE':
-            #for each pod in the route, calculate the prevented exposures if its given the max vaccines it needs
-            routeSINC[i] = vehiclePreventedExposures(PODs[route[i]], routeNeeds[i], params)
-    
-    if sum(routeNeeds) < vehicleCapacity:
-        vaccinesToDeliver = routeNeeds
-    else:
-        remainingCap = vehicleCapacity
-        for i in range(0,len(route)):
-            bestSINCindex = np.argmax(routeSINC)
-            vaccinesToDeliver[bestSINCindex] = min(routeNeeds[bestSINCindex], remainingCap)
-            routeSINC[bestSINCindex] = -1                       #do not add more vaccines to this spot.
-            remainingCap -= vaccinesToDeliver[bestSINCindex]
-            if remainingCap == 0:
-                break
-        
-    for i in range(0,len(route)):
-        vaccQty = vaccinesToDeliver[i]
-        if vaccQty <= 0:
-            continue
-        podIndex = route[i]
-        PODs[podIndex].vaccinesInStock += vaccQty
-        thisDelivery = vaccineDelivery(vaccQty * 1, t + mdP)
-        PODs[podIndex].vaccineDeliveries.append(thisDelivery)
-    return vaccinesToDeliver, route
-        
-def calcVaccinesNeededOnRoute(totalRoute, PODs, mdP):
-    ''' Given the route, PODs array and number of days the vaccine is potent for, 
-    returns the expected number of vaccines needed to be delivered on the route.'''
-    route = totalRoute[1:-1]
-    totVaccsNeeded = 0
-    for podIndex in route:
-        totVaccsNeeded += calcMaxVaccinesNeeded50(PODs[podIndex], mdP)
-    return totVaccsNeeded
-       
+      
 def choosePODtoFlyTo(strategy, PODs, time, workingMinutesPerDay, mdP):
     '''Selects the POD with the highest number of susceptible people, among 
     PODs with less than 2000 vaccines. Returns -1 if all PODs have enough vaccines.'''
@@ -636,26 +437,7 @@ def choosePODtoFlyTo(strategy, PODs, time, workingMinutesPerDay, mdP):
     if maxV == 0:
         return -1
     return maxpod
-                
-def vehiclePreventedExposures(pod, vaccQty, params):
-    #create two variations of this POD, with differing vaccinesInStock values
-    beforePOD = copy.deepcopy(pod)
-    afterPOD = copy.deepcopy(pod)
-    afterPOD.vaccinesInStock += vaccQty
-    thisDelivery = vaccineDelivery(vaccQty, np.inf)
-    afterPOD.vaccineDeliveries.append(thisDelivery)
-    
-    #vaccinate both PODs with the vaccines available at each
-    vaccinateOnePOD(beforePOD)
-    vaccinateOnePOD(afterPOD)
-    
-    #progress both PODs another day
-    progressSinglePOD(beforePOD, params)
-    progressSinglePOD(afterPOD, params)
-    
-    #return the difference between exposure values - how many exposures did the flights prevent
-    return max(beforePOD.E - afterPOD.E, 0)
-                
+               
 def flightPreventedExposures(pod, droneVC, params, numFlights):
     #create two variations of this POD, with differing vaccinesInStock values
     beforeFlightsPOD = copy.deepcopy(pod)
@@ -696,36 +478,7 @@ def teamPreventedExposures(pod, teams, params):
     
     #return the difference between exposure values - how many exposures did the flights prevent
     return max(noTeamsPOD.E - afterTeamsPOD.E, 0)
-    
-def findVehicleRoutes(oR, rT, dcI):
-    '''Finds routes of minimum time taken, using Clarke-Wright algorithm.
-    Also includes routes to-and-from each POD using Dijkstra's shortest path algorithm.'''
-    openRoadTimes = np.full(np.shape(oR), 100000)   #BigM if no direct road from i to j. Otherwise, travel time in mins
-    for i in range(0,len(openRoadTimes)):
-        for j in range(0,len(openRoadTimes[i])):
-            if oR[i][j] == 1 and rT[i][j] != np.inf:
-                openRoadTimes[i][j] = rT[i][j]
-                if openRoadTimes[i][j] == np.inf:
-                    openRoadTimes[i][j] = 100000    #BigM easier to work with than infinity
-    #Calculate the savings travelling directly from each pair to each other produces
-    Savings = calcSavings(openRoadTimes, dcI)
-    #build up the vehicle routes according to the heuristic
-    routes = buildRoutes(Savings, dcI, openRoadTimes)
-    routeTimes = []
-    for route in routes:
-        routeTimes.append(calcRouteTime(route, openRoadTimes))
-        
-    #Add to the routes found, there-and-back routes for each possible POD (back to DC).
-    for i in range(0, len(openRoadTimes)):
-        if i == dcI:
-            continue
-        route = [dcI,i,dcI]
-        rTime = 2 * findShortestPath(dcI, i, openRoadTimes)[0]
-        if rTime < 100000:          #if the route is feasible, add it
-            routes.append(route)
-            routeTimes.append(rTime)   
-    return routes, routeTimes
-    
+  
 def calcSavings(oRT, dcI):
     S = np.zeros(np.shape(oRT))
     for i in range(0,len(oRT)):
@@ -736,75 +489,6 @@ def calcSavings(oRT, dcI):
             if i != j:
                 S[i][j] = oRT[dcI][i] + oRT[dcI][j] - oRT[i][j]        
     return S            
-    
-def buildRoutes(Savings, dcI, openRoadTimes):
-    routes = []    
-    inRoutes = np.full(len(Savings), False)
-    while np.amax(Savings) > 0:
-        #Select savings pairs in descending order to add to routes
-        rowMaxes = np.amax(Savings, axis=1)
-        #rowI, colI is the location pair with the highest savings
-        rowI = np.argmax(rowMaxes)
-        colI = np.where(rowMaxes[rowI] == Savings[rowI])[0][0]
-        Savings[rowI][colI] = 0
-        Savings[colI][rowI] = 0
-        if openRoadTimes[rowI][colI] > 90000:
-            #only allow this link if feasible (capacity), etc
-            continue
-        
-        if inRoutes[rowI] == inRoutes[colI] == False:
-            routes.append([rowI, colI])
-            inRoutes[rowI] = inRoutes[colI] = True
-        elif inRoutes[rowI] == inRoutes[colI] == True:
-            RrouteIndex = findPoint(routes, rowI, dcI)
-            CrouteIndex = findPoint(routes, colI, dcI)
-            #Neither POD is interior, and the PODs are not in the same route
-            if RrouteIndex != -1 and CrouteIndex != -1 and CrouteIndex != RrouteIndex:
-                if routes[RrouteIndex][0] == rowI:      #rowI must be last in its route
-                    routes[RrouteIndex].reverse()
-                if routes[CrouteIndex][-1] == colI:     #colI must be first in its route
-                    routes[CrouteIndex].reverse()
-            
-                routes[RrouteIndex].extend(routes[CrouteIndex])
-                if RrouteIndex != CrouteIndex:  
-                    del routes[CrouteIndex]
-        else:
-            if inRoutes[rowI] == True:      #the rowI is in a route already, colI not
-                routeIndex = findPoint(routes, rowI, dcI)
-                if routeIndex == -1:
-                    continue
-                
-                if routes[routeIndex][0] == rowI:
-                    routes[routeIndex].reverse()
-                    routes[routeIndex].append(colI)
-                elif routes[routeIndex][-1] == rowI:
-                    routes[routeIndex].append(colI)
-                else:
-                    print("Logical error.")
-                    quit()
-                inRoutes[colI] = True
-            else:                           #the colI is in a route already, rowI not
-                routeIndex = findPoint(routes, colI, dcI)
-                if routeIndex == -1:
-                    continue
-                
-                if routes[routeIndex][0] == colI:
-                    routes[routeIndex].reverse()
-                    routes[routeIndex].append(rowI)
-                elif routes[routeIndex][-1] == colI:
-                    routes[routeIndex].append(rowI)
-                else:
-                    quit()
-                inRoutes[rowI] = True
-                
-    #Need to add the visit to the DC at the start and end of each
-    for i in range(0,len(routes)):
-        routes[i].append(dcI)
-        routes[i].reverse()
-        routes[i].append(dcI)
-        routes[i].reverse()
-        
-    return routes
     
 def findPoint(routes, node, dcI):
     '''If the node is interior or the DC, returns -1. If the node is on an edge,
@@ -818,22 +502,6 @@ def findPoint(routes, node, dcI):
         if route[0] == node or route[-1] == node:
             return routeIndex
     return -1
-  
-def calcRouteTime(route, oRT):
-    '''Calculates the total time in minutes to travel the given route.
-    If the route contains any indirect links between nodes (where there is no passable road), 
-    use Dijkstra's shortest path algorithm to determine to time to traverse that link if possible.'''
-    routeTime = 0
-    for k in range(1, len(route)):
-        i = route[k-1]
-        j = route[k]
-        if oRT[i][j] == 100000:       #indirect link between nodes i and j
-            ijTime, ijPath = findShortestPath(i,j,oRT)
-            #ijTime is the time of the shortest path from i to j. ijPath, the actual shortest path.
-            routeTime += ijTime
-        else:                           #add time to travel direct link
-            routeTime += oRT[i][j]
-    return routeTime
   
 def findShortestPath(i,j,oRT):
     '''Finds the shortest path between i and j using Dijkstra's algorithm.'''  
@@ -1042,7 +710,7 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
     
 #     import matplotlib as mpl
 #     mpl.rcParams['figure.dpi'] = 150
-#     plt.savefig("SEIRvehicleD.pdf",bbox_inches='tight')
+#     plt.savefig("filename_figure.pdf",bbox_inches='tight')
     
     plt.show()
     
@@ -1112,10 +780,8 @@ def simulate(filename='Likasi.csv'):
     #===============================================================================
     # Initial Calculations
     #===============================================================================
-    PODs = readPODsFromFile(filename, maxVaccsFreePODday, maxVaccsFixedPODday, ruralTnt, urbanTnt)
+    PODs = readPODsFromFile(filename, maxVaccsTeamDay, turnout)
     podDistances = calcPODdistanceMatrix(PODs)
-    #numRoadsClosed, openRoads, roadTimes = calcRoadTimes(PODs, roadDistances, podDistances, roadCloseFactor)
-    #roadTimes = roadDistances   #for matadi only!
     MigrationProportions = calcMigration(PODs, podDistances, migrationIntensity)
     DCindex = findDC(PODs, podDistances)
     #print("The DC is placed in", PODs[DCindex])
@@ -1160,24 +826,6 @@ def simulate(filename='Likasi.csv'):
                                             monoDaysPotency)
                 totDroneDelvs += delivDetails[0]
                 totVaccs += delivDetails[1]
-            elif deliveryType == "vehicle":
-                vDeliveredToday, minsDr = deliverByVehicle(openRoads, roadTimes, DCindex, 
-                                            strategy, PODs, workingMinutesPerDay, 
-                                            vehicleCapacities, numVehicles, params, 
-                                            monoDaysPotency, t, maxTripLength, deliveryType)
-                totVaccs += vDeliveredToday
-                totMinsDriven += minsDr
-            elif deliveryType == "combined":
-                vaccsByV, minsDriven = deliverByVehicle(openRoads, roadTimes, DCindex, 
-                                            strategy, PODs, workingMinutesPerDay, 
-                                            vehicleCapacities, numVehicles, params, 
-                                            monoDaysPotency, t, maxTripLength, deliveryType)
-                dDelivs, vaccsByD = deliverByDrone(strategy, t, PODs, workingMinutesPerDay, 
-                                            droneVaccineCapacity, numberOfDrones, params, 
-                                            monoDaysPotency)
-                totVaccs += vaccsByD + vaccsByV
-                totDroneDelvs += dDelivs
-                totMinsDriven += minsDriven
             elif deliveryType != "none":            #no vaccinations happen if deliveryType is none.
                 print("Invalid delivery type selected.")
                 quit()        
@@ -1194,8 +842,8 @@ def simulate(filename='Likasi.csv'):
             #print("Intervention is over")
         elif not waitingForIntervention and t <= interventionStartTime:
             for pod in PODs:
-                if pod.isUrban and pod.I/pod.N > interventionCaseRatio:
-                    #if a confirmed measles case found in a major town, then decide to intervene.
+                if pod.I/pod.N > interventionCaseRatio:
+                    #if a confirmed measles case found in a town, then decide to intervene.
                     interventionStartTime = t + interventionLeadTime
                     waitingForIntervention = True
                     #print("The epidemic has been detected in", pod.name, "! Intervention will begin on day", interventionStartTime)            
@@ -1220,14 +868,6 @@ def simulate(filename='Likasi.csv'):
     #print("\nThe total number of deaths is:", deaths)
     
     if deliveryType == "drone":
-        droneCost = totDroneDelvs * costPerFlight
-        #print("Total drone flight cost: $", droneCost,",for", totDroneDelvs, "flights.")
-    elif deliveryType == "vehicle":
-        drivingCost = totMinsDriven/60 * 60 * 7/100 * 1.36     #60kph, 7l/100km, $1.36 per litre
-        #print("Total estimated driving cost: $", int(drivingCost), "for a total of", int(totMinsDriven/60), "hours of driving.")    
-    elif deliveryType == "combined":
-        drivingCost = totMinsDriven/60 * 60 * 7/100 * 1.36     #60kph, 7l/100km, $1.36 per litre
-        #print("Total estimated driving cost: $", "for a total of", int(totMinsDriven/60), "hours of driving.")    
         droneCost = totDroneDelvs * costPerFlight
         #print("Total drone flight cost: $", droneCost,",for", totDroneDelvs, "flights.")
     
@@ -1279,18 +919,13 @@ interventionLength = 28             #number of days the intervention lasts for
 workingMinutesPerDay = 660          #11 working hours per day: 7am to 6pm
 workDaysPerWeek = 7                 #number of working days per week for MSF teams
 numTeams = 15                       #number of vaccination teams in the field
-maxVaccsFixedPODday = 450           #fixed teams can vaccinate up to 450 per day
-maxVaccsFreePODday = 250            #free teams can vaccinate up to 250 per day
-ruralTnt = 450                      #rural areas, turnout is 300-600
-urbanTnt = 900                      #urban areas, turnout is 800-1000
+maxVaccsTeamDay = 450               #teams can vaccinate up to 450 per day
+turnout = 900                       #turnout is 800-1000
 #delivery details
 flightLaunchTime = 10               #minutes per flight, to set up takeoff
 droneSpeed = 100                    #100 kilometres per hour     
 numberOfDrones = 2                  #number of drones
-numVehicles = 2                     #number of land-based delivery vehicles
 droneVaccineCapacity = 60           #number of vaccine doses per drone
-vehicleCapacities = [1050,200]      #number of vaccine doses per vehicle
-roadCloseFactor = 1                 #prob that road is open is divided by this factor. 1<rCF
 #costs
 costPerDoseMono = 2.85              #the cost per dose of monodose measles vaccine
 costPerDose10 = 1.284               #the cost per dose of 10-dose measles vaccine
@@ -1298,8 +933,7 @@ costPerFlight = 17                  #$17 per drone flight
 #strategies
 strategy = 'I'                      #I = infections, S = Susceptible, N = Total Pop., EPE = Expected Prevented Exposures
 teamStrategy = 'N'                  #I, S, N, I/N, spread
-deliveryType = 'vehicle'            #"none", "drone" or "vehicle", or "combined"
-maxTripLength = 180                 #if deliveryType = combined, this is the cutoff in mins for vehicle trip length
+deliveryType = 'drone'            #"none", "drone"
 
 print(simulate("Likasi.csv"))
 
