@@ -58,31 +58,32 @@ def readPODsFromFile(filename, maxVaccsTeamDay, turnout, targetedVaccination, va
         podmapY = int(lineContents[2])
         podXY = (podmapX,podmapY)                     #set x- and y- coords to unscaled values.
 
-        #Split the population according to vaccination rate
         podN = int(lineContents[3])
-        podV, podS, podR = 0,0,0
-        if targetedVaccination:
-            podV = int(podN * vaccinationRate)
-            podS = podN - podV
-        else:
-            podR = int(podN * vaccinationRate)
-            podS = podN - podR
-
         try: 
             podE = int(lineContents[4])
         except ValueError:
             # if there is a ValueError, set podE = 0
             podE = 0
-
         try:
             podI = int(lineContents[5])
         except ValueError:
             # if there is a ValueError, set podI = 0
             podI = 0
 
+        #Split population according to vaccination rate
+        podV, podS, podR = 0,0,0
+        notInfected = podN - podE - podI
+        if targetedVaccination:
+            podV = int(notInfected * vaccinationRate)
+            podS = notInfected - podV
+        else:
+            podR = int(notInfected * vaccinationRate)
+            podS = notInfected - podR
+
         podflightTime = np.inf
         pod = POD(podName,podXY,podN,podS,podE,podI,podR,podV,podflightTime,podMaxVaccPD,podTrnt,podmapX,podmapY)
         PODs.append(pod)
+        print(vars(pod))
 
     return PODs
     
@@ -166,8 +167,8 @@ def calcMaxVaccinesNeeded50(pod, numDays):
     stock = pod.vaccinesInStock
     actualValue = max(0, min(unvaccinated, maxVaccsPossible, turnout) - stock)
     #multipleOf50 = np.ceil(actualValue/50) * 50     #since vaccines in boxes of 50
-    multipleOf50 = actualValue
-    return int(multipleOf50)
+    #return int(multipleOf50)
+    return int(actualValue)
 
 def calcTurnout(pod):
     mean = pod.averageTurnout
@@ -429,7 +430,6 @@ def deliverByDrone(strategy, t, PODs, workingMinutes, droneVC, numDrones, params
     else:                   #simple delivery schedule
         delivDetails = deliverVaccinesByDroneSimple(strategy, t, PODs, workingMinutes, droneVC, numDrones, params, mdP)
     return delivDetails
-      
       
 def choosePODtoFlyTo(strategy, PODs, time, workingMinutesPerDay, mdP):
     '''Selects the POD with the highest number of susceptible people, among 
@@ -923,7 +923,7 @@ simulationRuntime = 200             #days to run the simulation for
 #Measles SEIR parameters
 exposedDays = 10                    #number of days a patient is exposed for without symptoms
 infectiousDays = 8                  #number of days a patient is infectious for
-deathRate = 0.10 * 1/infectiousDays #the proportion of infected patients that die per day
+deathRate = 0.03 * 1/infectiousDays #daily death rate. From wolfson2009estimates - 3.29 mean, 0.05-6% WHO estimate for low income countries
 R0 = 15                             #basic reproductive number of the epidemic
 params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
 migrationIntensity = 1              #factor by which migration is multiplied. 2 means more migration.
@@ -940,7 +940,7 @@ workingMinutesPerDay = 660          #11 working hours per day: 7am to 6pm
 workDaysPerWeek = 7                 #number of working days per week for MSF teams
 numTeams = 15                       #number of vaccination teams in the field
 maxVaccsTeamDay = 450               #teams can vaccinate up to 450 per day
-turnout = 900                       #turnout is 800-1000
+turnout = 999999999                 #turnout was 900, now inf to effectively remove its impact.
 #delivery details
 flightLaunchTime = 10               #minutes per flight, to set up takeoff
 droneSpeed = 100                    #100 kilometres per hour     
@@ -960,10 +960,8 @@ maxDistance = 30                    #The distance in km that the max inter-locat
 
 print(simulate("Generic_network_city.csv"))
 
-#TODO: Fix death rate. Make it like 1% maybe.
-#TODO: Fix turnout. Maybe remove it as a constraint?
-#TODO: Confirm the delivery-payload-up-to-60 rounding is valid
 #TODO: Fix the spread team allocation method
 #TODO: Implement 'Big-M' vaccine deliveries to ensure vaccine stock is not a constraint - only team allocs
+#TODO: Confirm the delivery-payload-up-to-60 rounding is valid
 #TODO: Add delete protection to this branch of the Git repo.
 #TODO: Ensure validity of parameter values
