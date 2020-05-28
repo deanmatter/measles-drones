@@ -83,8 +83,6 @@ def readPODsFromFile(filename, maxVaccsTeamDay, turnout, targetedVaccination, va
         podflightTime = np.inf
         pod = POD(podName,podXY,podN,podS,podE,podI,podR,podV,podflightTime,podMaxVaccPD,podTrnt,podmapX,podmapY)
         PODs.append(pod)
-        print(vars(pod))
-
     return PODs
     
 def scaleCoordinatesAndDistances(unscaledDistances,PODs,maxDistance):
@@ -563,18 +561,21 @@ def findShortestPath(i,j,oRT):
   
 def assignTeams(PODs, numTeams, tStrategy):
     if tStrategy == 'spread':
+        # Splits teams equally among locations, randomly assigns remaining teams.
         remainingTeams = numTeams
         for pod in PODs:
-            pod.teamsAtPOD = min(roundUsingProb(numTeams/len(PODs)), remainingTeams)
-            remainingTeams -= pod.teamsAtPOD
-            pod.maxVaccinationsPerDay = pod.vaccsPerTeamDay * pod.teamsAtPOD
+            if remainingTeams > 0:
+                pod.teamsAtPOD = min(roundUsingProb(numTeams/len(PODs)), remainingTeams)
+                remainingTeams -= pod.teamsAtPOD
+                pod.maxVaccinationsPerDay = pod.vaccsPerTeamDay * pod.teamsAtPOD
+            else:
+                break
             
-        if remainingTeams > 0:
+        while remainingTeams > 0:
             randIndex = int(len(PODs) * random.random())
-            PODs[randIndex].teamsAtPOD += remainingTeams
-            remainingTeams = 0
+            PODs[randIndex].teamsAtPOD += 1
+            remainingTeams -= 1
             PODs[randIndex].maxVaccinationsPerDay = PODs[randIndex].vaccsPerTeamDay * PODs[randIndex].teamsAtPOD
-        
     elif tStrategy == 'S':
         podSs = np.zeros(np.shape(PODs))
         for i in range(0,len(PODs)):
@@ -952,7 +953,7 @@ costPerDose10 = 1.284               #the cost per dose of 10-dose measles vaccin
 costPerFlight = 17                  #$17 per drone flight
 #strategies
 strategy = 'I'                      #I = infections, S = Susceptible, N = Total Pop., EPE = Expected Prevented Exposures
-teamStrategy = 'N'                  #I, S, N, I/N, spread
+teamStrategy = 'spread'             #I, S, N, I/N, spread
 deliveryType = 'drone'              #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
@@ -960,8 +961,8 @@ maxDistance = 30                    #The distance in km that the max inter-locat
 
 print(simulate("Generic_network_city.csv"))
 
-#TODO: Fix the spread team allocation method
 #TODO: Implement 'Big-M' vaccine deliveries to ensure vaccine stock is not a constraint - only team allocs
 #TODO: Confirm the delivery-payload-up-to-60 rounding is valid
 #TODO: Add delete protection to this branch of the Git repo.
 #TODO: Ensure validity of parameter values
+#TODO: Investigate potential absolute max N vacc delivery strategy (not per minute).
