@@ -158,11 +158,12 @@ def calcMigration(PODs, podDistances, migrationIntensity):
     #print(migrations)
     return migrations
 
-def calcMaxVaccinesNeeded50(pod, numDays):
+def calcVaccinesNeeded(pod, numDays):
     unvaccinated = pod.S + pod.E + pod.R
     maxVaccsPossible = numDays * pod.maxVaccinationsPerDay
     turnout = pod.averageTurnout * numDays * pod.teamsAtPOD
     stock = pod.vaccinesInStock
+    # Vaccines needed is number of likely vaccinations next3days, less the stock on hand.
     actualValue = max(0, min(unvaccinated, maxVaccsPossible, turnout) - stock)
     #multipleOf50 = np.ceil(actualValue/50) * 50     #since vaccines in boxes of 50
     #return int(multipleOf50)
@@ -337,7 +338,7 @@ def expireVaccines(PODs, t):
             #print(d.doses, "vaccines have expired in", pod.name)
     return expiredVs
 
-def deliverVaccinesByDroneSimple(strategy, t, PODs, workingMinutesPerDay, droneVC, numDrones, params, mdP):
+def deliverVaccinesByDroneSimple(vaccStrategy, t, PODs, workingMinutesPerDay, droneVC, numDrones, params, mdP):
     deliveries = 0
     vaccinesDelivered = 0
     times = np.zeros(numDrones)     #no launch staggering
@@ -345,18 +346,16 @@ def deliverVaccinesByDroneSimple(strategy, t, PODs, workingMinutesPerDay, droneV
     dronesFinished = np.full(numDrones, False)
     while all(dronesFinished) == False:
         for drone in range(0,numDrones):
-            pod = choosePODtoFlyTo(strategy, PODs, times[drone], workingMinutesPerDay, mdP)
-            if pod != -1:
+            pod = choosePODtoFlyTo(vaccStrategy, PODs, times[drone], workingMinutesPerDay, mdP)
+            if pod != -1:       # this ensures the pod needs vaccines, is not the DC, and can be delivered to in time
                 times[drone] += pod.flightTime
-                deliveryQty = min(60*np.ceil(calcMaxVaccinesNeeded50(pod,mdP)/60), droneVC)
-                if deliveryQty == 0:
-                    continue
+                deliveryQty = droneVC
                 pod.vaccinesInStock += deliveryQty
                 deliveries += 1
                 vaccinesDelivered += deliveryQty
                 thisDelivery = vaccineDelivery(deliveryQty * 1, t + mdP)
                 pod.vaccineDeliveries.append(thisDelivery)
-                displayTime = str(int(times[drone]/60 + 7)) + ":" + "{:02d}".format(int(times[drone]%60))
+                #displayTime = str(int(times[drone]/60 + 7)) + ":" + "{:02d}".format(int(times[drone]%60))
                 #print(displayTime,"- Drone", drone+1, " delivered", deliveryQty,"vaccines to", pod.name)
             else:
                 dronesFinished[drone] = True
@@ -390,7 +389,10 @@ def deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, param
             break
         pod = PODs[podIndex]
         
-        deliveryQty = min(np.ceil(calcMaxVaccinesNeeded50(pod,mdP)/60)*60, droneVC)
+        deliveryQty = 0
+        if calcVaccinesNeeded(pod,mdP) > 0:
+            deliveryQty = droneVC
+
         if deliveryQty == 0:
             #the POD does not need any vaccines
             ratios[podIndex] = 0
@@ -422,27 +424,40 @@ def findAvailDrone(droneAvail, time, pod, workMins):
     else:
         return -1               #else return 'no drone available', essentially.
    
-def deliverByDrone(strategy, t, PODs, workingMinutes, droneVC, numDrones, params, mdP):
-    if strategy == 'EPE':     #clever exposure-prevention delivery schedule
+def deliverByDrone(vaccStrategy, t, PODs, workingMinutes, droneVC, numDrones, params, mdP):
+    ''' Depending on vaccine delivery strategy, delivers vaccines by drone using helper methods.'''
+    if vaccStrategy == 'EPE':     #clever exposure-prevention delivery schedule
         delivDetails = deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, params, mdP)
+    elif vaccStrategy == 'uncapped':
+        delivDetails = deliverUncappedVaccines(t, PODs, mdP)
     else:                   #simple delivery schedule
-        delivDetails = deliverVaccinesByDroneSimple(strategy, t, PODs, workingMinutes, droneVC, numDrones, params, mdP)
+        delivDetails = deliverVaccinesByDroneSimple(vaccStrategy, t, PODs, workingMinutes, droneVC, numDrones, params, mdP)
     return delivDetails
-      
-def choosePODtoFlyTo(strategy, PODs, time, workingMinutesPerDay, mdP):
-    '''Selects the POD with the highest number of susceptible people, among 
-    PODs with less than 2000 vaccines. Returns -1 if all PODs have enough vaccines.'''
+
+def deliverUncappedVaccines(t, PODs, mdP):
+    deliveries = 0
+    vaccinesDelivered = 0
+    deliveryQty = 999999                 # arbitrarily high. Can't be np.inf since that denotes the DC.
+    for pod in PODs:
+        deliveries += 1
+        vaccinesDelivered += deliveryQty
+        pod.vaccinesInStock += deliveryQty
+        thisDelivery = vaccineDelivery(deliveryQty * 1, t + mdP)
+        pod.vaccineDeliveries.append(thisDelivery)
+    return deliveries, vaccinesDelivered
+
+def choosePODtoFlyTo(vaccStrategy, PODs, time, workingMinutesPerDay, mdP):
     maxV = -1
     maxpod = -1
     for pod in PODs:
         #Different strategies for selecting the order of deliveries
         if pod.flightTime == 0:
             continue
-        elif strategy == 'S':
+        elif vaccStrategy == 'S':
             podVal = pod.S / pod.flightTime
-        elif strategy == 'I':
+        elif vaccStrategy == 'I':
             podVal = pod.I / pod.flightTime
-        elif strategy == 'N':
+        elif vaccStrategy == 'N':
             podVal = pod.N / pod.flightTime
         else:
             print("Invalid delivery strategy selected. Choose S, I, N, or EPE.")
@@ -451,8 +466,8 @@ def choosePODtoFlyTo(strategy, PODs, time, workingMinutesPerDay, mdP):
         #the drone flight must be able to return in time
         if time + pod.flightTime <= workingMinutesPerDay:
             #there's no need for more vaccines than people to vaccinate
-            if calcMaxVaccinesNeeded50(pod, mdP) > 0:
-                #no drone flights to DC, and vaccine stock can't exceed max stock
+            if calcVaccinesNeeded(pod, mdP) > 0:
+                #no drone flights to DC
                 if podVal > maxV and pod.flightTime != 0:
                     maxV = podVal
                     maxpod = pod
@@ -848,7 +863,7 @@ def simulate(filename='Likasi.csv'):
             
             #deliver vaccines
             if deliveryType == "drone":
-                delivDetails = deliverByDrone(strategy, t, PODs, workingMinutesPerDay, 
+                delivDetails = deliverByDrone(vaccStrategy, t, PODs, workingMinutesPerDay, 
                                             droneVaccineCapacity, numberOfDrones, params, 
                                             monoDaysPotency)
                 totDroneDelvs += delivDetails[0]
@@ -941,7 +956,7 @@ workingMinutesPerDay = 660          #11 working hours per day: 7am to 6pm
 workDaysPerWeek = 7                 #number of working days per week for MSF teams
 numTeams = 15                       #number of vaccination teams in the field
 maxVaccsTeamDay = 450               #teams can vaccinate up to 450 per day
-turnout = 999999999                 #turnout was 900, now inf to effectively remove its impact.
+turnout = 999999                 #turnout was 900, now inf to effectively remove its impact.
 #delivery details
 flightLaunchTime = 10               #minutes per flight, to set up takeoff
 droneSpeed = 100                    #100 kilometres per hour     
@@ -952,17 +967,16 @@ costPerDoseMono = 2.85              #the cost per dose of monodose measles vacci
 costPerDose10 = 1.284               #the cost per dose of 10-dose measles vaccine
 costPerFlight = 17                  #$17 per drone flight
 #strategies
-strategy = 'I'                      #I = infections, S = Susceptible, N = Total Pop., EPE = Expected Prevented Exposures
-teamStrategy = 'spread'             #I, S, N, I/N, spread
+vaccStrategy = 'EPE'                #I, S, N, EPE, uncapped
+teamStrategy = 'EPE'                #I, S, N, EPE, I/N, spread
 deliveryType = 'drone'              #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
-maxDistance = 30                    #The distance in km that the max inter-location distance is scaled to
+maxDistance = 100                    #The distance in km that the max inter-location distance is scaled to
 
 print(simulate("Generic_network_city.csv"))
 
-#TODO: Implement 'Big-M' vaccine deliveries to ensure vaccine stock is not a constraint - only team allocs
-#TODO: Confirm the delivery-payload-up-to-60 rounding is valid
-#TODO: Add delete protection to this branch of the Git repo.
+#TODO: Confirm the calcVaccinesNeeded method usage is valid.
 #TODO: Ensure validity of parameter values
-#TODO: Investigate potential absolute max N vacc delivery strategy (not per minute).
+#TODO: Investigate potential absolute max N vacc delivery vaccStrategy (not per minute).
+#TODO: Merge this branch to master of git repo.
