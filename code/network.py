@@ -1317,3 +1317,6 @@ maxTripLength = 180                 #if deliveryType = combined, this is the cut
 #changes made in calcMaxVaccinesNeeded50, and both deliverByDrones methods, using np.ceil to round up to multips of 60
 
 print(simulate())
+
+# TODO: To make this work as it did for honours results, you need to return the 5 minute drone delivery staggering, 
+# and fix the file inputs to use absolute paths. 
