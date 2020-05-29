@@ -376,7 +376,7 @@ def deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, param
     droneAvail = np.zeros(numDrones)
     while time <= workingMinutes:
         #select POD with highest ratio of prevented exposures to flight time
-        if np.max(ratios) > 0.01:
+        if np.max(ratios) > 0:
             podIndex = np.argmax(ratios)
             #ensure flight ends before the end of the day
             while PODs[podIndex].flightTime + time > workingMinutes:
@@ -413,7 +413,9 @@ def deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, param
         pod.vaccineDeliveries.append(thisDelivery)
         ratios[podIndex] = flightPreventedExposures(pod, droneVC, params, 1) / pod.flightTime
         displayTime = str(int((droneAvail[droneIndex])/60 + 7)) + ":" + "{:02d}".format((int(droneAvail[droneIndex]))%60)
-        #print(displayTime,"- Drone", droneIndex+1, " delivered", deliveryQty,"vaccines to", pod.name)
+        print(displayTime,"- Drone", droneIndex+1, " delivered", deliveryQty,
+            "vaccines to", pod.name, "which still needs", calcVaccinesNeeded(pod,mdP)
+            )
         #time += 5              #there is no need to increase (stagger) the time after a delivery anymore
     return deliveries, vaccinesDelivered
    
@@ -846,7 +848,7 @@ def simulate(filename='Likasi.csv'):
     # Simulation - Main Daily Loop
     #===============================================================================    
     for t in range(0, simulationRuntime):
-        #print("\n",t,":")
+        print("\n",t,":")
             
         #Progress the SEIR models and migration by one day
         PODs = progressEpidemicByOneDay(PODs, params, MigrationProportions)
@@ -891,8 +893,7 @@ def simulate(filename='Likasi.csv'):
                     #print("The epidemic has been detected in", pod.name, "! Intervention will begin on day", interventionStartTime)            
                     break
         
-        drivingCost = totMinsDriven/60 * 60 * 7/100 * 1.36  #60kph, 7l/100km, $1.36 per litre
-        deliveryCost = totDroneDelvs * costPerFlight + drivingCost
+        deliveryCost = totDroneDelvs * costPerFlight
         vaccineCost = totVaccs * costPerDoseMono
             
         updatePlotHistory(PODs, plots)
@@ -951,7 +952,7 @@ vaccinationRate = 0.7               #70% vaccination rate at first. Confirm this
 #intervention parameters
 interventionLeadTime = 15           #number of days before vaccination starts
 interventionCaseRatio = 0.005       #ratio of I/S in a town before detection
-interventionLength = 28             #number of days the intervention lasts for
+interventionLength = 50             #number of days the intervention lasts for
 workingMinutesPerDay = 660          #11 working hours per day: 7am to 6pm
 workDaysPerWeek = 7                 #number of working days per week for MSF teams
 numTeams = 15                       #number of vaccination teams in the field
@@ -960,7 +961,7 @@ turnout = 999999                 #turnout was 900, now inf to effectively remove
 #delivery details
 flightLaunchTime = 10               #minutes per flight, to set up takeoff
 droneSpeed = 100                    #100 kilometres per hour     
-numberOfDrones = 2                  #number of drones
+numberOfDrones = 5                  #number of drones
 droneVaccineCapacity = 60           #number of vaccine doses per drone
 #costs
 costPerDoseMono = 2.85              #the cost per dose of monodose measles vaccine
