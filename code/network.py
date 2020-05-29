@@ -998,9 +998,11 @@ targetedVaccination = False         #True: already-vaccd people go to V. False: 
 #input dataset
 maxDistance = 100                    #The distance in km that the max inter-location distance is scaled to
 
-print(simulate("Generic_network_monocentric.csv"))
+print(simulate("Generic_network_city.csv"))
 
+#TODO: Debug why EPE values are updated to increase
 #TODO: Confirm the calcVaccinesNeeded method usage is valid.
+
 #TODO: Ensure validity of parameter values
-#TODO: Investigate potential absolute max N vacc delivery vaccStrategy (not per minute).
+#TODO: Add absolute S, N, I strategies
 #TODO: Merge this branch to master of git repo.
