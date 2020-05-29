@@ -1,5 +1,5 @@
 import numpy as np
-np.set_printoptions(precision=1, suppress=True, linewidth=2000)
+np.set_printoptions(precision=3, suppress=True, linewidth=2000)
 import random
 from matplotlib import pyplot as plt
 from matplotlib import patches
@@ -190,7 +190,7 @@ def progressEpidemicByOneDay(PODs, params, MigrationProportions):
         Rarr[i] = PODs[i].R
         Varr[i] = PODs[i].vaccinated
         deaths += PODs[i].deaths
-    #print(sum(Iarr))
+    print(Iarr)
           
     i = 0
     for pod in PODs:
@@ -355,8 +355,10 @@ def deliverVaccinesByDroneSimple(vaccStrategy, t, PODs, workingMinutesPerDay, dr
                 vaccinesDelivered += deliveryQty
                 thisDelivery = vaccineDelivery(deliveryQty * 1, t + mdP)
                 pod.vaccineDeliveries.append(thisDelivery)
-                #displayTime = str(int(times[drone]/60 + 7)) + ":" + "{:02d}".format(int(times[drone]%60))
-                #print(displayTime,"- Drone", drone+1, " delivered", deliveryQty,"vaccines to", pod.name)
+                displayTime = str(int(times[drone]/60 + 7)) + ":" + "{:02d}".format(int(times[drone]%60))
+                print(displayTime,"- Drone", drone+1, " delivered", deliveryQty,"vaccines to",
+                        pod.name, "which still needs", calcVaccinesNeeded(pod,mdP)
+                    )
             else:
                 dronesFinished[drone] = True
     return deliveries, vaccinesDelivered
@@ -367,11 +369,18 @@ def deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, param
     
     n = len(PODs)
     ratios = np.zeros(n)
+    EPE = np.zeros(n)
     for i in range(0,n):
         pod = PODs[i]
         if pod.vaccinesInStock != np.inf:
             ratios[i] = flightPreventedExposures(pod, droneVC, params, 1) / pod.flightTime
-    
+            EPE[i] = flightPreventedExposures(pod, droneVC, params, 1)
+
+    print("EPE values")
+    print(EPE)
+    print("EPE/min ratios:")
+    print(ratios)
+
     time = 0
     droneAvail = np.zeros(numDrones)
     while time <= workingMinutes:
@@ -414,7 +423,8 @@ def deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, param
         ratios[podIndex] = flightPreventedExposures(pod, droneVC, params, 1) / pod.flightTime
         displayTime = str(int((droneAvail[droneIndex])/60 + 7)) + ":" + "{:02d}".format((int(droneAvail[droneIndex]))%60)
         print(displayTime,"- Drone", droneIndex+1, " delivered", deliveryQty,
-            "vaccines to", pod.name, "which still needs", calcVaccinesNeeded(pod,mdP)
+            "vaccines to", pod.name, "which still needs", calcVaccinesNeeded(pod,mdP), 
+                        "vaccines. EPE updated to:", ratios[podIndex]            
             )
         #time += 5              #there is no need to increase (stagger) the time after a delivery anymore
     return deliveries, vaccinesDelivered
@@ -962,20 +972,20 @@ turnout = 999999                 #turnout was 900, now inf to effectively remove
 flightLaunchTime = 10               #minutes per flight, to set up takeoff
 droneSpeed = 100                    #100 kilometres per hour     
 numberOfDrones = 5                  #number of drones
-droneVaccineCapacity = 60           #number of vaccine doses per drone
+droneVaccineCapacity = 600           #number of vaccine doses per drone
 #costs
 costPerDoseMono = 2.85              #the cost per dose of monodose measles vaccine
 costPerDose10 = 1.284               #the cost per dose of 10-dose measles vaccine
 costPerFlight = 17                  #$17 per drone flight
 #strategies
 vaccStrategy = 'EPE'                #I, S, N, EPE, uncapped
-teamStrategy = 'EPE'                #I, S, N, EPE, I/N, spread
+teamStrategy = 'spread'                #I, S, N, EPE, I/N, spread
 deliveryType = 'drone'              #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
 maxDistance = 100                    #The distance in km that the max inter-location distance is scaled to
 
-print(simulate("Generic_network_city.csv"))
+print(simulate("Generic_network_monocentric.csv"))
 
 #TODO: Confirm the calcVaccinesNeeded method usage is valid.
 #TODO: Ensure validity of parameter values
