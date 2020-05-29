@@ -213,10 +213,10 @@ def progressSinglePOD(pod, params):
     deaths = pod.deaths
     
     #calculation of changes in SEIR model
-    newExposures = roundUsingProb(beta * S * I / N)
-    newInfectious = roundUsingProb(sigma * E)
-    newRecoveries = roundUsingProb(gamma * I)
-    newDeaths = roundUsingProb(mu * I)
+    newExposures = roundPeopleUsingProb(beta * S * I / N)
+    newInfectious = roundPeopleUsingProb(sigma * E)
+    newRecoveries = roundPeopleUsingProb(gamma * I)
+    newDeaths = roundPeopleUsingProb(mu * I)
     pod.last3E.append(newExposures)
     
     #SEIR updates for the pod
@@ -228,11 +228,11 @@ def progressSinglePOD(pod, params):
         
 def migratePOD(pod, i, todaysMigration, Sarr, Earr, Iarr, Rarr, Varr):
     migrationIn = todaysMigration[:,i]
-    pod.S = roundUsingProb(np.dot(Sarr, migrationIn))
-    pod.E = roundUsingProb(np.dot(Earr, migrationIn))
-    pod.I = roundUsingProb(np.dot(Iarr, migrationIn))
-    pod.R = roundUsingProb(np.dot(Rarr, migrationIn))
-    pod.vaccinated = roundUsingProb(np.dot(Varr, migrationIn))
+    pod.S = roundPeopleUsingProb(np.dot(Sarr, migrationIn))
+    pod.E = roundPeopleUsingProb(np.dot(Earr, migrationIn))
+    pod.I = roundPeopleUsingProb(np.dot(Iarr, migrationIn))
+    pod.R = roundPeopleUsingProb(np.dot(Rarr, migrationIn))
+    pod.vaccinated = roundPeopleUsingProb(np.dot(Varr, migrationIn))
     pod.N = pod.S + pod.E + pod.I + pod.R + pod.vaccinated + pod.deaths
       
 def vaccinate(PODs):
@@ -712,6 +712,19 @@ def roundUsingProb(val):
     else:
         val = int(val)
     return val
+
+def roundPeopleUsingProb(val):
+    '''Identical to roundUsingProb, but used for people-related rounding. 
+        This way, it's easier to switch between using floats to denote S,E,I and R,
+        and using probabilistically rounded integers.
+    '''
+    return val          #if uncommented, this returns decimals instead of rounded values.
+
+    if val % 1 > random.random():
+        val = int(val) + 1
+    else:
+        val = int(val)
+    return val
    
 def plotPOD(daysOfIntervention, plots, podIndex, podName):
     plt.plot(np.arange(daysOfIntervention), plots[podIndex][0], label='Susceptible')
@@ -971,8 +984,8 @@ turnout = 999999                 #turnout was 900, now inf to effectively remove
 #delivery details
 flightLaunchTime = 10               #minutes per flight, to set up takeoff
 droneSpeed = 100                    #100 kilometres per hour     
-numberOfDrones = 5                  #number of drones
-droneVaccineCapacity = 600           #number of vaccine doses per drone
+numberOfDrones = 2                  #number of drones
+droneVaccineCapacity = 60           #number of vaccine doses per drone
 #costs
 costPerDoseMono = 2.85              #the cost per dose of monodose measles vaccine
 costPerDose10 = 1.284               #the cost per dose of 10-dose measles vaccine
