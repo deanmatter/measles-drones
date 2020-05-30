@@ -190,7 +190,7 @@ def progressEpidemicByOneDay(PODs, params, MigrationProportions):
         Rarr[i] = PODs[i].R
         Varr[i] = PODs[i].vaccinated
         deaths += PODs[i].deaths
-    print(Iarr)
+    #print(Iarr)
           
     i = 0
     for pod in PODs:
@@ -213,10 +213,10 @@ def progressSinglePOD(pod, params):
     deaths = pod.deaths
     
     #calculation of changes in SEIR model
-    newExposures = roundPeopleUsingProb(beta * S * I / N)
-    newInfectious = roundPeopleUsingProb(sigma * E)
-    newRecoveries = roundPeopleUsingProb(gamma * I)
-    newDeaths = roundPeopleUsingProb(mu * I)
+    newExposures = beta * S * I / N
+    newInfectious = sigma * E
+    newRecoveries = gamma * I
+    newDeaths = mu * I
     pod.last3E.append(newExposures)
     
     #SEIR updates for the pod
@@ -228,11 +228,11 @@ def progressSinglePOD(pod, params):
         
 def migratePOD(pod, i, todaysMigration, Sarr, Earr, Iarr, Rarr, Varr):
     migrationIn = todaysMigration[:,i]
-    pod.S = roundPeopleUsingProb(np.dot(Sarr, migrationIn))
-    pod.E = roundPeopleUsingProb(np.dot(Earr, migrationIn))
-    pod.I = roundPeopleUsingProb(np.dot(Iarr, migrationIn))
-    pod.R = roundPeopleUsingProb(np.dot(Rarr, migrationIn))
-    pod.vaccinated = roundPeopleUsingProb(np.dot(Varr, migrationIn))
+    pod.S = np.dot(Sarr, migrationIn)
+    pod.E = np.dot(Earr, migrationIn)
+    pod.I = np.dot(Iarr, migrationIn)
+    pod.R = np.dot(Rarr, migrationIn)
+    pod.vaccinated = np.dot(Varr, migrationIn)
     pod.N = pod.S + pod.E + pod.I + pod.R + pod.vaccinated + pod.deaths
       
 def vaccinate(PODs):
@@ -258,6 +258,7 @@ def vaccinate(PODs):
     return totVaccsGiven, vaccsGivenDC
 
 def vaccinateOnePOD(pod):    
+    #print("\nVaccinating:-----------------------")
     if pod.maxVaccinationsPerDay == 0:
         return 0
     
@@ -277,17 +278,24 @@ def vaccinateOnePOD(pod):
         return 0
     SturnoutProp = pod.S * 1.0 / (pod.S + pod.E + pod.R)
     EturnoutProp = pod.E * 1.0 / (pod.S + pod.E + pod.R)
+    #print("Sprop",SturnoutProp,"Eprop",EturnoutProp)
     
     propE72hrs = 0              #proportion of E that is recently enough exposed to be vaccd
     if pod.E > 0:
         propE72hrs = (podE72hrs/pod.E)
+    #print("E72/E prop",propE72hrs)
         
-    vaccinesGiven = int(min(turnout, pod.vaccinesInStock, maxVaccinations))      
+    vaccinesGiven = min(turnout, pod.vaccinesInStock, maxVaccinations)
     
-    numEffectiveSvaccinations = int(vaccinesGiven * SturnoutProp * vaccineEffectiveness)
-    numEffectiveEvaccinations = int(vaccinesGiven * EturnoutProp * propE72hrs *  prophylaxis72hrSuccessRate)
-    #numRvaccinations = vaccinesGiven - numEffectiveEvaccinations - numEffectiveSvaccinations
-    numRvaccinations = max(int(vaccinesGiven * (1-SturnoutProp-EturnoutProp)),0)
+    #print("vaccines Given",vaccinesGiven)
+
+    numEffectiveSvaccinations = vaccinesGiven * SturnoutProp * vaccineEffectiveness
+    #print("effective s",numEffectiveSvaccinations)
+    numEffectiveEvaccinations = vaccinesGiven * EturnoutProp * propE72hrs *  prophylaxis72hrSuccessRate
+    #print("effective E",numEffectiveEvaccinations)
+
+    numRvaccinations = max(vaccinesGiven * (1-SturnoutProp-EturnoutProp),0)
+    #print("number to R",numRvaccinations)
     pod.S -= numEffectiveSvaccinations
     pod.E -= numEffectiveEvaccinations
     pod.R -= numRvaccinations
@@ -295,6 +303,7 @@ def vaccinateOnePOD(pod):
     #pod.vaccinated += vaccinesGiven        -only add successfully vaccinated people to V class
     successfulVaccs = numEffectiveEvaccinations + numEffectiveSvaccinations + numRvaccinations
     pod.vaccinated += successfulVaccs
+    #print("Successful vaccs",successfulVaccs)
     
     #Adjustment of E72hrs queue
     vaccinateE3(pod, numEffectiveEvaccinations)
@@ -316,8 +325,8 @@ def vaccinateE3(pod, Evacc):
     sumE3 = sum(pod.last3E)
     if sumE3 == 0 or Evacc == 0:
         return
-    l30vaccs = roundUsingProb(Evacc * (pod.last3E[0] / sumE3))  #vaccs given to people exposed yesterday
-    l31vaccs = roundUsingProb(Evacc * (pod.last3E[1] / sumE3))  #vaccs given to people exposed 2 days ago
+    l30vaccs = Evacc * (pod.last3E[0] / sumE3)  #vaccs given to people exposed yesterday
+    l31vaccs = Evacc * (pod.last3E[1] / sumE3)  #vaccs given to people exposed 2 days ago
     pod.last3E[0] -= l30vaccs
     pod.last3E[1] -= l31vaccs
     pod.last3E[2] -= (Evacc - l30vaccs - l31vaccs)
@@ -355,10 +364,11 @@ def deliverVaccinesByDroneSimple(vaccStrategy, t, PODs, workingMinutesPerDay, dr
                 vaccinesDelivered += deliveryQty
                 thisDelivery = vaccineDelivery(deliveryQty * 1, t + mdP)
                 pod.vaccineDeliveries.append(thisDelivery)
-                displayTime = str(int(times[drone]/60 + 7)) + ":" + "{:02d}".format(int(times[drone]%60))
-                print(displayTime,"- Drone", drone+1, " delivered", deliveryQty,"vaccines to",
-                        pod.name, "which still needs", calcVaccinesNeeded(pod,mdP)
-                    )
+                #if t in [100,101,102,103]:
+                #    displayTime = str(int(times[drone]/60 + 7)) + ":" + "{:02d}".format(int(times[drone]%60))
+                #    print(displayTime,"- Drone", drone+1, " delivered", deliveryQty,"vaccines to",
+                #            pod.name, "which still needs", calcVaccinesNeeded(pod,mdP)
+                #    )
             else:
                 dronesFinished[drone] = True
     return deliveries, vaccinesDelivered
@@ -369,17 +379,10 @@ def deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, param
     
     n = len(PODs)
     ratios = np.zeros(n)
-    EPE = np.zeros(n)
     for i in range(0,n):
         pod = PODs[i]
         if pod.vaccinesInStock != np.inf:
             ratios[i] = flightPreventedExposures(pod, droneVC, params, 1) / pod.flightTime
-            EPE[i] = flightPreventedExposures(pod, droneVC, params, 1)
-
-    print("EPE values")
-    print(EPE)
-    print("EPE/min ratios:")
-    print(ratios)
 
     time = 0
     droneAvail = np.zeros(numDrones)
@@ -421,12 +424,13 @@ def deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, param
         thisDelivery = vaccineDelivery(deliveryQty * 1, t + mdP)
         pod.vaccineDeliveries.append(thisDelivery)
         ratios[podIndex] = flightPreventedExposures(pod, droneVC, params, 1) / pod.flightTime
-        displayTime = str(int((droneAvail[droneIndex])/60 + 7)) + ":" + "{:02d}".format((int(droneAvail[droneIndex]))%60)
-        print(displayTime,"- Drone", droneIndex+1, " delivered", deliveryQty,
-            "vaccines to", pod.name, "which still needs", calcVaccinesNeeded(pod,mdP), 
-                        "vaccines. EPE updated to:", ratios[podIndex]            
-            )
-        #time += 5              #there is no need to increase (stagger) the time after a delivery anymore
+        #if t in [100,101,102,103]:
+        #    displayTime = str(int((droneAvail[droneIndex])/60 + 7)) + ":" + "{:02d}".format((int(droneAvail[droneIndex]))%60)
+        #    print(displayTime,"- Drone", droneIndex+1, " delivered", deliveryQty,
+        #        "to", pod.name, "which now has",pod.vaccinesInStock,", which needs", calcVaccinesNeeded(pod,mdP), 
+        #                    "vaccines. EPE updated to:", ratios[podIndex] * pod.flightTime          
+        #        )
+        #time += 1              #there is no need to increase (stagger) the time after a delivery anymore
     return deliveries, vaccinesDelivered
    
 def findAvailDrone(droneAvail, time, pod, workMins):
@@ -471,8 +475,14 @@ def choosePODtoFlyTo(vaccStrategy, PODs, time, workingMinutesPerDay, mdP):
             podVal = pod.I / pod.flightTime
         elif vaccStrategy == 'N':
             podVal = pod.N / pod.flightTime
+        elif vaccStrategy == 'absS':
+            podVal = pod.S
+        elif vaccStrategy == 'absI':
+            podVal = pod.I
+        elif vaccStrategy == 'absN':
+            podVal = pod.N
         else:
-            print("Invalid delivery strategy selected. Choose S, I, N, or EPE.")
+            print("Invalid delivery strategy selected. Choose absS, S, absI, I, absN, N, or EPE.")
             quit()
         
         #the drone flight must be able to return in time
@@ -496,15 +506,30 @@ def flightPreventedExposures(pod, droneVC, params, numFlights):
     thisDelivery = vaccineDelivery(droneVC * numFlights, np.inf)
     afterFlightsPOD.vaccineDeliveries.append(thisDelivery)
     
+    #print("\nAfter delivery of", droneVC * numFlights)
+    #print("Before",vars(beforeFlightsPOD))
+    #print("After",vars(afterFlightsPOD))
+
     #vaccinate both PODs with the vaccines available at each
     vaccinateOnePOD(beforeFlightsPOD)
     vaccinateOnePOD(afterFlightsPOD)
+
+    #print("\nAfter vaccination")
+    #print("Before",vars(beforeFlightsPOD))
+    #print("After",vars(afterFlightsPOD))
     
     #progress both PODs another day
     progressSinglePOD(beforeFlightsPOD, params)
     progressSinglePOD(afterFlightsPOD, params)
+
+    #print("\nAfter progression")
+    #print("Before",vars(beforeFlightsPOD))
+    #print("After",vars(afterFlightsPOD))
+    #print("Thus EPE",max(beforeFlightsPOD.E - afterFlightsPOD.E, 0))
+    #print()
+    #quit()
     
-    #return the difference between exposure values - how many exposures did the flights prevent
+    #return the difference between exposure values - how many exposures did the flights prevent for the following day
     return max(beforeFlightsPOD.E - afterFlightsPOD.E, 0)
     
 def teamPreventedExposures(pod, teams, params):
@@ -712,19 +737,6 @@ def roundUsingProb(val):
     else:
         val = int(val)
     return val
-
-def roundPeopleUsingProb(val):
-    '''Identical to roundUsingProb, but used for people-related rounding. 
-        This way, it's easier to switch between using floats to denote S,E,I and R,
-        and using probabilistically rounded integers.
-    '''
-    return val          #if uncommented, this returns decimals instead of rounded values.
-
-    if val % 1 > random.random():
-        val = int(val) + 1
-    else:
-        val = int(val)
-    return val
    
 def plotPOD(daysOfIntervention, plots, podIndex, podName):
     plt.plot(np.arange(daysOfIntervention), plots[podIndex][0], label='Susceptible')
@@ -871,7 +883,7 @@ def simulate(filename='Likasi.csv'):
     # Simulation - Main Daily Loop
     #===============================================================================    
     for t in range(0, simulationRuntime):
-        print("\n",t,":")
+        #print("\n",t,":")
             
         #Progress the SEIR models and migration by one day
         PODs = progressEpidemicByOneDay(PODs, params, MigrationProportions)
@@ -991,18 +1003,15 @@ costPerDoseMono = 2.85              #the cost per dose of monodose measles vacci
 costPerDose10 = 1.284               #the cost per dose of 10-dose measles vaccine
 costPerFlight = 17                  #$17 per drone flight
 #strategies
-vaccStrategy = 'EPE'                #I, S, N, EPE, uncapped
-teamStrategy = 'spread'                #I, S, N, EPE, I/N, spread
+vaccStrategy = 'N'                  #I, S, N, EPE, uncapped, absI, absS, absN
+teamStrategy = 'N'                  #I, S, N, EPE, I/N, spread
 deliveryType = 'drone'              #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
 maxDistance = 100                    #The distance in km that the max inter-location distance is scaled to
 
+print("Vacs:",vaccStrategy,"Teams:",teamStrategy)
 print(simulate("Generic_network_city.csv"))
 
-#TODO: Debug why EPE values are updated to increase
-#TODO: Confirm the calcVaccinesNeeded method usage is valid.
-
 #TODO: Ensure validity of parameter values
-#TODO: Add absolute S, N, I strategies
 #TODO: Merge this branch to master of git repo.
