@@ -74,10 +74,10 @@ def readPODsFromFile(filename, maxVaccsTeamDay, turnout, targetedVaccination, va
         podV, podS, podR = 0,0,0
         notInfected = podN - podE - podI
         if targetedVaccination:
-            podV = int(notInfected * vaccinationRate)
+            podV = int(notInfected * min(vaccinationRate,1))
             podS = notInfected - podV
         else:
-            podR = int(notInfected * vaccinationRate)
+            podR = int(notInfected * min(vaccinationRate,1))
             podS = notInfected - podR
 
         podflightTime = np.inf
@@ -954,7 +954,7 @@ def simulate(filename='Likasi.csv'):
 
     #print("Total number of vaccines administered to patients:", totVaccsGiven)
     
-    #plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10), PODs)
+    plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10), PODs)
     #plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10,11), PODs)
     #plotPOD(simulationRuntime, plots, 7, "Likasi")
     #plotMap(PODs,  t, waitingForIntervention, interventionStartTime, interventionOver,
@@ -967,7 +967,7 @@ def simulate(filename='Likasi.csv'):
         Vactots[t] += plots[6][5][t]  #Just for Likasi
         Stots[t] += plots[6][0][t]  
         Itots[t] += plots[6][2][t]
-    return deaths, totVaccsGiven, totExpired #, vaccsPerDay #,Vactots,Stots
+    return deaths, totVaccsGiven,  #totExpired, vaccsPerDay #,Vactots,Stots
 
 
 #Parameters    ========================================================================
@@ -975,7 +975,7 @@ simulationRuntime = 200             #days to run the simulation for
 #Measles SEIR parameters
 exposedDays = 10                    #number of days a patient is exposed for without symptoms
 infectiousDays = 8                  #number of days a patient is infectious for
-deathRate = 0.03 * 1/infectiousDays #daily death rate. From wolfson2009estimates - 3.29 mean, 0.05-6% WHO estimate for low income countries
+deathRate = 0.0329 * 1/infectiousDays #daily death rate. From wolfson2009estimates - 3.29 mean, 0.05-6% WHO estimate for low income countries
 R0 = 15                             #basic reproductive number of the epidemic
 params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
 migrationIntensity = 1              #factor by which migration is multiplied. 2 means more migration.
@@ -983,24 +983,22 @@ migrationIntensity = 1              #factor by which migration is multiplied. 2 
 vaccineEffectiveness = 0.95         #probability the vaccine works (for non-exposed)
 prophylaxis72hrSuccessRate = 0.83   #probability the vaccine works (for exposed, within 72hrs)
 monoDaysPotency = 3                 #number of days for which the vaccine lasts outside of cold-chain
-vaccinationRate = 0.7               #70% vaccination rate at first. Confirm this!
 #intervention parameters
 interventionLeadTime = 15           #number of days before vaccination starts
 interventionCaseRatio = 0.005       #ratio of I/S in a town before detection
-interventionLength = 50             #number of days the intervention lasts for
+interventionLength = np.inf         #number of days the intervention lasts for
 workingMinutesPerDay = 660          #11 working hours per day: 7am to 6pm
 workDaysPerWeek = 7                 #number of working days per week for MSF teams
 numTeams = 15                       #number of vaccination teams in the field
 maxVaccsTeamDay = 450               #teams can vaccinate up to 450 per day
-turnout = 999999                 #turnout was 900, now inf to effectively remove its impact.
+turnout = 999999                    #turnout was 900, now inf to effectively remove its impact.
 #delivery details
 flightLaunchTime = 10               #minutes per flight, to set up takeoff
 droneSpeed = 100                    #100 kilometres per hour     
-numberOfDrones = 2                  #number of drones
+numberOfDrones = 5                  #number of drones
 droneVaccineCapacity = 60           #number of vaccine doses per drone
 #costs
 costPerDoseMono = 2.85              #the cost per dose of monodose measles vaccine
-costPerDose10 = 1.284               #the cost per dose of 10-dose measles vaccine
 costPerFlight = 17                  #$17 per drone flight
 #strategies
 vaccStrategy = 'N'                  #I, S, N, EPE, uncapped, absI, absS, absN
@@ -1008,10 +1006,16 @@ teamStrategy = 'N'                  #I, S, N, EPE, I/N, spread
 deliveryType = 'drone'              #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
-maxDistance = 100                    #The distance in km that the max inter-location distance is scaled to
+maxDistance = 30                    #The distance in km that the max inter-location distance is scaled to
+vaccinationRate = 0.66              #66% vaccination rate in network
 
-print("Vacs:",vaccStrategy,"Teams:",teamStrategy)
 print(simulate("Generic_network_city.csv"))
 
-#TODO: Ensure validity of parameter values
+for vaccStrategy in ['I','S','N','EPE','absI','absS','absN','uncapped']
+    for teamStrategy in ['I','S','N','EPE','I/N','spread']
+        simulate("Generic_network_city.csv")
+
+
+#TODO: Randomly generated networks
+#TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
 #TODO: Merge this branch to master of git repo.
