@@ -875,8 +875,7 @@ def simulate(filename='Likasi.csv'):
     totDroneDelvs = 0                            #total number of drone flights for simulation
     totVaccs = 0                            #total number of vaccines delivered, incl DC vaccines
     totExpired = 0                          #total number of vaccines expired    
-    totMinsDriven = 0
-    totVaccsGiven = 0
+    totVaccsGiven = 0                       #total number of vaccines actually administered, incl DC.
     vaccsPerDay = np.zeros(simulationRuntime)
 
     #===============================================================================
@@ -914,7 +913,7 @@ def simulate(filename='Likasi.csv'):
                 vGiven, vGivenDC = vaccinate(PODs)
                 vaccsPerDay[t] = vGiven
                 totVaccsGiven += vGiven
-                totVaccs += vGivenDC
+                totVaccs += vGivenDC        # Add the vaccs given at DC to the total cumul. vaccines delivered
         elif t >= interventionStartTime + interventionLength:
             #intervention is over
             interventionOver = True
@@ -943,31 +942,24 @@ def simulate(filename='Likasi.csv'):
         deaths += pod.deaths
     #print("\nThe total number of deaths is:", deaths)
     
-    if deliveryType == "drone":
-        droneCost = totDroneDelvs * costPerFlight
-        #print("Total drone flight cost: $", droneCost,",for", totDroneDelvs, "flights.")
-    
     #print("Total cost of monodose vaccines delivered: $", vaccineCost, ",for", totVaccs, "doses.")
     if totVaccs > 0:
         expiryRatio = totExpired / totVaccs * 100
         #print("Percentage of vaccines expired without use:", round(expiryRatio,2), "%")
 
-    #print("Total number of vaccines administered to patients:", totVaccsGiven)
+    #print("Total number of vaccines delivered, plus those used at the DC:",totVaccs)
+    #print("Total number of vaccines actually administered to patients:", totVaccsGiven)
     
     plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10), PODs)
-    #plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10,11), PODs)
     #plotPOD(simulationRuntime, plots, 7, "Likasi")
     #plotMap(PODs,  t, waitingForIntervention, interventionStartTime, interventionOver,
-     #      totExpired, totVaccs, totVaccsGiven, vaccineCost + deliveryCost)
+    #      totExpired, totVaccs, totVaccsGiven, vaccineCost + deliveryCost)
     
-    Vactots = np.zeros(simulationRuntime)
-    Stots = np.zeros(simulationRuntime)
-    Itots = np.zeros(simulationRuntime)
-    for t in range(0,simulationRuntime):    
-        Vactots[t] += plots[6][5][t]  #Just for Likasi
-        Stots[t] += plots[6][0][t]  
-        Itots[t] += plots[6][2][t]
-    return deaths, totVaccsGiven,  #totExpired, vaccsPerDay #,Vactots,Stots
+    if vaccStrategy == 'uncapped':
+        # In this case, the total vaccines delivered and used is just the total vaccs given (which includes DC)
+        totVaccs = totVaccsGiven
+
+    return deaths, totVaccs, deliveryCost + vaccineCost  #totExpired, vaccsPerDay #,Vactots,Stots
 
 
 #Parameters    ========================================================================
@@ -1010,10 +1002,11 @@ maxDistance = 30                    #The distance in km that the max inter-locat
 vaccinationRate = 0.66              #66% vaccination rate in network
 
 print(simulate("Generic_network_city.csv"))
-
-for vaccStrategy in ['I','S','N','EPE','absI','absS','absN','uncapped']
-    for teamStrategy in ['I','S','N','EPE','I/N','spread']
-        simulate("Generic_network_city.csv")
+quit()
+for vaccStrategy in ['I','S','N','EPE','absI','absS','absN','uncapped']:
+    for teamStrategy in ['I','S','N','EPE','I/N','spread']:
+        deaths, vaccinesUsed, cost = simulate("Generic_network_city.csv")
+        
 
 
 #TODO: Randomly generated networks
