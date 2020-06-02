@@ -982,7 +982,7 @@ interventionLength = np.inf         #number of days the intervention lasts for
 workingMinutesPerDay = 660          #11 working hours per day: 7am to 6pm
 workDaysPerWeek = 7                 #number of working days per week for MSF teams
 numTeams = 15                       #number of vaccination teams in the field
-maxVaccsTeamDay = 450               #teams can vaccinate up to 450 per day
+maxVaccsTeamDay = 2000              #teams can vaccinate up to ~2000 per day - poncin2018implementation
 turnout = 999999                    #turnout was 900, now inf to effectively remove its impact.
 #delivery details
 flightLaunchTime = 10               #minutes per flight, to set up takeoff
