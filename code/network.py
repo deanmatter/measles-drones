@@ -1,10 +1,11 @@
 import numpy as np
-np.set_printoptions(precision=1, suppress=True, linewidth=2000)
+np.set_printoptions(precision=3, suppress=True, linewidth=2000)
 import random
 from matplotlib import pyplot as plt
 from matplotlib import patches
 import copy
 from collections import deque
+import os
 
 class vaccineDelivery:
     def __init__(self, d, eD):
@@ -12,9 +13,8 @@ class vaccineDelivery:
         self.expiryDate = eD            #the day t on which this delivery will expire
 
 class POD:
-    def __init__(self, name, urban, cords, N, S, E, I, R, V, fT, mvpd, avt, mX, mY):
+    def __init__(self, name, cords, N, S, E, I, R, V, fT, mvpd, avt, mX, mY):
         self.name = name                #location at which POD is placed
-        self.isUrban = urban           #true/false value of if the DC can be placed at this POD
         self.coordinates = cords        #tuple (x,y) of POD location in network
         self.N = N                      #total population 
         self.S = S                      #number of susceptible people
@@ -37,71 +37,74 @@ class POD:
     def __str__(self):
         return self.name    
        
-def readPODsFromFile(filename, mvpFreeDay, mvpFixedDay, ruralT, urbanT):
+def readPODsFromFile(filename, maxVaccsTeamDay, turnout, targetedVaccination, vaccinationRate):
     '''Reads in location information from an input CSV file.'''
     PODs = []
-    roadDistances = []
-    data = open(filename,'r')
-    lineCount = -2
-    mode = 0
+    data = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), filename), 'r')
+    lineCount = 0
     
     for line in data:
+        if lineCount == 0:
+            # skip the header row
+            lineCount += 1
+            continue
         lineCount += 1
         lineContents = line.strip().split(",")
         
-        if lineCount == -1:
-            mode = 1
-            continue
-        if lineContents[0][:1] == "#":
-            mode += 1
-            continue
-        
-        #Mode 1 -- reading in POD details
-        if mode == 1:
-            podName = lineContents[0]
-            podUrban = False
-            podTrnt = ruralT
-            podMaxVaccPD = mvpFreeDay
-            if int(lineContents[1]) == 1:
-                podUrban = True
-                podTrnt = urbanT
-                podMaxVaccPD = mvpFixedDay
-            podXY = (float(lineContents[2]),float(lineContents[3]))
-            podN = int(lineContents[4])
-            podS = int(lineContents[5])
-            podE = int(lineContents[6])
-            podI = int(lineContents[7])
-            podR = int(lineContents[8])
-            podV = int(lineContents[9])
-            podmapX = int(lineContents[10])
-            podmapY = int(lineContents[11])
-            podfT = np.inf
-            pod = POD(podName,podUrban,podXY,podN,podS,podE,podI,podR,podV,podfT,podMaxVaccPD,podTrnt,podmapX,podmapY)
-            PODs.append(pod)
-                
-        #Mode 2 -- reading in road times details
-        if mode == 2 and lineContents[0] != '':
-            thisRowsRoadDs = []
-            for i in range(1,len(PODs)+1):
-                if(lineContents[i] == ''):
-                    thisRowsRoadDs.append(np.inf)
-                else:
-                    thisRowsRoadDs.append(float(lineContents[i]))
-            roadDistances.append(thisRowsRoadDs)
-            
-    roadDistances = np.array(roadDistances)
-    return PODs, roadDistances
+        podName = lineContents[0]
+        podTrnt = turnout
+        podMaxVaccPD = maxVaccsTeamDay
+        podmapX = int(lineContents[1])
+        podmapY = int(lineContents[2])
+        podXY = (podmapX,podmapY)                     #set x- and y- coords to unscaled values.
+
+        podN = int(lineContents[3])
+        try: 
+            podE = int(lineContents[4])
+        except ValueError:
+            # if there is a ValueError, set podE = 0
+            podE = 0
+        try:
+            podI = int(lineContents[5])
+        except ValueError:
+            # if there is a ValueError, set podI = 0
+            podI = 0
+
+        #Split population according to vaccination rate
+        podV, podS, podR = 0,0,0
+        notInfected = podN - podE - podI
+        if targetedVaccination:
+            podV = int(notInfected * min(vaccinationRate,1))
+            podS = notInfected - podV
+        else:
+            podR = int(notInfected * min(vaccinationRate,1))
+            podS = notInfected - podR
+
+        podflightTime = np.inf
+        pod = POD(podName,podXY,podN,podS,podE,podI,podR,podV,podflightTime,podMaxVaccPD,podTrnt,podmapX,podmapY)
+        PODs.append(pod)
+    return PODs
     
+def scaleCoordinatesAndDistances(unscaledDistances,PODs,maxDistance):
+    ''' Returns: scaledDistances, and PODs with updated coordinates.'''
+    #Calculate desired scaling factor and scale all distances accordingly.
+    scaleFactor = maxDistance * 1.0 / np.amax(unscaledDistances)
+    scaledDistances = unscaledDistances * scaleFactor
     
+    #Scale the coordinates of each pod.
+    for pod in PODs:
+        scaledX = scaleFactor * pod.coordinates[0]
+        scaledY = scaleFactor * pod.coordinates[1]
+        pod.coordinates = (scaledX,scaledY)
+      
+    return scaledDistances, PODs
+
 def findDC(PODs, podDistances):
     #maxInRow[i] stores the maximum distance from location i to any other location
     maxInRow = np.zeros(len(PODs))
     i = 0
     for pod in PODs:
-        if pod.isUrban == True:
-            maxInRow[i] = max(podDistances[i])
-        else:
-            maxInRow[i] = np.inf
+        maxInRow[i] = max(podDistances[i])
         i += 1
     
     DCindex = -1   
@@ -111,7 +114,7 @@ def findDC(PODs, podDistances):
             DCindex = i
             minimax = maxInRow[i]
     if minimax > 80:
-        print("The best DC placement is at", PODs[DCindex], "but not all PODs are within 80km!")
+        print("The best DC placement is at", PODs[DCindex], "but not all PODs are within 80km.")
     return DCindex
             
 def calcPODdistanceMatrix(PODs):
@@ -155,49 +158,16 @@ def calcMigration(PODs, podDistances, migrationIntensity):
     #print(migrations)
     return migrations
 
-def calcRoadTimes(PODs, roadDistances, podDistances, roadCloseFactor):
-    '''Returns two nxn matrices, with i-j entries =1 if the road i-j is open, and =0 if the road is closed. Also, road times'''
-    roadTimes = np.zeros(np.shape(roadDistances))
-    openRoads = np.zeros(np.shape(roadDistances))
-    
-    numClosedRoads = 0
-    for r in range(0,len(PODs)):
-        for c in range(0, len(PODs)):
-            if roadDistances[r][c] == np.inf:
-                #there is no road between r and c - 10kph travel speed by foot
-                openRoads[r][c] = 0
-            elif PODs[r].isUrban == True and PODs[c].isUrban == True:
-                #travel speed is 60kph - between urban and urban
-                roadTimes[r][c] = int(roadDistances[r][c] / 60 * 60)
-                openRoads[r][c] = min(roundUsingProb(1 / roadCloseFactor),1)
-            elif PODs[r].isUrban == False and PODs[c].isUrban == False:
-                #travel speed is 20 kph - between rural and rural
-                roadTimes[r][c] = int(roadDistances[r][c] / 20 * 60)
-                openRoads[r][c] = min(roundUsingProb(0.6 / roadCloseFactor),1)
-            else:
-                #travel speed is 40kph - between rural and urban
-                roadTimes[r][c] = int(roadDistances[r][c] / 40 * 60)
-                openRoads[r][c] = min(roundUsingProb(0.8 / roadCloseFactor),1)
-            
-            if openRoads[r][c] == 0:
-                roadTimes[r][c] = int(podDistances[r][c] / 10 * 60)
-    
-    for r in range(0,len(PODs)):
-        for c in range(0, len(PODs)):
-            if openRoads[r][c] == 0 and roadDistances[r][c] != np.inf:
-                numClosedRoads += 1
-            
-    return numClosedRoads, openRoads, roadTimes
-
-def calcMaxVaccinesNeeded50(pod, numDays):
+def calcVaccinesNeeded(pod, numDays):
     unvaccinated = pod.S + pod.E + pod.R
     maxVaccsPossible = numDays * pod.maxVaccinationsPerDay
     turnout = pod.averageTurnout * numDays * pod.teamsAtPOD
     stock = pod.vaccinesInStock
+    # Vaccines needed is number of likely vaccinations next3days, less the stock on hand.
     actualValue = max(0, min(unvaccinated, maxVaccsPossible, turnout) - stock)
     #multipleOf50 = np.ceil(actualValue/50) * 50     #since vaccines in boxes of 50
-    multipleOf50 = actualValue
-    return int(multipleOf50)
+    #return int(multipleOf50)
+    return int(actualValue)
 
 def calcTurnout(pod):
     mean = pod.averageTurnout
@@ -220,7 +190,7 @@ def progressEpidemicByOneDay(PODs, params, MigrationProportions):
         Rarr[i] = PODs[i].R
         Varr[i] = PODs[i].vaccinated
         deaths += PODs[i].deaths
-    #print(sum(Iarr))
+    #print(Iarr)
           
     i = 0
     for pod in PODs:
@@ -243,10 +213,10 @@ def progressSinglePOD(pod, params):
     deaths = pod.deaths
     
     #calculation of changes in SEIR model
-    newExposures = roundUsingProb(beta * S * I / N)
-    newInfectious = roundUsingProb(sigma * E)
-    newRecoveries = roundUsingProb(gamma * I)
-    newDeaths = roundUsingProb(mu * I)
+    newExposures = beta * S * I / N
+    newInfectious = sigma * E
+    newRecoveries = gamma * I
+    newDeaths = mu * I
     pod.last3E.append(newExposures)
     
     #SEIR updates for the pod
@@ -258,11 +228,11 @@ def progressSinglePOD(pod, params):
         
 def migratePOD(pod, i, todaysMigration, Sarr, Earr, Iarr, Rarr, Varr):
     migrationIn = todaysMigration[:,i]
-    pod.S = roundUsingProb(np.dot(Sarr, migrationIn))
-    pod.E = roundUsingProb(np.dot(Earr, migrationIn))
-    pod.I = roundUsingProb(np.dot(Iarr, migrationIn))
-    pod.R = roundUsingProb(np.dot(Rarr, migrationIn))
-    pod.vaccinated = roundUsingProb(np.dot(Varr, migrationIn))
+    pod.S = np.dot(Sarr, migrationIn)
+    pod.E = np.dot(Earr, migrationIn)
+    pod.I = np.dot(Iarr, migrationIn)
+    pod.R = np.dot(Rarr, migrationIn)
+    pod.vaccinated = np.dot(Varr, migrationIn)
     pod.N = pod.S + pod.E + pod.I + pod.R + pod.vaccinated + pod.deaths
       
 def vaccinate(PODs):
@@ -288,6 +258,7 @@ def vaccinate(PODs):
     return totVaccsGiven, vaccsGivenDC
 
 def vaccinateOnePOD(pod):    
+    #print("\nVaccinating:-----------------------")
     if pod.maxVaccinationsPerDay == 0:
         return 0
     
@@ -307,17 +278,24 @@ def vaccinateOnePOD(pod):
         return 0
     SturnoutProp = pod.S * 1.0 / (pod.S + pod.E + pod.R)
     EturnoutProp = pod.E * 1.0 / (pod.S + pod.E + pod.R)
+    #print("Sprop",SturnoutProp,"Eprop",EturnoutProp)
     
     propE72hrs = 0              #proportion of E that is recently enough exposed to be vaccd
     if pod.E > 0:
         propE72hrs = (podE72hrs/pod.E)
+    #print("E72/E prop",propE72hrs)
         
-    vaccinesGiven = int(min(turnout, pod.vaccinesInStock, maxVaccinations))      
+    vaccinesGiven = min(turnout, pod.vaccinesInStock, maxVaccinations)
     
-    numEffectiveSvaccinations = int(vaccinesGiven * SturnoutProp * vaccineEffectiveness)
-    numEffectiveEvaccinations = int(vaccinesGiven * EturnoutProp * propE72hrs *  prophylaxis72hrSuccessRate)
-    #numRvaccinations = vaccinesGiven - numEffectiveEvaccinations - numEffectiveSvaccinations
-    numRvaccinations = max(int(vaccinesGiven * (1-SturnoutProp-EturnoutProp)),0)
+    #print("vaccines Given",vaccinesGiven)
+
+    numEffectiveSvaccinations = vaccinesGiven * SturnoutProp * vaccineEffectiveness
+    #print("effective s",numEffectiveSvaccinations)
+    numEffectiveEvaccinations = vaccinesGiven * EturnoutProp * propE72hrs *  prophylaxis72hrSuccessRate
+    #print("effective E",numEffectiveEvaccinations)
+
+    numRvaccinations = max(vaccinesGiven * (1-SturnoutProp-EturnoutProp),0)
+    #print("number to R",numRvaccinations)
     pod.S -= numEffectiveSvaccinations
     pod.E -= numEffectiveEvaccinations
     pod.R -= numRvaccinations
@@ -325,6 +303,7 @@ def vaccinateOnePOD(pod):
     #pod.vaccinated += vaccinesGiven        -only add successfully vaccinated people to V class
     successfulVaccs = numEffectiveEvaccinations + numEffectiveSvaccinations + numRvaccinations
     pod.vaccinated += successfulVaccs
+    #print("Successful vaccs",successfulVaccs)
     
     #Adjustment of E72hrs queue
     vaccinateE3(pod, numEffectiveEvaccinations)
@@ -346,8 +325,8 @@ def vaccinateE3(pod, Evacc):
     sumE3 = sum(pod.last3E)
     if sumE3 == 0 or Evacc == 0:
         return
-    l30vaccs = roundUsingProb(Evacc * (pod.last3E[0] / sumE3))  #vaccs given to people exposed yesterday
-    l31vaccs = roundUsingProb(Evacc * (pod.last3E[1] / sumE3))  #vaccs given to people exposed 2 days ago
+    l30vaccs = Evacc * (pod.last3E[0] / sumE3)  #vaccs given to people exposed yesterday
+    l31vaccs = Evacc * (pod.last3E[1] / sumE3)  #vaccs given to people exposed 2 days ago
     pod.last3E[0] -= l30vaccs
     pod.last3E[1] -= l31vaccs
     pod.last3E[2] -= (Evacc - l30vaccs - l31vaccs)
@@ -368,7 +347,7 @@ def expireVaccines(PODs, t):
             #print(d.doses, "vaccines have expired in", pod.name)
     return expiredVs
 
-def deliverVaccinesByDroneSimple(strategy, t, PODs, workingMinutesPerDay, droneVC, numDrones, params, mdP):
+def deliverVaccinesByDroneSimple(vaccStrategy, t, PODs, workingMinutesPerDay, droneVC, numDrones, params, mdP):
     deliveries = 0
     vaccinesDelivered = 0
     times = np.zeros(numDrones)     #no launch staggering
@@ -376,19 +355,20 @@ def deliverVaccinesByDroneSimple(strategy, t, PODs, workingMinutesPerDay, droneV
     dronesFinished = np.full(numDrones, False)
     while all(dronesFinished) == False:
         for drone in range(0,numDrones):
-            pod = choosePODtoFlyTo(strategy, PODs, times[drone], workingMinutesPerDay, mdP)
-            if pod != -1:
+            pod = choosePODtoFlyTo(vaccStrategy, PODs, times[drone], workingMinutesPerDay, mdP)
+            if pod != -1:       # this ensures the pod needs vaccines, is not the DC, and can be delivered to in time
                 times[drone] += pod.flightTime
-                deliveryQty = min(60*np.ceil(calcMaxVaccinesNeeded50(pod,mdP)/60), droneVC)
-                if deliveryQty == 0:
-                    continue
+                deliveryQty = droneVC
                 pod.vaccinesInStock += deliveryQty
                 deliveries += 1
                 vaccinesDelivered += deliveryQty
                 thisDelivery = vaccineDelivery(deliveryQty * 1, t + mdP)
                 pod.vaccineDeliveries.append(thisDelivery)
-                displayTime = str(int(times[drone]/60 + 7)) + ":" + "{:02d}".format(int(times[drone]%60))
-                #print(displayTime,"- Drone", drone+1, " delivered", deliveryQty,"vaccines to", pod.name)
+                #if t in [100,101,102,103]:
+                #    displayTime = str(int(times[drone]/60 + 7)) + ":" + "{:02d}".format(int(times[drone]%60))
+                #    print(displayTime,"- Drone", drone+1, " delivered", deliveryQty,"vaccines to",
+                #            pod.name, "which still needs", calcVaccinesNeeded(pod,mdP)
+                #    )
             else:
                 dronesFinished[drone] = True
     return deliveries, vaccinesDelivered
@@ -403,12 +383,12 @@ def deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, param
         pod = PODs[i]
         if pod.vaccinesInStock != np.inf:
             ratios[i] = flightPreventedExposures(pod, droneVC, params, 1) / pod.flightTime
-    
+
     time = 0
     droneAvail = np.zeros(numDrones)
     while time <= workingMinutes:
         #select POD with highest ratio of prevented exposures to flight time
-        if np.max(ratios) > 0.01:
+        if np.max(ratios) > 0:
             podIndex = np.argmax(ratios)
             #ensure flight ends before the end of the day
             while PODs[podIndex].flightTime + time > workingMinutes:
@@ -421,7 +401,10 @@ def deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, param
             break
         pod = PODs[podIndex]
         
-        deliveryQty = min(np.ceil(calcMaxVaccinesNeeded50(pod,mdP)/60)*60, droneVC)
+        deliveryQty = 0
+        if calcVaccinesNeeded(pod,mdP) > 0:
+            deliveryQty = droneVC
+
         if deliveryQty == 0:
             #the POD does not need any vaccines
             ratios[podIndex] = 0
@@ -441,9 +424,13 @@ def deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, param
         thisDelivery = vaccineDelivery(deliveryQty * 1, t + mdP)
         pod.vaccineDeliveries.append(thisDelivery)
         ratios[podIndex] = flightPreventedExposures(pod, droneVC, params, 1) / pod.flightTime
-        displayTime = str(int((droneAvail[droneIndex])/60 + 7)) + ":" + "{:02d}".format((int(droneAvail[droneIndex]))%60)
-        #print(displayTime,"- Drone", droneIndex+1, " delivered", deliveryQty,"vaccines to", pod.name)
-        #time += 5              #there is no need to increase (stagger) the time after a delivery anymore
+        #if t in [100,101,102,103]:
+        #    displayTime = str(int((droneAvail[droneIndex])/60 + 7)) + ":" + "{:02d}".format((int(droneAvail[droneIndex]))%60)
+        #    print(displayTime,"- Drone", droneIndex+1, " delivered", deliveryQty,
+        #        "to", pod.name, "which now has",pod.vaccinesInStock,", which needs", calcVaccinesNeeded(pod,mdP), 
+        #                    "vaccines. EPE updated to:", ratios[podIndex] * pod.flightTime          
+        #        )
+        #time += 1              #there is no need to increase (stagger) the time after a delivery anymore
     return deliveries, vaccinesDelivered
    
 def findAvailDrone(droneAvail, time, pod, workMins):
@@ -453,194 +440,56 @@ def findAvailDrone(droneAvail, time, pod, workMins):
     else:
         return -1               #else return 'no drone available', essentially.
    
-def deliverByDrone(strategy, t, PODs, workingMinutes, droneVC, numDrones, params, mdP):
-    if strategy == 'EPE':     #clever exposure-prevention delivery schedule
+def deliverByDrone(vaccStrategy, t, PODs, workingMinutes, droneVC, numDrones, params, mdP):
+    ''' Depending on vaccine delivery strategy, delivers vaccines by drone using helper methods.'''
+    if vaccStrategy == 'EPE':     #clever exposure-prevention delivery schedule
         delivDetails = deliverVaccinesByDroneEPE(t, PODs, workingMinutes, droneVC, numDrones, params, mdP)
+    elif vaccStrategy == 'uncapped':
+        delivDetails = deliverUncappedVaccines(t, PODs, mdP)
     else:                   #simple delivery schedule
-        delivDetails = deliverVaccinesByDroneSimple(strategy, t, PODs, workingMinutes, droneVC, numDrones, params, mdP)
+        delivDetails = deliverVaccinesByDroneSimple(vaccStrategy, t, PODs, workingMinutes, droneVC, numDrones, params, mdP)
     return delivDetails
-      
-def deliverByVehicle(openRoads, roadTimes, DCindex, strategy, PODs, workMinsPerDay, 
-                     vehicleCapacities, numVehicles, params, mdP, t, maxTripLength, 
-                     deliveryType):
-    #Use Clarke-Wright method to find vehicle routes that could be used
-    routes, routeTimes = findVehicleRoutes(openRoads, roadTimes, DCindex)
-   
-    displayTime = "7:00"
-    totalVDelivered = 0
-    times = np.zeros(numVehicles)
-    
-    vehiclesFinished = np.full(numVehicles, False)
-    while all(vehiclesFinished) == False:
-        for vehicle in range(0,numVehicles):
-            if vehiclesFinished[vehicle] == True:
-                continue
-            #calculate the payoff for each route, acc. to the strategy
-            routePayoffs = []
-            for i in range(0,len(routes)):
-                if times[vehicle] >= workMinsPerDay:
-                    vehiclesFinished[vehicle] = True
-                    routePayoffs.append(-1)
-                    break
-                #disqualify routes where less than 50 vaccines are needed per location, on average
-                if calcVaccinesNeededOnRoute(routes[i], PODs, mdP) <= 50*(len(routes[i])-2):
-                    routePayoffs.append(-1)
-                    continue
-                #disqualify routes (leaving after the first hour) that would exceed the day's working hours.
-                if (times[vehicle] + routeTimes[i]) > workMinsPerDay and times[vehicle] > 60:
-                    routePayoffs.append(-1)
-                    continue
-                #disqualify routes that take too long
-                if routeTimes[i] > maxTripLength and deliveryType == "combined":
-                    #the route is too long for the combined method
-                    routePayoffs.append(-1)
-                    continue
-                
-                if strategy == 'N':
-                    totalN = 0
-                    for node in routes[i]:
-                        if node != DCindex:
-                            totalN += PODs[node].N
-                    routePayoffs.append(totalN / routeTimes[i])
-                elif strategy == 'I':
-                    totalI = 0
-                    for node in routes[i]:
-                        if node != DCindex:
-                            totalI += PODs[node].I
-                    routePayoffs.append(totalI / routeTimes[i])
-                elif strategy == 'S':
-                    totalS = 0
-                    for node in routes[i]:
-                        if node != DCindex:
-                            totalS += PODs[node].S
-                    routePayoffs.append(totalS / routeTimes[i])
-                elif strategy == 'EPE':
-                    #clever method, using expected exposures prevented
-                    vehicleCapacity = vehicleCapacities[0]
-                    if isRouteRural(routes[i], PODs):
-                        vehicleCapacity = vehicleCapacities[1]
-                    
-                    totalEPE = 0
-                    for node in routes[i]:
-                        if node != DCindex:
-                            vaccsNeeded = calcMaxVaccinesNeeded50(PODs[node], mdP)
-                            vaccs = min(vaccsNeeded, vehicleCapacity)                                        
-                            totalEPE += vehiclePreventedExposures(PODs[node], vaccs, params)
-                    routePayoffs.append(totalEPE / routeTimes[i])
-                else:
-                    print("Invalid selection of strategy:", strategy)
-                
-            routeTimes = np.array(routeTimes)
-            routePayoffs = np.array(routePayoffs)
-            
-            if max(routePayoffs) == -1:
-                vehiclesFinished[vehicle] = True
-                break
-                        
-            chosenRouteI = np.argmax(routePayoffs)
-            
-            #setting vehicle capacity for delivery
-            vehicleCapacity = vehicleCapacities[0]  #deliver by default in large carrier
-            if isRouteRural(routes[chosenRouteI], PODs):
-                #deliver in a handheld carrier
-                vehicleCapacity = vehicleCapacities[1]
-                    
-            vDelivered, strippedRoute = deliverRoute(routes[chosenRouteI], PODs, strategy, vehicleCapacity, mdP, t, params)
-            
-            totalVDelivered += sum(vDelivered)
-            times[vehicle] += routeTimes[chosenRouteI]
-            routeNames = []
-            for location in strippedRoute:
-                routeNames.append(PODs[location].name)
-            
-            displayTime = str(int(times[vehicle]/60 + 7)) + ":" + "{:02d}".format(int(times[vehicle]%60))
-            #print(displayTime, "- Vehicle", vehicle+1, "delivered quantities", vDelivered, "to route", routeNames)
-            
-    #print(displayTime,"Day deliveries complete.")
-    totMinsDriven = sum(times)
-    return totalVDelivered, totMinsDriven
 
-def isRouteRural(route, PODs):
-    anyRurals = False
-    for node in route:
-        if PODs[node].isUrban == False:
-            anyRurals = True
-    return anyRurals
-                
-def deliverRoute(totalRoute, PODs, strategy, vehicleCapacity, mdP, t, params):
-    '''Delivers vaccines to the PODs in the route, according to the amount still required at each POD, 
-    with <strategy> determining which POD gets allocated the most vaccines.'''
-    route = totalRoute[1:-1]        #removes DC from route string
-    vaccinesToDeliver = np.zeros(np.shape(route))
-    routeSINC = np.zeros(np.shape(route))   #this routeSINC is the S, I, N or C value for each 
-    routeNeeds = np.zeros(np.shape(route))  #this routeNeeds is the number of vaccines each location needs
-    for i in range(0,len(route)):
-        routeNeeds[i] = calcMaxVaccinesNeeded50(PODs[route[i]], mdP)
-        if strategy == 'S':
-            routeSINC[i] = PODs[route[i]].S
-        elif strategy == 'I':
-            routeSINC[i] = PODs[route[i]].I
-        elif strategy == 'N':
-            routeSINC[i] = PODs[route[i]].N
-        elif strategy == 'EPE':
-            #for each pod in the route, calculate the prevented exposures if its given the max vaccines it needs
-            routeSINC[i] = vehiclePreventedExposures(PODs[route[i]], routeNeeds[i], params)
-    
-    if sum(routeNeeds) < vehicleCapacity:
-        vaccinesToDeliver = routeNeeds
-    else:
-        remainingCap = vehicleCapacity
-        for i in range(0,len(route)):
-            bestSINCindex = np.argmax(routeSINC)
-            vaccinesToDeliver[bestSINCindex] = min(routeNeeds[bestSINCindex], remainingCap)
-            routeSINC[bestSINCindex] = -1                       #do not add more vaccines to this spot.
-            remainingCap -= vaccinesToDeliver[bestSINCindex]
-            if remainingCap == 0:
-                break
-        
-    for i in range(0,len(route)):
-        vaccQty = vaccinesToDeliver[i]
-        if vaccQty <= 0:
-            continue
-        podIndex = route[i]
-        PODs[podIndex].vaccinesInStock += vaccQty
-        thisDelivery = vaccineDelivery(vaccQty * 1, t + mdP)
-        PODs[podIndex].vaccineDeliveries.append(thisDelivery)
-    return vaccinesToDeliver, route
-        
-def calcVaccinesNeededOnRoute(totalRoute, PODs, mdP):
-    ''' Given the route, PODs array and number of days the vaccine is potent for, 
-    returns the expected number of vaccines needed to be delivered on the route.'''
-    route = totalRoute[1:-1]
-    totVaccsNeeded = 0
-    for podIndex in route:
-        totVaccsNeeded += calcMaxVaccinesNeeded50(PODs[podIndex], mdP)
-    return totVaccsNeeded
-       
-def choosePODtoFlyTo(strategy, PODs, time, workingMinutesPerDay, mdP):
-    '''Selects the POD with the highest number of susceptible people, among 
-    PODs with less than 2000 vaccines. Returns -1 if all PODs have enough vaccines.'''
+def deliverUncappedVaccines(t, PODs, mdP):
+    deliveries = 0
+    vaccinesDelivered = 0
+    deliveryQty = 999999                 # arbitrarily high. Can't be np.inf since that denotes the DC.
+    for pod in PODs:
+        deliveries += 1
+        vaccinesDelivered += deliveryQty
+        pod.vaccinesInStock += deliveryQty
+        thisDelivery = vaccineDelivery(deliveryQty * 1, t + mdP)
+        pod.vaccineDeliveries.append(thisDelivery)
+    return deliveries, vaccinesDelivered
+
+def choosePODtoFlyTo(vaccStrategy, PODs, time, workingMinutesPerDay, mdP):
     maxV = -1
     maxpod = -1
     for pod in PODs:
         #Different strategies for selecting the order of deliveries
         if pod.flightTime == 0:
             continue
-        elif strategy == 'S':
+        elif vaccStrategy == 'S':
             podVal = pod.S / pod.flightTime
-        elif strategy == 'I':
+        elif vaccStrategy == 'I':
             podVal = pod.I / pod.flightTime
-        elif strategy == 'N':
+        elif vaccStrategy == 'N':
             podVal = pod.N / pod.flightTime
+        elif vaccStrategy == 'absS':
+            podVal = pod.S
+        elif vaccStrategy == 'absI':
+            podVal = pod.I
+        elif vaccStrategy == 'absN':
+            podVal = pod.N
         else:
-            print("Invalid delivery strategy selected. Choose S, I, N, or EPE.")
+            print("Invalid delivery strategy selected. Choose absS, S, absI, I, absN, N, or EPE.")
             quit()
         
         #the drone flight must be able to return in time
         if time + pod.flightTime <= workingMinutesPerDay:
             #there's no need for more vaccines than people to vaccinate
-            if calcMaxVaccinesNeeded50(pod, mdP) > 0:
-                #no drone flights to DC, and vaccine stock can't exceed max stock
+            if calcVaccinesNeeded(pod, mdP) > 0:
+                #no drone flights to DC
                 if podVal > maxV and pod.flightTime != 0:
                     maxV = podVal
                     maxpod = pod
@@ -648,26 +497,7 @@ def choosePODtoFlyTo(strategy, PODs, time, workingMinutesPerDay, mdP):
     if maxV == 0:
         return -1
     return maxpod
-                
-def vehiclePreventedExposures(pod, vaccQty, params):
-    #create two variations of this POD, with differing vaccinesInStock values
-    beforePOD = copy.deepcopy(pod)
-    afterPOD = copy.deepcopy(pod)
-    afterPOD.vaccinesInStock += vaccQty
-    thisDelivery = vaccineDelivery(vaccQty, np.inf)
-    afterPOD.vaccineDeliveries.append(thisDelivery)
-    
-    #vaccinate both PODs with the vaccines available at each
-    vaccinateOnePOD(beforePOD)
-    vaccinateOnePOD(afterPOD)
-    
-    #progress both PODs another day
-    progressSinglePOD(beforePOD, params)
-    progressSinglePOD(afterPOD, params)
-    
-    #return the difference between exposure values - how many exposures did the flights prevent
-    return max(beforePOD.E - afterPOD.E, 0)
-                
+               
 def flightPreventedExposures(pod, droneVC, params, numFlights):
     #create two variations of this POD, with differing vaccinesInStock values
     beforeFlightsPOD = copy.deepcopy(pod)
@@ -676,15 +506,30 @@ def flightPreventedExposures(pod, droneVC, params, numFlights):
     thisDelivery = vaccineDelivery(droneVC * numFlights, np.inf)
     afterFlightsPOD.vaccineDeliveries.append(thisDelivery)
     
+    #print("\nAfter delivery of", droneVC * numFlights)
+    #print("Before",vars(beforeFlightsPOD))
+    #print("After",vars(afterFlightsPOD))
+
     #vaccinate both PODs with the vaccines available at each
     vaccinateOnePOD(beforeFlightsPOD)
     vaccinateOnePOD(afterFlightsPOD)
+
+    #print("\nAfter vaccination")
+    #print("Before",vars(beforeFlightsPOD))
+    #print("After",vars(afterFlightsPOD))
     
     #progress both PODs another day
     progressSinglePOD(beforeFlightsPOD, params)
     progressSinglePOD(afterFlightsPOD, params)
+
+    #print("\nAfter progression")
+    #print("Before",vars(beforeFlightsPOD))
+    #print("After",vars(afterFlightsPOD))
+    #print("Thus EPE",max(beforeFlightsPOD.E - afterFlightsPOD.E, 0))
+    #print()
+    #quit()
     
-    #return the difference between exposure values - how many exposures did the flights prevent
+    #return the difference between exposure values - how many exposures did the flights prevent for the following day
     return max(beforeFlightsPOD.E - afterFlightsPOD.E, 0)
     
 def teamPreventedExposures(pod, teams, params):
@@ -708,36 +553,7 @@ def teamPreventedExposures(pod, teams, params):
     
     #return the difference between exposure values - how many exposures did the flights prevent
     return max(noTeamsPOD.E - afterTeamsPOD.E, 0)
-    
-def findVehicleRoutes(oR, rT, dcI):
-    '''Finds routes of minimum time taken, using Clarke-Wright algorithm.
-    Also includes routes to-and-from each POD using Dijkstra's shortest path algorithm.'''
-    openRoadTimes = np.full(np.shape(oR), 100000)   #BigM if no direct road from i to j. Otherwise, travel time in mins
-    for i in range(0,len(openRoadTimes)):
-        for j in range(0,len(openRoadTimes[i])):
-            if oR[i][j] == 1 and rT[i][j] != np.inf:
-                openRoadTimes[i][j] = rT[i][j]
-                if openRoadTimes[i][j] == np.inf:
-                    openRoadTimes[i][j] = 100000    #BigM easier to work with than infinity
-    #Calculate the savings travelling directly from each pair to each other produces
-    Savings = calcSavings(openRoadTimes, dcI)
-    #build up the vehicle routes according to the heuristic
-    routes = buildRoutes(Savings, dcI, openRoadTimes)
-    routeTimes = []
-    for route in routes:
-        routeTimes.append(calcRouteTime(route, openRoadTimes))
-        
-    #Add to the routes found, there-and-back routes for each possible POD (back to DC).
-    for i in range(0, len(openRoadTimes)):
-        if i == dcI:
-            continue
-        route = [dcI,i,dcI]
-        rTime = 2 * findShortestPath(dcI, i, openRoadTimes)[0]
-        if rTime < 100000:          #if the route is feasible, add it
-            routes.append(route)
-            routeTimes.append(rTime)   
-    return routes, routeTimes
-    
+  
 def calcSavings(oRT, dcI):
     S = np.zeros(np.shape(oRT))
     for i in range(0,len(oRT)):
@@ -748,75 +564,6 @@ def calcSavings(oRT, dcI):
             if i != j:
                 S[i][j] = oRT[dcI][i] + oRT[dcI][j] - oRT[i][j]        
     return S            
-    
-def buildRoutes(Savings, dcI, openRoadTimes):
-    routes = []    
-    inRoutes = np.full(len(Savings), False)
-    while np.amax(Savings) > 0:
-        #Select savings pairs in descending order to add to routes
-        rowMaxes = np.amax(Savings, axis=1)
-        #rowI, colI is the location pair with the highest savings
-        rowI = np.argmax(rowMaxes)
-        colI = np.where(rowMaxes[rowI] == Savings[rowI])[0][0]
-        Savings[rowI][colI] = 0
-        Savings[colI][rowI] = 0
-        if openRoadTimes[rowI][colI] > 90000:
-            #only allow this link if feasible (capacity), etc
-            continue
-        
-        if inRoutes[rowI] == inRoutes[colI] == False:
-            routes.append([rowI, colI])
-            inRoutes[rowI] = inRoutes[colI] = True
-        elif inRoutes[rowI] == inRoutes[colI] == True:
-            RrouteIndex = findPoint(routes, rowI, dcI)
-            CrouteIndex = findPoint(routes, colI, dcI)
-            #Neither POD is interior, and the PODs are not in the same route
-            if RrouteIndex != -1 and CrouteIndex != -1 and CrouteIndex != RrouteIndex:
-                if routes[RrouteIndex][0] == rowI:      #rowI must be last in its route
-                    routes[RrouteIndex].reverse()
-                if routes[CrouteIndex][-1] == colI:     #colI must be first in its route
-                    routes[CrouteIndex].reverse()
-            
-                routes[RrouteIndex].extend(routes[CrouteIndex])
-                if RrouteIndex != CrouteIndex:  
-                    del routes[CrouteIndex]
-        else:
-            if inRoutes[rowI] == True:      #the rowI is in a route already, colI not
-                routeIndex = findPoint(routes, rowI, dcI)
-                if routeIndex == -1:
-                    continue
-                
-                if routes[routeIndex][0] == rowI:
-                    routes[routeIndex].reverse()
-                    routes[routeIndex].append(colI)
-                elif routes[routeIndex][-1] == rowI:
-                    routes[routeIndex].append(colI)
-                else:
-                    print("Logical error.")
-                    quit()
-                inRoutes[colI] = True
-            else:                           #the colI is in a route already, rowI not
-                routeIndex = findPoint(routes, colI, dcI)
-                if routeIndex == -1:
-                    continue
-                
-                if routes[routeIndex][0] == colI:
-                    routes[routeIndex].reverse()
-                    routes[routeIndex].append(rowI)
-                elif routes[routeIndex][-1] == colI:
-                    routes[routeIndex].append(rowI)
-                else:
-                    quit()
-                inRoutes[rowI] = True
-                
-    #Need to add the visit to the DC at the start and end of each
-    for i in range(0,len(routes)):
-        routes[i].append(dcI)
-        routes[i].reverse()
-        routes[i].append(dcI)
-        routes[i].reverse()
-        
-    return routes
     
 def findPoint(routes, node, dcI):
     '''If the node is interior or the DC, returns -1. If the node is on an edge,
@@ -830,22 +577,6 @@ def findPoint(routes, node, dcI):
         if route[0] == node or route[-1] == node:
             return routeIndex
     return -1
-  
-def calcRouteTime(route, oRT):
-    '''Calculates the total time in minutes to travel the given route.
-    If the route contains any indirect links between nodes (where there is no passable road), 
-    use Dijkstra's shortest path algorithm to determine to time to traverse that link if possible.'''
-    routeTime = 0
-    for k in range(1, len(route)):
-        i = route[k-1]
-        j = route[k]
-        if oRT[i][j] == 100000:       #indirect link between nodes i and j
-            ijTime, ijPath = findShortestPath(i,j,oRT)
-            #ijTime is the time of the shortest path from i to j. ijPath, the actual shortest path.
-            routeTime += ijTime
-        else:                           #add time to travel direct link
-            routeTime += oRT[i][j]
-    return routeTime
   
 def findShortestPath(i,j,oRT):
     '''Finds the shortest path between i and j using Dijkstra's algorithm.'''  
@@ -882,18 +613,21 @@ def findShortestPath(i,j,oRT):
   
 def assignTeams(PODs, numTeams, tStrategy):
     if tStrategy == 'spread':
+        # Splits teams equally among locations, randomly assigns remaining teams.
         remainingTeams = numTeams
         for pod in PODs:
-            pod.teamsAtPOD = min(roundUsingProb(numTeams/len(PODs)), remainingTeams)
-            remainingTeams -= pod.teamsAtPOD
-            pod.maxVaccinationsPerDay = pod.vaccsPerTeamDay * pod.teamsAtPOD
+            if remainingTeams > 0:
+                pod.teamsAtPOD = min(roundUsingProb(numTeams/len(PODs)), remainingTeams)
+                remainingTeams -= pod.teamsAtPOD
+                pod.maxVaccinationsPerDay = pod.vaccsPerTeamDay * pod.teamsAtPOD
+            else:
+                break
             
-        if remainingTeams > 0:
+        while remainingTeams > 0:
             randIndex = int(len(PODs) * random.random())
-            PODs[randIndex].teamsAtPOD += remainingTeams
-            remainingTeams = 0
+            PODs[randIndex].teamsAtPOD += 1
+            remainingTeams -= 1
             PODs[randIndex].maxVaccinationsPerDay = PODs[randIndex].vaccsPerTeamDay * PODs[randIndex].teamsAtPOD
-        
     elif tStrategy == 'S':
         podSs = np.zeros(np.shape(PODs))
         for i in range(0,len(PODs)):
@@ -1054,7 +788,7 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
     
 #     import matplotlib as mpl
 #     mpl.rcParams['figure.dpi'] = 150
-#     plt.savefig("SEIRvehicleD.pdf",bbox_inches='tight')
+#     plt.savefig("filename_figure.pdf",bbox_inches='tight')
     
     plt.show()
     
@@ -1124,10 +858,9 @@ def simulate(filename='Likasi.csv'):
     #===============================================================================
     # Initial Calculations
     #===============================================================================
-    PODs, roadDistances = readPODsFromFile(filename, maxVaccsFreePODday, maxVaccsFixedPODday, ruralTnt, urbanTnt)
-    podDistances = calcPODdistanceMatrix(PODs)
-    numRoadsClosed, openRoads, roadTimes = calcRoadTimes(PODs, roadDistances, podDistances, roadCloseFactor)
-    #roadTimes = roadDistances   #for matadi only!
+    PODs = readPODsFromFile(filename, maxVaccsTeamDay, turnout, targetedVaccination, vaccinationRate)
+    unscaledDistances = calcPODdistanceMatrix(PODs)
+    podDistances, PODs = scaleCoordinatesAndDistances(unscaledDistances, PODs, maxDistance)
     MigrationProportions = calcMigration(PODs, podDistances, migrationIntensity)
     DCindex = findDC(PODs, podDistances)
     #print("The DC is placed in", PODs[DCindex])
@@ -1142,12 +875,11 @@ def simulate(filename='Likasi.csv'):
     totDroneDelvs = 0                            #total number of drone flights for simulation
     totVaccs = 0                            #total number of vaccines delivered, incl DC vaccines
     totExpired = 0                          #total number of vaccines expired    
-    totMinsDriven = 0
-    totVaccsGiven = 0
+    totVaccsGiven = 0                       #total number of vaccines actually administered, incl DC.
     vaccsPerDay = np.zeros(simulationRuntime)
 
     #===============================================================================
-    # Simulation - Main Loop
+    # Simulation - Main Daily Loop
     #===============================================================================    
     for t in range(0, simulationRuntime):
         #print("\n",t,":")
@@ -1167,29 +899,11 @@ def simulate(filename='Likasi.csv'):
             
             #deliver vaccines
             if deliveryType == "drone":
-                delivDetails = deliverByDrone(strategy, t, PODs, workingMinutesPerDay, 
+                delivDetails = deliverByDrone(vaccStrategy, t, PODs, workingMinutesPerDay, 
                                             droneVaccineCapacity, numberOfDrones, params, 
                                             monoDaysPotency)
                 totDroneDelvs += delivDetails[0]
                 totVaccs += delivDetails[1]
-            elif deliveryType == "vehicle":
-                vDeliveredToday, minsDr = deliverByVehicle(openRoads, roadTimes, DCindex, 
-                                            strategy, PODs, workingMinutesPerDay, 
-                                            vehicleCapacities, numVehicles, params, 
-                                            monoDaysPotency, t, maxTripLength, deliveryType)
-                totVaccs += vDeliveredToday
-                totMinsDriven += minsDr
-            elif deliveryType == "combined":
-                vaccsByV, minsDriven = deliverByVehicle(openRoads, roadTimes, DCindex, 
-                                            strategy, PODs, workingMinutesPerDay, 
-                                            vehicleCapacities, numVehicles, params, 
-                                            monoDaysPotency, t, maxTripLength, deliveryType)
-                dDelivs, vaccsByD = deliverByDrone(strategy, t, PODs, workingMinutesPerDay, 
-                                            droneVaccineCapacity, numberOfDrones, params, 
-                                            monoDaysPotency)
-                totVaccs += vaccsByD + vaccsByV
-                totDroneDelvs += dDelivs
-                totMinsDriven += minsDriven
             elif deliveryType != "none":            #no vaccinations happen if deliveryType is none.
                 print("Invalid delivery type selected.")
                 quit()        
@@ -1199,22 +913,21 @@ def simulate(filename='Likasi.csv'):
                 vGiven, vGivenDC = vaccinate(PODs)
                 vaccsPerDay[t] = vGiven
                 totVaccsGiven += vGiven
-                totVaccs += vGivenDC
+                totVaccs += vGivenDC        # Add the vaccs given at DC to the total cumul. vaccines delivered
         elif t >= interventionStartTime + interventionLength:
             #intervention is over
             interventionOver = True
             #print("Intervention is over")
         elif not waitingForIntervention and t <= interventionStartTime:
             for pod in PODs:
-                if pod.isUrban and pod.I/pod.N > interventionCaseRatio:
-                    #if a confirmed measles case found in a major town, then decide to intervene.
+                if pod.I/pod.N > interventionCaseRatio:
+                    #if a confirmed measles case found in a town, then decide to intervene.
                     interventionStartTime = t + interventionLeadTime
                     waitingForIntervention = True
                     #print("The epidemic has been detected in", pod.name, "! Intervention will begin on day", interventionStartTime)            
                     break
         
-        drivingCost = totMinsDriven/60 * 60 * 7/100 * 1.36  #60kph, 7l/100km, $1.36 per litre
-        deliveryCost = totDroneDelvs * costPerFlight + drivingCost
+        deliveryCost = totDroneDelvs * costPerFlight
         vaccineCost = totVaccs * costPerDoseMono
             
         updatePlotHistory(PODs, plots)
@@ -1223,60 +936,38 @@ def simulate(filename='Likasi.csv'):
         #plotMap(PODs, t, waitingForIntervention, interventionStartTime, interventionOver, 
         #       totExpired, totVaccs, totVaccsGiven, deliveryCost + vaccineCost)
     
-    #===============================================================================
-    # Result Reporting
-    #===============================================================================
+    # ----------------- Result Reporting
     deaths = 0
     for pod in PODs:
         deaths += pod.deaths
     #print("\nThe total number of deaths is:", deaths)
     
-    if deliveryType == "drone":
-        droneCost = totDroneDelvs * costPerFlight
-        #print("Total drone flight cost: $", droneCost,",for", totDroneDelvs, "flights.")
-    elif deliveryType == "vehicle":
-        drivingCost = totMinsDriven/60 * 60 * 7/100 * 1.36     #60kph, 7l/100km, $1.36 per litre
-        #print("Total estimated driving cost: $", int(drivingCost), "for a total of", int(totMinsDriven/60), "hours of driving.")    
-    elif deliveryType == "combined":
-        drivingCost = totMinsDriven/60 * 60 * 7/100 * 1.36     #60kph, 7l/100km, $1.36 per litre
-        #print("Total estimated driving cost: $", "for a total of", int(totMinsDriven/60), "hours of driving.")    
-        droneCost = totDroneDelvs * costPerFlight
-        #print("Total drone flight cost: $", droneCost,",for", totDroneDelvs, "flights.")
-    
-    
     #print("Total cost of monodose vaccines delivered: $", vaccineCost, ",for", totVaccs, "doses.")
     if totVaccs > 0:
         expiryRatio = totExpired / totVaccs * 100
         #print("Percentage of vaccines expired without use:", round(expiryRatio,2), "%")
+
+    #print("Total number of vaccines delivered, plus those used at the DC:",totVaccs)
+    #print("Total number of vaccines actually administered to patients:", totVaccsGiven)
     
-    #print("Total number of vaccines administered to patients:", totVaccsGiven)
-    
-    #plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10), PODs)
-    #plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10,11), PODs)
+    plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10), PODs)
     #plotPOD(simulationRuntime, plots, 7, "Likasi")
     #plotMap(PODs,  t, waitingForIntervention, interventionStartTime, interventionOver,
-     #      totExpired, totVaccs, totVaccsGiven, vaccineCost + deliveryCost)
+    #      totExpired, totVaccs, totVaccsGiven, vaccineCost + deliveryCost)
     
-    Vactots = np.zeros(simulationRuntime)
-    Stots = np.zeros(simulationRuntime)
-    Itots = np.zeros(simulationRuntime)
-    for t in range(0,simulationRuntime):    
-        Vactots[t] += plots[6][5][t]  #Just for Likasi
-        Stots[t] += plots[6][0][t]  
-        Itots[t] += plots[6][2][t]
-#         for podI in range(0,len(PODs)):        #for all locations
-#             Vactots[t] += plots[podI][5][t]  
-#             Stots[t] += plots[podI][0][t]  
-#             Itots[t] += plots[podI][2][t]
-    return deaths, vaccineCost + deliveryCost, totVaccsGiven, totExpired#, vaccsPerDay #,Vactots,Stots
+    if vaccStrategy == 'uncapped':
+        # In this case, the total vaccines delivered and used is just the total vaccs given (which includes DC)
+        totVaccs = totVaccsGiven
+
+    return deaths, totVaccs, deliveryCost + vaccineCost  #totExpired, vaccsPerDay #,Vactots,Stots
 
 
-simulationRuntime = 150             #days to run the simulation for
 #Parameters    ========================================================================
+simulationRuntime = 200             #days to run the simulation for
 #Measles SEIR parameters
 exposedDays = 10                    #number of days a patient is exposed for without symptoms
 infectiousDays = 8                  #number of days a patient is infectious for
-deathRate = 0.10 * 1/infectiousDays #the proportion of infected patients that die per day
+deathRate = 0.0329 * 1/infectiousDays #daily death rate. From wolfson2009estimates - 3.29 mean, 0.05-6% WHO estimate for low income countries
 R0 = 15                             #basic reproductive number of the epidemic
 params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
 migrationIntensity = 1              #factor by which migration is multiplied. 2 means more migration.
@@ -1284,36 +975,33 @@ migrationIntensity = 1              #factor by which migration is multiplied. 2 
 vaccineEffectiveness = 0.95         #probability the vaccine works (for non-exposed)
 prophylaxis72hrSuccessRate = 0.83   #probability the vaccine works (for exposed, within 72hrs)
 monoDaysPotency = 3                 #number of days for which the vaccine lasts outside of cold-chain
-TenDaysPotency = 5                  #number of days the 10-dose vaccine lasts outside of cold-chain
 #intervention parameters
 interventionLeadTime = 15           #number of days before vaccination starts
 interventionCaseRatio = 0.005       #ratio of I/S in a town before detection
-interventionLength = 28             #number of days the intervention lasts for
+interventionLength = np.inf         #number of days the intervention lasts for
 workingMinutesPerDay = 660          #11 working hours per day: 7am to 6pm
 workDaysPerWeek = 7                 #number of working days per week for MSF teams
 numTeams = 15                       #number of vaccination teams in the field
-maxVaccsFixedPODday = 450           #fixed teams can vaccinate up to 450 per day
-maxVaccsFreePODday = 250            #free teams can vaccinate up to 250 per day
-ruralTnt = 450                      #rural areas, turnout is 300-600
-urbanTnt = 900                      #urban areas, turnout is 800-1000
+maxVaccsTeamDay = 2000              #teams can vaccinate up to ~2000 per day - poncin2018implementation
+turnout = 999999                    #turnout was 900, now inf to effectively remove its impact.
 #delivery details
 flightLaunchTime = 10               #minutes per flight, to set up takeoff
 droneSpeed = 100                    #100 kilometres per hour     
-numberOfDrones = 2                  #number of drones
-numVehicles = 2                     #number of land-based delivery vehicles
+numberOfDrones = 5                  #number of drones
 droneVaccineCapacity = 60           #number of vaccine doses per drone
-vehicleCapacities = [1050,200]      #number of vaccine doses per vehicle
-roadCloseFactor = 1                 #prob that road is open is divided by this factor. 1<rCF
 #costs
 costPerDoseMono = 2.85              #the cost per dose of monodose measles vaccine
-costPerDose10 = 1.284               #the cost per dose of 10-dose measles vaccine
 costPerFlight = 17                  #$17 per drone flight
 #strategies
-strategy = 'I'                      #I = infections, S = Susceptible, N = Total Pop., EPE = Expected Prevented Exposures
-teamStrategy = 'N'                  #I, S, N, I/N, spread
-deliveryType = 'vehicle'            #"none", "drone" or "vehicle", or "combined"
-maxTripLength = 180                 #if deliveryType = combined, this is the cutoff in mins for vehicle trip length
+vaccStrategy = 'S'                  #I, S, N, EPE, uncapped, absI, absS, absN
+teamStrategy = 'S'                  #I, S, N, EPE, I/N, spread
+deliveryType = 'drone'              #"none", "drone"
+targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
+#input dataset
+maxDistance = 30                    #The distance in km that the max inter-location distance is scaled to
+vaccinationRate = 0.66              #66% vaccination rate in network
 
-#changes made in calcMaxVaccinesNeeded50, and both deliverByDrones methods, using np.ceil to round up to multips of 60
+print(simulate("Generic_network_city.csv"))
 
-print(simulate())
+#TODO: (Optional) Randomly generated networks
+#TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
