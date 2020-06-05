@@ -993,8 +993,8 @@ droneVaccineCapacity = 60           #number of vaccine doses per drone
 costPerDoseMono = 2.85              #the cost per dose of monodose measles vaccine
 costPerFlight = 17                  #$17 per drone flight
 #strategies
-vaccStrategy = 'N'                  #I, S, N, EPE, uncapped, absI, absS, absN
-teamStrategy = 'N'                  #I, S, N, EPE, I/N, spread
+vaccStrategy = 'S'                  #I, S, N, EPE, uncapped, absI, absS, absN
+teamStrategy = 'S'                  #I, S, N, EPE, I/N, spread
 deliveryType = 'drone'              #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
@@ -1002,13 +1002,6 @@ maxDistance = 30                    #The distance in km that the max inter-locat
 vaccinationRate = 0.66              #66% vaccination rate in network
 
 print(simulate("Generic_network_city.csv"))
-quit()
-for vaccStrategy in ['I','S','N','EPE','absI','absS','absN','uncapped']:
-    for teamStrategy in ['I','S','N','EPE','I/N','spread']:
-        deaths, vaccinesUsed, cost = simulate("Generic_network_city.csv")
-        
 
-
-#TODO: Randomly generated networks
+#TODO: (Optional) Randomly generated networks
 #TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
-#TODO: Merge this branch to master of git repo.
