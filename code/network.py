@@ -817,9 +817,9 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
     plt.xlabel("Number of weeks since 1 November 2003")
     plt.legend()
     
-    #import matplotlib as mpl
-    #mpl.rcParams['figure.dpi'] = 150
-    #plt.savefig("niamey_histograms.pdf",bbox_inches='tight')
+    import matplotlib as mpl
+    mpl.rcParams['figure.dpi'] = 150
+    plt.savefig("niamey_histograms.pdf",bbox_inches='tight')
     
     plt.show()
     
@@ -1001,7 +1001,7 @@ simulationRuntime = 280             #days to run the simulation for - 31 weeks
 #Measles SEIR parameters
 exposedDays = 10                    #number of days a patient is exposed for without symptoms
 infectiousDays = 8                  #number of days a patient is infectious for
-deathRate = 0.01 * 1/infectiousDays #daily death rate. From wolfson2009estimates - 3.29 mean, 0.05-6% WHO estimate for low income countries
+deathRate = 0.0329 * 1/infectiousDays #daily death rate. From wolfson2009estimates - 3.29 mean, 0.05-6% WHO estimate for low income countries
 R0 = 6.9                              #basic reproductive number of the epidemic
 params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
 migrationIntensity = 1              #factor by which migration is multiplied. 2 means more migration.
