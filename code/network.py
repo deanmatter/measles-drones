@@ -790,7 +790,7 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
         # else:                                                   # Else plot the simulated higher
         #     plt.fill_between(np.arange(week,week+1), 0, reported_weekly[week], color='k')                       #actual
         #     plt.fill_between(np.arange(week,week+1), reported_weekly[week], newReportedInfections, color='b')   #simulated
-
+   
     plt.plot(0,0, label='Actual',color='k')
     plt.plot(0,0, label='Simulated',color='b')
 
@@ -817,9 +817,9 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
     plt.xlabel("Number of weeks since 1 November 2003")
     plt.legend()
     
-    import matplotlib as mpl
-    mpl.rcParams['figure.dpi'] = 150
-    plt.savefig("niamey_histograms.pdf",bbox_inches='tight')
+    #import matplotlib as mpl
+    #mpl.rcParams['figure.dpi'] = 150
+    #plt.savefig("niamey_histograms.pdf",bbox_inches='tight')
     
     plt.show()
     
@@ -984,6 +984,9 @@ def simulate(filename='Likasi.csv'):
     #print("Total number of vaccines actually administered to patients:", totVaccsGiven)
     
     newInfectionsPerDay = np.array(newInfectionsPerDay)
+    print("Simulated total cases:",sum(newInfectionsPerDay))
+    print("Simulated reported cases:",sum(newInfectionsPerDay)/2)
+    
     plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10,11,12,13,14), PODs)
     #plotPOD(simulationRuntime, plots, 7, "Likasi")
     #plotMap(PODs,  t, waitingForIntervention, interventionStartTime, interventionOver,
