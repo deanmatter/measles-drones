@@ -192,10 +192,13 @@ def progressEpidemicByOneDay(PODs, params, MigrationProportions):
         deaths += PODs[i].deaths
     #print(Iarr)
           
+    newInfectionsPerDay.append(0)
+
     i = 0
     for pod in PODs:
         #consider migrations
         migratePOD(pod, i, MigrationProportions, Sarr, Earr, Iarr, Rarr, Varr)
+
         #calculate SEIR progression for the day
         progressSinglePOD(pod, params)
         if len(pod.last3E) == 4:
@@ -218,6 +221,9 @@ def progressSinglePOD(pod, params):
     newRecoveries = gamma * I
     newDeaths = mu * I
     pod.last3E.append(newExposures)
+
+    #Add new infections to global array
+    newInfectionsPerDay[-1] += newInfectious
     
     #SEIR updates for the pod
     pod.S = S - newExposures 
@@ -766,23 +772,43 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
         deads = deads + plots[podIndexes[i]][4]
         vacs = vacs + plots[podIndexes[i]][5]
         
-    plt.plot(np.arange(daysOfIntervention), Ss, label='Susceptible')
-    plt.plot(np.arange(daysOfIntervention), Es, label='Exposed')
-    plt.plot(np.arange(daysOfIntervention), Is, label='Infectious')
-    plt.plot(np.arange(daysOfIntervention), deads, label='Deaths')
-    plt.plot(np.arange(daysOfIntervention), Rs, label='Recovered')
-    plt.plot(np.arange(daysOfIntervention), (vacs-min(vacs)), label='Vaccinations')
+    newInfectionsPerWeek = np.zeros(len(reported_weekly))
+    for week in range(0,len(reported_weekly)):
+        # Calculate new infections, aggregated by week
+        newInfectionsPerWeek[week] = sum(newInfectionsPerDay[7*week:7*(week+1)])
+        # Reported infections is 50% of actual infections
+        newReportedInfections = newInfectionsPerWeek[week] / 2
+        # Plot both the actual reported cases, and simulated reported new cases, as histograms.
+        if reported_weekly[week] > newReportedInfections:       # If reported > simulated, plot that higher (fancy formatting)
+            plt.fill_between(np.arange(week*7,week*7+7), [newReportedInfections]*7, [reported_weekly[week]]*7, color='k')    #actual
+            plt.fill_between(np.arange(week*7,week*7+7), [0]*7, [newReportedInfections]*7, color='b')                       #simulated
+        else:                                                   # Else plot the simulated higher
+            plt.fill_between(np.arange(week*7,week*7+7), [0]*7, [reported_weekly[week]]*7, color='k')                       #actual
+            plt.fill_between(np.arange(week*7,week*7+7), [reported_weekly[week]]*7, [newReportedInfections]*7, color='b')   #simulated
+
+    plt.plot(0,0, label='Actual Reported Cases',color='k')
+    plt.plot(0,0, label='Simulated Reported Cases',color='b')
+
+    #Plot the new infections per day
+    #plt.plot(np.arange(daysOfIntervention), newInfectionsPerDay, label='Simulated Reported Cases')
+
+    #plt.plot(np.arange(daysOfIntervention), Ss, label='Susceptible')
+    #plt.plot(np.arange(daysOfIntervention), Es, label='Exposed')
+    #plt.plot(np.arange(daysOfIntervention), Is, label='Infectious')
+    #plt.plot(np.arange(daysOfIntervention), deads, label='Deaths')
+    #plt.plot(np.arange(daysOfIntervention), Rs, label='Recovered')
+    #plt.plot(np.arange(daysOfIntervention), (vacs-min(vacs)), label='Vaccinations')
 
     label = ""
     for i in podIndexes:
         label = label + PODs[i].name + ","
     label = label[:len(label)-1]
     if len(podIndexes) == len(PODs):
-        label = "Measles epidemic progression over the whole network,\nwith intervention"
+        label = "Comparison between actual and simulated weekly reported cases for 2003-4 Niamey measles outbreak"
     
     plt.title(label)
     #plt.title("Progression of measles epidemic SEIR model")
-    plt.ylabel("Number of People")
+    plt.ylabel("Number of reported infections")
     plt.xlabel("Time elapsed in days")
     plt.legend()
     
@@ -877,6 +903,8 @@ def simulate(filename='Likasi.csv'):
     totExpired = 0                          #total number of vaccines expired    
     totVaccsGiven = 0                       #total number of vaccines actually administered, incl DC.
     vaccsPerDay = np.zeros(simulationRuntime)
+    global newInfectionsPerDay
+    newInfectionsPerDay = []
 
     #===============================================================================
     # Simulation - Main Daily Loop
@@ -950,7 +978,8 @@ def simulate(filename='Likasi.csv'):
     #print("Total number of vaccines delivered, plus those used at the DC:",totVaccs)
     #print("Total number of vaccines actually administered to patients:", totVaccsGiven)
     
-    plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10), PODs)
+    newInfectionsPerDay = np.array(newInfectionsPerDay)
+    plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10,11,12,13,14), PODs)
     #plotPOD(simulationRuntime, plots, 7, "Likasi")
     #plotMap(PODs,  t, waitingForIntervention, interventionStartTime, interventionOver,
     #      totExpired, totVaccs, totVaccsGiven, vaccineCost + deliveryCost)
@@ -963,12 +992,12 @@ def simulate(filename='Likasi.csv'):
 
 
 #Parameters    ========================================================================
-simulationRuntime = 200             #days to run the simulation for
+simulationRuntime = 280             #days to run the simulation for - 31 weeks
 #Measles SEIR parameters
 exposedDays = 10                    #number of days a patient is exposed for without symptoms
 infectiousDays = 8                  #number of days a patient is infectious for
-deathRate = 0.0329 * 1/infectiousDays #daily death rate. From wolfson2009estimates - 3.29 mean, 0.05-6% WHO estimate for low income countries
-R0 = 15                             #basic reproductive number of the epidemic
+deathRate = 0.01 * 1/infectiousDays #daily death rate. From wolfson2009estimates - 3.29 mean, 0.05-6% WHO estimate for low income countries
+R0 = 6.9                              #basic reproductive number of the epidemic
 params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
 migrationIntensity = 1              #factor by which migration is multiplied. 2 means more migration.
 #vaccine parameters
@@ -977,12 +1006,12 @@ prophylaxis72hrSuccessRate = 0.83   #probability the vaccine works (for exposed,
 monoDaysPotency = 3                 #number of days for which the vaccine lasts outside of cold-chain
 #intervention parameters
 interventionLeadTime = 15           #number of days before vaccination starts
-interventionCaseRatio = 0.005       #ratio of I/S in a town before detection
-interventionLength = np.inf         #number of days the intervention lasts for
+interventionCaseRatio = 0.008       #ratio of I/S in a town before detection
+interventionLength = 10             #number of days the intervention lasts for
 workingMinutesPerDay = 660          #11 working hours per day: 7am to 6pm
 workDaysPerWeek = 7                 #number of working days per week for MSF teams
-numTeams = 15                       #number of vaccination teams in the field
-maxVaccsTeamDay = 2000              #teams can vaccinate up to ~2000 per day - poncin2018implementation
+numTeams = 33                       #number of vaccination teams in the field
+maxVaccsTeamDay = 256               #teams can vaccinate up to ~2000 per day - poncin2018implementation
 turnout = 999999                    #turnout was 900, now inf to effectively remove its impact.
 #delivery details
 flightLaunchTime = 10               #minutes per flight, to set up takeoff
@@ -993,15 +1022,25 @@ droneVaccineCapacity = 60           #number of vaccine doses per drone
 costPerDoseMono = 2.85              #the cost per dose of monodose measles vaccine
 costPerFlight = 17                  #$17 per drone flight
 #strategies
-vaccStrategy = 'S'                  #I, S, N, EPE, uncapped, absI, absS, absN
-teamStrategy = 'S'                  #I, S, N, EPE, I/N, spread
+vaccStrategy = 'uncapped'                  #I, S, N, EPE, uncapped, absI, absS, absN
+teamStrategy = 'N'                  #I, S, N, EPE, I/N, spread
 deliveryType = 'drone'              #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
-maxDistance = 30                    #The distance in km that the max inter-location distance is scaled to
-vaccinationRate = 0.66              #66% vaccination rate in network
+maxDistance = 20                    #The distance in km that the max inter-location distance is scaled to
+vaccinationRate = 0.70              #66% vaccination rate in network
 
-print(simulate("Generic_network_city.csv"))
+reported_weekly = np.array(
+    [
+        10,12,15,18,22,30,27,50,53,65,
+        80,140,130,200,430,460,780,600,1100,900,
+        960,820,980,820,1020,550,240,200,130,90,
+        0,0,0,0,0,0,0,0,0,0
+    ]
+)
+
+print(simulate("Niamey.csv"))
+
 
 #TODO: (Optional) Randomly generated networks
 #TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
