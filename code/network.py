@@ -193,14 +193,17 @@ def progressEpidemicByOneDay(PODs, params, MigrationProportions):
     #print(Iarr)
           
     newInfectionsPerDay.append(0)
-
     i = 0
     for pod in PODs:
         #consider migrations
         migratePOD(pod, i, MigrationProportions, Sarr, Earr, Iarr, Rarr, Varr)
 
         #calculate SEIR progression for the day
-        progressSinglePOD(pod, params)
+        podNewInfections = progressSinglePOD(pod, params)
+
+        # Add new infections to the global array
+        newInfectionsPerDay[-1] += podNewInfections
+
         if len(pod.last3E) == 4:
             pod.last3E.popleft()
         i += 1
@@ -221,9 +224,6 @@ def progressSinglePOD(pod, params):
     newRecoveries = gamma * I
     newDeaths = mu * I
     pod.last3E.append(newExposures)
-
-    #Add new infections to global array
-    newInfectionsPerDay[-1] += newInfectious
     
     #SEIR updates for the pod
     pod.S = S - newExposures 
@@ -231,6 +231,8 @@ def progressSinglePOD(pod, params):
     pod.I = I + newInfectious - newRecoveries - newDeaths
     pod.R = R + newRecoveries
     pod.deaths = deaths + newDeaths
+
+    return newInfectious
         
 def migratePOD(pod, i, todaysMigration, Sarr, Earr, Iarr, Rarr, Varr):
     migrationIn = todaysMigration[:,i]
@@ -779,15 +781,18 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
         # Reported infections is 50% of actual infections
         newReportedInfections = newInfectionsPerWeek[week] / 2
         # Plot both the actual reported cases, and simulated reported new cases, as histograms.
-        if reported_weekly[week] > newReportedInfections:       # If reported > simulated, plot that higher (fancy formatting)
-            plt.fill_between(np.arange(week*7,week*7+7), [newReportedInfections]*7, [reported_weekly[week]]*7, color='k')    #actual
-            plt.fill_between(np.arange(week*7,week*7+7), [0]*7, [newReportedInfections]*7, color='b')                       #simulated
-        else:                                                   # Else plot the simulated higher
-            plt.fill_between(np.arange(week*7,week*7+7), [0]*7, [reported_weekly[week]]*7, color='k')                       #actual
-            plt.fill_between(np.arange(week*7,week*7+7), [reported_weekly[week]]*7, [newReportedInfections]*7, color='b')   #simulated
+        plt.fill_between([week+0.15,week+0.5], 0, reported_weekly[week], color='k')    #actual
+        plt.fill_between([week+0.5,week+0.85], 0, newReportedInfections, color='b')    #simulated
+        
+        # if reported_weekly[week] > newReportedInfections:       # If reported > simulated, plot that higher (fancy formatting)
+        #     plt.fill_between(np.arange(week,week+1), newReportedInfections, reported_weekly[week], color='k')    #actual
+        #     plt.fill_between(np.arange(week,week+1), 0, newReportedInfections, color='b')                       #simulated
+        # else:                                                   # Else plot the simulated higher
+        #     plt.fill_between(np.arange(week,week+1), 0, reported_weekly[week], color='k')                       #actual
+        #     plt.fill_between(np.arange(week,week+1), reported_weekly[week], newReportedInfections, color='b')   #simulated
 
-    plt.plot(0,0, label='Actual Reported Cases',color='k')
-    plt.plot(0,0, label='Simulated Reported Cases',color='b')
+    plt.plot(0,0, label='Actual',color='k')
+    plt.plot(0,0, label='Simulated',color='b')
 
     #Plot the new infections per day
     #plt.plot(np.arange(daysOfIntervention), newInfectionsPerDay, label='Simulated Reported Cases')
@@ -808,13 +813,13 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
     
     plt.title(label)
     #plt.title("Progression of measles epidemic SEIR model")
-    plt.ylabel("Number of reported infections")
-    plt.xlabel("Time elapsed in days")
+    plt.ylabel("Number of reported measles cases")
+    plt.xlabel("Number of weeks since 1 November 2003")
     plt.legend()
     
-#     import matplotlib as mpl
-#     mpl.rcParams['figure.dpi'] = 150
-#     plt.savefig("filename_figure.pdf",bbox_inches='tight')
+    #import matplotlib as mpl
+    #mpl.rcParams['figure.dpi'] = 150
+    #plt.savefig("niamey_histograms.pdf",bbox_inches='tight')
     
     plt.show()
     
