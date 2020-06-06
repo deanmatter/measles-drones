@@ -782,17 +782,17 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
         newReportedInfections = newInfectionsPerWeek[week] / 2
         # Plot both the actual reported cases, and simulated reported new cases, as histograms.
         plt.fill_between([week+0.15,week+0.5], 0, reported_weekly[week], color='k')    #actual
-        plt.fill_between([week+0.5,week+0.85], 0, newReportedInfections, color='b')    #simulated
+        plt.fill_between([week+0.5,week+0.85], 0, newReportedInfections, color='cornflowerblue')    #simulated
         
         # if reported_weekly[week] > newReportedInfections:       # If reported > simulated, plot that higher (fancy formatting)
         #     plt.fill_between(np.arange(week,week+1), newReportedInfections, reported_weekly[week], color='k')    #actual
-        #     plt.fill_between(np.arange(week,week+1), 0, newReportedInfections, color='b')                       #simulated
+        #     plt.fill_between(np.arange(week,week+1), 0, newReportedInfections, color='cornflowerblue')                       #simulated
         # else:                                                   # Else plot the simulated higher
         #     plt.fill_between(np.arange(week,week+1), 0, reported_weekly[week], color='k')                       #actual
-        #     plt.fill_between(np.arange(week,week+1), reported_weekly[week], newReportedInfections, color='b')   #simulated
+        #     plt.fill_between(np.arange(week,week+1), reported_weekly[week], newReportedInfections, color='cornflowerblue')   #simulated
    
     plt.plot(0,0, label='Actual',color='k')
-    plt.plot(0,0, label='Simulated',color='b')
+    plt.plot(0,0, label='Simulated',color='cornflowerblue')
 
     #Plot the new infections per day
     #plt.plot(np.arange(daysOfIntervention), newInfectionsPerDay, label='Simulated Reported Cases')
@@ -817,9 +817,9 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
     plt.xlabel("Number of weeks since 1 November 2003")
     plt.legend()
     
-    #import matplotlib as mpl
-    #mpl.rcParams['figure.dpi'] = 150
-    #plt.savefig("niamey_histograms.pdf",bbox_inches='tight')
+    import matplotlib as mpl
+    mpl.rcParams['figure.dpi'] = 150
+    plt.savefig("niamey_histograms.pdf",bbox_inches='tight')
     
     plt.show()
     
