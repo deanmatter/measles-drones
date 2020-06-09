@@ -6,6 +6,7 @@ from matplotlib import patches
 import copy
 from collections import deque
 import os
+import matplotlib as mpl
 
 class vaccineDelivery:
     def __init__(self, d, eD):
@@ -818,11 +819,9 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
     plt.xlabel("Number of weeks since 1 November 2003")
     plt.legend()
     
-    #import matplotlib as mpl
-    #mpl.rcParams['figure.dpi'] = 150
-    #plt.savefig("niamey_histograms.pdf",bbox_inches='tight')
-    
-    #plt.show()
+    mpl.rcParams['figure.dpi'] = 150
+    plt.savefig("niamey_histograms.pdf",bbox_inches='tight')
+    plt.show()
     
 def plotMap(PODs, t, waitingForIntervention, IstartTime, intOver, 
             totExpired, totVaccs, totVaccsGiven, totCost):
@@ -1007,7 +1006,7 @@ simulationRuntime = 280             #days to run the simulation for - 31 weeks
 exposedDays = 10                    #number of days a patient is exposed for without symptoms
 infectiousDays = 8                  #number of days a patient is infectious for
 deathRate = 0.0329 * 1/infectiousDays #daily death rate. From wolfson2009estimates - 3.29 mean, 0.05-6% WHO estimate for low income countries
-R0 = 6.9                              #basic reproductive number of the epidemic
+R0 = 7                              #basic reproductive number of the epidemic
 params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
 migrationIntensity = 1              #factor by which migration is multiplied. 2 means more migration.
 #vaccine parameters
@@ -1016,7 +1015,7 @@ prophylaxis72hrSuccessRate = 0.83   #probability the vaccine works (for exposed,
 monoDaysPotency = 3                 #number of days for which the vaccine lasts outside of cold-chain
 #intervention parameters
 interventionLeadTime = 15           #number of days before vaccination starts
-interventionCaseRatio = 0.008       #ratio of I/S in a town before detection
+interventionCaseRatio = 0.009       #ratio of I/S in a town before detection
 interventionLength = 10             #number of days the intervention lasts for
 workingMinutesPerDay = 660          #11 working hours per day: 7am to 6pm
 workDaysPerWeek = 7                 #number of working days per week for MSF teams
@@ -1049,6 +1048,9 @@ reported_weekly = np.array(
     ]
 )
 
+print(simulate("Niamey.csv"))
+quit()
+
 # Grid search for best R0, iCR values
 low_error_score = np.inf
 low_param_set = []
@@ -1056,7 +1058,7 @@ for R0 in np.arange(6,8,0.05):
     for interventionCaseRatio in np.arange(0.001,0.01,0.001):
         params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
         deaths, reported_cases, vaccinations, cost = simulate("Niamey.csv")
-        case_error = 10880-reported_cases
+        case_error = np.abs(10880-reported_cases)
         dist_error_ss = np.dot(reported_weekly-newInfectionsPerWeek/2, reported_weekly-newInfectionsPerWeek/2)
         error_score = case_error + dist_error_ss/1000
         if error_score < low_error_score:
@@ -1064,7 +1066,6 @@ for R0 in np.arange(6,8,0.05):
             print(R0,interventionCaseRatio,"\t", error_score, case_error, dist_error_ss)
         elif error_score < 1.1 * low_error_score:
             print("almost",R0,interventionCaseRatio,"\t", error_score, case_error, dist_error_ss)
-
 
 
 #TODO: (Optional) Randomly generated networks
