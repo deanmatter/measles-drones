@@ -774,6 +774,7 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
         deads = deads + plots[podIndexes[i]][4]
         vacs = vacs + plots[podIndexes[i]][5]
         
+    global newInfectionsPerWeek
     newInfectionsPerWeek = np.zeros(len(reported_weekly))
     for week in range(0,len(reported_weekly)):
         # Calculate new infections, aggregated by week
@@ -817,11 +818,11 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
     plt.xlabel("Number of weeks since 1 November 2003")
     plt.legend()
     
-    import matplotlib as mpl
-    mpl.rcParams['figure.dpi'] = 150
-    plt.savefig("niamey_histograms.pdf",bbox_inches='tight')
+    #import matplotlib as mpl
+    #mpl.rcParams['figure.dpi'] = 150
+    #plt.savefig("niamey_histograms.pdf",bbox_inches='tight')
     
-    plt.show()
+    #plt.show()
     
 def plotMap(PODs, t, waitingForIntervention, IstartTime, intOver, 
             totExpired, totVaccs, totVaccsGiven, totCost):
@@ -984,8 +985,9 @@ def simulate(filename='Likasi.csv'):
     #print("Total number of vaccines actually administered to patients:", totVaccsGiven)
     
     newInfectionsPerDay = np.array(newInfectionsPerDay)
-    print("Simulated total cases:",sum(newInfectionsPerDay))
-    print("Simulated reported cases:",sum(newInfectionsPerDay)/2)
+    #print("Simulated total cases:",sum(newInfectionsPerDay))
+    reportedCases = sum(newInfectionsPerDay)/2
+    #print("Simulated reported cases:",reportedCases)
     
     plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10,11,12,13,14), PODs)
     #plotPOD(simulationRuntime, plots, 7, "Likasi")
@@ -996,7 +998,7 @@ def simulate(filename='Likasi.csv'):
         # In this case, the total vaccines delivered and used is just the total vaccs given (which includes DC)
         totVaccs = totVaccsGiven
 
-    return deaths, totVaccs, deliveryCost + vaccineCost  #totExpired, vaccsPerDay #,Vactots,Stots
+    return deaths, reportedCases, totVaccs, deliveryCost + vaccineCost  #totExpired, vaccsPerDay #,Vactots,Stots
 
 
 #Parameters    ========================================================================
@@ -1047,7 +1049,22 @@ reported_weekly = np.array(
     ]
 )
 
-print(simulate("Niamey.csv"))
+# Grid search for best R0, iCR values
+low_error_score = np.inf
+low_param_set = []
+for R0 in np.arange(6,8,0.05):
+    for interventionCaseRatio in np.arange(0.001,0.01,0.001):
+        params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
+        deaths, reported_cases, vaccinations, cost = simulate("Niamey.csv")
+        case_error = 10880-reported_cases
+        dist_error_ss = np.dot(reported_weekly-newInfectionsPerWeek/2, reported_weekly-newInfectionsPerWeek/2)
+        error_score = case_error + dist_error_ss/1000
+        if error_score < low_error_score:
+            low_error_score = error_score
+            print(R0,interventionCaseRatio,"\t", error_score, case_error, dist_error_ss)
+        elif error_score < 1.1 * low_error_score:
+            print("almost",R0,interventionCaseRatio,"\t", error_score, case_error, dist_error_ss)
+
 
 
 #TODO: (Optional) Randomly generated networks
