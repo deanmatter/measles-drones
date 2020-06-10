@@ -775,26 +775,30 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
     plt.plot(np.arange(daysOfIntervention), Is, label='Infectious')
     plt.plot(np.arange(daysOfIntervention), deads, label='Deaths')
     plt.plot(np.arange(daysOfIntervention), Rs, label='Recovered')
-    plt.plot(np.arange(daysOfIntervention), (vacs-min(vacs)), label='Vaccinations')
+
+    # Only plot the vaccinations curve if some where performed
+    if max(vacs) > 0:
+        plt.plot(np.arange(daysOfIntervention), (vacs-min(vacs)), label='Vaccinations')
 
     label = ""
     for i in podIndexes:
         label = label + PODs[i].name + ","
     label = label[:len(label)-1]
     if len(podIndexes) == len(PODs):
-        label = "Measles epidemic progression over the whole network,\nwith intervention"
+        label = "Measles epidemic progression across the whole network"
     
     plt.title(label)
     #plt.title("Progression of measles epidemic SEIR model")
-    plt.ylabel("Number of People")
-    plt.xlabel("Time elapsed in days")
-    plt.legend()
+    plt.ylabel("Number of people")
+    plt.xlabel("Day of epidemic")
+    plt.legend(loc='right')
     
-#     import matplotlib as mpl
-#     mpl.rcParams['figure.dpi'] = 150
-#     plt.savefig("filename_figure.pdf",bbox_inches='tight')
-    
-    plt.show()
+    import matplotlib as mpl
+    mpl.rcParams['figure.dpi'] = 150
+    plt.savefig(f"{plot_filename}.pdf",bbox_inches='tight')
+    #plt.show()
+    plt.close()
+
     
 def plotMap(PODs, t, waitingForIntervention, IstartTime, intOver, 
             totExpired, totVaccs, totVaccsGiven, totCost):
@@ -1010,7 +1014,16 @@ targetedVaccination = False         #True: already-vaccd people go to V. False: 
 maxDistance = 20                    #The distance in km that the max inter-location distance is scaled to
 vaccinationRate = 0.66              #66% vaccination rate in network
 
-print(simulate("Generic_network_city.csv"))
+input_networks_distances = [("Generic_network_city.csv",20),("Generic_network_rural.csv",150),
+                    ("Generic_network_monocentric.csv",40),("Generic_network_polycentric.csv",100)]
+experiment_name = 'base_novaccs'
+
+for filename, maxDistance in input_networks_distances:
+    network_type = filename[16:-4]
+    plot_filename = f"figures/{experiment_name}/{network_type}_{maxDistance}km_novaccs"
+    c,d,v,cost = simulate(filename)
+    print(network_type, c, d, v, cost)
+    #TODO: write output to a csv file in the base_novaccs directory
 
 #TODO: (Optional) Randomly generated networks
 #TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
