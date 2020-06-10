@@ -193,15 +193,16 @@ def progressEpidemicByOneDay(PODs, params, MigrationProportions):
     #print(Iarr)
           
     i = 0
+    new_cases = np.zeros(len(PODs))
     for pod in PODs:
         #consider migrations
         migratePOD(pod, i, MigrationProportions, Sarr, Earr, Iarr, Rarr, Varr)
         #calculate SEIR progression for the day
-        progressSinglePOD(pod, params)
+        new_cases[i] = progressSinglePOD(pod, params)
         if len(pod.last3E) == 4:
             pod.last3E.popleft()
-        i += 1
-    return PODs
+        i += 1 
+    return PODs, new_cases
    
 def progressSinglePOD(pod, params):
     beta, sigma, gamma, mu = params
@@ -225,6 +226,9 @@ def progressSinglePOD(pod, params):
     pod.I = I + newInfectious - newRecoveries - newDeaths
     pod.R = R + newRecoveries
     pod.deaths = deaths + newDeaths
+
+    #Return new infectious as num of new cases today
+    return newInfectious        
         
 def migratePOD(pod, i, todaysMigration, Sarr, Earr, Iarr, Rarr, Varr):
     migrationIn = todaysMigration[:,i]
@@ -877,6 +881,7 @@ def simulate(filename='Likasi.csv'):
     totExpired = 0                          #total number of vaccines expired    
     totVaccsGiven = 0                       #total number of vaccines actually administered, incl DC.
     vaccsPerDay = np.zeros(simulationRuntime)
+    cumulative_cases_pods = np.zeros(len(PODs))   # number of infectious cases so far, per pod
 
     #===============================================================================
     # Simulation - Main Daily Loop
@@ -885,8 +890,9 @@ def simulate(filename='Likasi.csv'):
         #print("\n",t,":")
             
         #Progress the SEIR models and migration by one day
-        PODs = progressEpidemicByOneDay(PODs, params, MigrationProportions)
-        
+        PODs, new_cases = progressEpidemicByOneDay(PODs, params, MigrationProportions)
+        cumulative_cases_pods += new_cases
+
         #if the intervention is running today
         if t >= interventionStartTime and t < interventionStartTime + interventionLength and random.random() < workDaysPerWeek/7:
             waitingForIntervention = False
@@ -942,6 +948,9 @@ def simulate(filename='Likasi.csv'):
         deaths += pod.deaths
     #print("\nThe total number of deaths is:", deaths)
     
+    # The total cases reported is the number of infectious people simulated
+    total_cases = sum(cumulative_cases_pods)
+
     #print("Total cost of monodose vaccines delivered: $", vaccineCost, ",for", totVaccs, "doses.")
     if totVaccs > 0:
         expiryRatio = totExpired / totVaccs * 100
@@ -950,7 +959,7 @@ def simulate(filename='Likasi.csv'):
     #print("Total number of vaccines delivered, plus those used at the DC:",totVaccs)
     #print("Total number of vaccines actually administered to patients:", totVaccsGiven)
     
-    plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10), PODs)
+    plotPODSum(simulationRuntime, plots, np.arange(0,len(PODs)), PODs)
     #plotPOD(simulationRuntime, plots, 7, "Likasi")
     #plotMap(PODs,  t, waitingForIntervention, interventionStartTime, interventionOver,
     #      totExpired, totVaccs, totVaccsGiven, vaccineCost + deliveryCost)
@@ -959,11 +968,11 @@ def simulate(filename='Likasi.csv'):
         # In this case, the total vaccines delivered and used is just the total vaccs given (which includes DC)
         totVaccs = totVaccsGiven
 
-    return deaths, totVaccs, deliveryCost + vaccineCost  #totExpired, vaccsPerDay #,Vactots,Stots
+    return total_cases, deaths, totVaccs, deliveryCost + vaccineCost  #totExpired, vaccsPerDay #,Vactots,Stots
 
 
 #Parameters    ========================================================================
-simulationRuntime = 200             #days to run the simulation for
+simulationRuntime = 280             #days to run the simulation for
 #Measles SEIR parameters
 exposedDays = 10                    #number of days a patient is exposed for without symptoms
 infectiousDays = 8                  #number of days a patient is infectious for
@@ -977,7 +986,7 @@ prophylaxis72hrSuccessRate = 0.83   #probability the vaccine works (for exposed,
 monoDaysPotency = 3                 #number of days for which the vaccine lasts outside of cold-chain
 #intervention parameters
 interventionLeadTime = 15           #number of days before vaccination starts
-interventionCaseRatio = 0.005       #ratio of I/S in a town before detection
+interventionCaseRatio = 0.009       #ratio of I/S in a town before detection
 interventionLength = np.inf         #number of days the intervention lasts for
 workingMinutesPerDay = 660          #11 working hours per day: 7am to 6pm
 workDaysPerWeek = 7                 #number of working days per week for MSF teams
@@ -995,10 +1004,10 @@ costPerFlight = 17                  #$17 per drone flight
 #strategies
 vaccStrategy = 'S'                  #I, S, N, EPE, uncapped, absI, absS, absN
 teamStrategy = 'S'                  #I, S, N, EPE, I/N, spread
-deliveryType = 'drone'              #"none", "drone"
+deliveryType = 'none'               #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
-maxDistance = 30                    #The distance in km that the max inter-location distance is scaled to
+maxDistance = 20                    #The distance in km that the max inter-location distance is scaled to
 vaccinationRate = 0.66              #66% vaccination rate in network
 
 print(simulate("Generic_network_city.csv"))
