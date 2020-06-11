@@ -770,15 +770,15 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
         deads = deads + plots[podIndexes[i]][4]
         vacs = vacs + plots[podIndexes[i]][5]
         
-    plt.plot(np.arange(daysOfIntervention), Ss, label='Susceptible')
-    plt.plot(np.arange(daysOfIntervention), Es, label='Exposed')
-    plt.plot(np.arange(daysOfIntervention), Is, label='Infectious')
-    plt.plot(np.arange(daysOfIntervention), deads, label='Deaths')
-    plt.plot(np.arange(daysOfIntervention), Rs, label='Recovered')
+    plt.plot(np.arange(daysOfIntervention), Ss, label='Susceptible',color='gold')
+    plt.plot(np.arange(daysOfIntervention), Es, label='Exposed',color='darkorange')
+    plt.plot(np.arange(daysOfIntervention), Is, label='Infectious',color='crimson')
+    plt.plot(np.arange(daysOfIntervention), deads, label='Deaths',color='k')
+    plt.plot(np.arange(daysOfIntervention), Rs, label='Recovered',color='forestgreen')
 
     # Only plot the vaccinations curve if some where performed
     if max(vacs) > 0:
-        plt.plot(np.arange(daysOfIntervention), (vacs-min(vacs)), label='Vaccinations')
+        plt.plot(np.arange(daysOfIntervention), (vacs-min(vacs)), label='Vaccinations',color='cornflowerblue')
 
     label = ""
     for i in podIndexes:
@@ -1006,24 +1006,85 @@ droneVaccineCapacity = 60           #number of vaccine doses per drone
 costPerDoseMono = 2.85              #the cost per dose of monodose measles vaccine
 costPerFlight = 17                  #$17 per drone flight
 #strategies
-vaccStrategy = 'S'                  #I, S, N, EPE, uncapped, absI, absS, absN
-teamStrategy = 'S'                  #I, S, N, EPE, I/N, spread
-deliveryType = 'none'               #"none", "drone"
+vaccStrategy = 'N'                  #I, S, N, EPE, uncapped, absI, absS, absN
+teamStrategy = 'N'                  #I, S, N, EPE, I/N, spread
+deliveryType = 'drone'               #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
-maxDistance = 20                    #The distance in km that the max inter-location distance is scaled to
+maxDistance = 40                    #The distance in km that the max inter-location distance is scaled to
 vaccinationRate = 0.66              #66% vaccination rate in network
 
-input_networks_distances = [("Generic_network_city.csv",20),("Generic_network_rural.csv",150),
-                    ("Generic_network_monocentric.csv",40),("Generic_network_polycentric.csv",100)]
-experiment_name = 'base_novaccs'
 
-for filename, maxDistance in input_networks_distances:
-    network_type = filename[16:-4]
-    plot_filename = f"figures/{experiment_name}/{network_type}_{maxDistance}km_novaccs"
-    c,d,v,cost = simulate(filename)
-    print(network_type, c, d, v, cost)
-    #TODO: write output to a csv file in the base_novaccs directory
+# Sensitivity Analysis
+sensitivity_parameter_values = [
+    exposedDays,
+    infectiousDays,
+    R0,
+    migrationIntensity,
+    deathRate,
+    vaccineEffectiveness,
+    prophylaxis72hrSuccessRate,
+    numTeams,
+    workingMinutesPerDay,
+    maxVaccsTeamDay,
+    droneVaccineCapacity,
+    monoDaysPotency,
+    interventionCaseRatio,
+    interventionLeadTime,
+    numberOfDrones,
+    droneSpeed,
+    flightLaunchTime,
+    vaccinationRate,
+    maxDistance
+]
+
+sensitivity_parameter_names = [
+    "exposedDays",
+    "infectiousDays",
+    "R0",
+    "migrationIntensity",
+    "deathRate",
+    "vaccineEffectiveness",
+    "prophylaxis72hrSuccessRate",
+    "numTeams",
+    "workingMinutesPerDay",
+    "maxVaccsTeamDay",
+    "droneVaccineCapacity",
+    "monoDaysPotency",
+    "interventionCaseRatio",
+    "interventionLeadTime",
+    "numberOfDrones",
+    "droneSpeed",
+    "flightLaunchTime",
+    "vaccinationRate",
+    "maxDistance"
+]
+
+
+
+print(sensitivity_parameter_values)
+print(sensitivity_parameter_names)
+quit()
+
+# So I'm a little stuck. How do I dynamically assign values to each of the variables?
+# I need something like: droneSpeed = i in the loop below, but how do I know the variable is droneSpeed!
+
+experiment_name = 'sensitivity'
+output_folder = f"measles-drones/results/{experiment_name}"
+
+with open(f"{output_folder}/sensitivity.csv","a+") as f:
+    for p in sensitivity_parameters:
+        for i in [0.7*p, 0.8*p, 0.9*p, 1.1*p, 1.2*p, 1.3*p]:
+            c,d,v,cost = simulate(f"Generic_network_monocentric.csv")
+            f.write(f"{c},{d},{v},{cost}")
+        f.write("\n")
+        
+
+print(network_type, c, d, v, cost)
+
+
+    
+
 
 #TODO: (Optional) Randomly generated networks
 #TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
