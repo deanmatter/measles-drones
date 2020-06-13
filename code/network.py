@@ -38,7 +38,7 @@ class POD:
     def __str__(self):
         return self.name    
        
-def readPODsFromFile(filename, maxVaccsTeamDay, turnout, targetedVaccination, vaccinationRate):
+def readPODsFromFile(filename, maxVaccsTeamDay, turnout, targetedVaccination, vaccinationRate, populationMultiplier):
     '''Reads in location information from an input CSV file.'''
     PODs = []
     data = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), filename), 'r')
@@ -59,7 +59,7 @@ def readPODsFromFile(filename, maxVaccsTeamDay, turnout, targetedVaccination, va
         podmapY = int(lineContents[2])
         podXY = (podmapX,podmapY)                     #set x- and y- coords to unscaled values.
 
-        podN = int(lineContents[3])
+        podN = int(lineContents[3]) * populationMultiplier
         try: 
             podE = int(lineContents[4])
         except ValueError:
@@ -811,7 +811,7 @@ def simulate(filename='Likasi.csv'):
     #===============================================================================
     # Initial Calculations
     #===============================================================================
-    PODs = readPODsFromFile(filename, maxVaccsTeamDay, turnout, targetedVaccination, vaccinationRate)
+    PODs = readPODsFromFile(filename, maxVaccsTeamDay, turnout, targetedVaccination, vaccinationRate, populationMultiplier)
     unscaledDistances = calcPODdistanceMatrix(PODs)
     podDistances, PODs = scaleCoordinatesAndDistances(unscaledDistances, PODs, maxDistance)
     MigrationProportions = calcMigration(PODs, podDistances, migrationIntensity)
@@ -981,8 +981,9 @@ targetedVaccination = False         #True: already-vaccd people go to V. False: 
 #input dataset
 maxDistance = 40                    #The distance in km that the max inter-location distance is scaled to
 vaccinationRate = 0.66              #66% vaccination rate in network
+populationMultiplier = 1            #Used for sensitivity analysis only. Multiplier for population size
 
-print(simulate("Generic_network_city.csv"))
+print(simulate("Generic_network_monocentric.csv"))
 quit()
 
 # Sensitivity Analysis
@@ -990,7 +991,7 @@ epidemic_parameters = [
     "exposedDays",
     "infectiousDays",
     "R0",
-    "deathRate",
+    "deathRate"
 ]
 
 vaccination_parameters = [
@@ -1008,10 +1009,10 @@ intervention_parameters = [
     "interventionLeadTime"
 ]
 
-spatial_parameters = [
+network_parameters = [
     "migrationIntensity",
-    "maxDistance"
-
+    "maxDistance",
+    "populationMultiplier"
 ]
 
 drone_parameters = [
@@ -1021,32 +1022,34 @@ drone_parameters = [
     "flightLaunchTime"
 ]
 
-network_type = 'rural'
-maxDistance = 150
+network_type = 'monocentric'
+maxDistance = 40
 output_folder = f"measles-drones/results/sensitivity"
 
 with open(f"{output_folder}/{network_type}.csv","a+") as f:
-    for p_name in epidemic_parameters:
-        # Set p_val = original variable value
-        p_val = vars()[p_name]
-        print(f"Testing {p_name}, with initial value {p_val}")
-
-        for i in [0.5*p_val,0.7*p_val, 0.8*p_val, 0.9*p_val, 1.1*p_val, 1.2*p_val, 1.3*p_val,1.5*p_val]:
-            # Set the variable's value to i for each iteration, potentially with truncation to integer
-            if p_name in ['numTeams','interventionLeadTime','numberOfDrones']:
-                i = int(i)
-            vars()[p_name] = i
-            print(f"Set {p_name}={i}")
-
-            # Update the parameters to be used
-            params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
-            
-            #Simulate this epidemic and write results to file
-            c,d,v,cost = simulate(f"Generic_network_{network_type}.csv")
-            f.write(f"{c},{d},{v},{cost},")
-        vars()[p_name] = p_val
-        print(f"Reset {p_name}={p_val}")
+    for param_set in [epidemic_parameters,vaccination_parameters,intervention_parameters,network_parameters,drone_parameters]:
         f.write("\n")
+        for p_name in param_set:
+            # Set p_val = original variable value
+            p_val = vars()[p_name]
+            print(f"Testing {p_name}, with initial value {p_val}")
+
+            for i in [0.5*p_val,0.7*p_val, 0.8*p_val, 0.9*p_val, 1.1*p_val, 1.2*p_val, 1.3*p_val,1.5*p_val]:
+                # Set the variable's value to i for each iteration, potentially with truncation to integer
+                if p_name in ['numTeams','interventionLeadTime','numberOfDrones']:
+                    i = int(i)
+                vars()[p_name] = i
+                print(f"Set {p_name}={i}")
+
+                # Update the parameters to be used
+                params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
+                
+                #Simulate this epidemic and write results to file
+                c,d,v,cost = simulateRepeatedly(f"Generic_network_{network_type}.csv", 1)
+                f.write(f"{c},{d},{v},{cost},")
+            vars()[p_name] = p_val
+            print(f"Reset {p_name}={p_val}")
+            f.write("\n")
         
 #TODO: (Optional) Randomly generated networks
 #TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
