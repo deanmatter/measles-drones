@@ -569,52 +569,9 @@ def calcSavings(oRT, dcI):
                 S[i][j] = oRT[dcI][i] + oRT[dcI][j] - oRT[i][j]        
     return S            
     
-def findPoint(routes, node, dcI):
-    '''If the node is interior or the DC, returns -1. If the node is on an edge,
-    returns the index of the route it is in.'''
-    if node == dcI:
-        return -1
-    
-    routeIndex = -1
-    for route in routes:
-        routeIndex += 1
-        if route[0] == node or route[-1] == node:
-            return routeIndex
-    return -1
+
   
-def findShortestPath(i,j,oRT):
-    '''Finds the shortest path between i and j using Dijkstra's algorithm.'''  
-    nodeVisited = np.full(len(oRT), False)  #True if node has been visited in Dijkstra's alg
-    times = np.full(len(oRT), 100000)       #holds the min time to reach each node from initial
-    prevNode = np.full(len(oRT), -1)        #holds the previous node in the shortest path
-    times[i] = 0
-    while all(nodeVisited) == False:
-        minUnvisitedTime = 100000
-        minUnvisitedNode = -1
-        for i in range(0,len(nodeVisited)):
-            if nodeVisited[i] == False:
-                if times[i] < minUnvisitedTime:
-                    minUnvisitedTime = times[i]
-                    minUnvisitedNode = i
-        if minUnvisitedNode == -1:
-            break
-        currNode = minUnvisitedNode
-        nodeVisited[currNode] = True
-        #update distance values
-        for node in range(0,len(oRT[currNode])):
-            if oRT[currNode][node] != 100000 and oRT[currNode][node] != 0:
-                if times[currNode] + oRT[currNode][node] < times[node]:
-                    times[node] = times[currNode] + oRT[currNode][node]
-                    prevNode[node] = currNode
-    pN = -2
-    ijPath = [j]
-    while pN != -1:
-        pN = prevNode[ijPath[-1]]
-        if pN != -1:
-            ijPath.append(pN)
-    ijPath.reverse()
-    return times[j], ijPath
-  
+ 
 def assignTeams(PODs, numTeams, tStrategy):
     if tStrategy == 'spread':
         # Splits teams equally among locations, randomly assigns remaining teams.
@@ -1006,8 +963,8 @@ droneVaccineCapacity = 60           #number of vaccine doses per drone
 costPerDoseMono = 2.85              #the cost per dose of monodose measles vaccine
 costPerFlight = 17                  #$17 per drone flight
 #strategies
-vaccStrategy = 'S'                  #I, S, N, EPE, uncapped, absI, absS, absN
-teamStrategy = 'S'                  #I, S, N, EPE, I/N, spread
+vaccStrategy = 'N'                  #I, S, N, EPE, uncapped, absI, absS, absN
+teamStrategy = 'N'                  #I, S, N, EPE, I/N, spread
 deliveryType = 'none'               #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
