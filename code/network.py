@@ -988,8 +988,8 @@ def simulate(filename='Likasi.csv'):
     reportedCases = sum(newInfectionsPerDay)/2
     #print("Simulated reported cases:",reportedCases)
     
-    plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10,11,12,13,14), PODs)
-    #plotPOD(simulationRuntime, plots, 7, "Likasi")
+    #plotPODSum(simulationRuntime, plots, (0,1,2,3,4,5,6,7,8,9,10,11,12,13,14), PODs)
+
     #plotMap(PODs,  t, waitingForIntervention, interventionStartTime, interventionOver,
     #      totExpired, totVaccs, totVaccsGiven, vaccineCost + deliveryCost)
     
@@ -1048,7 +1048,17 @@ reported_weekly = np.array(
     ]
 )
 
-print(simulate("Niamey.csv"))
+# Simulate 100 times to get mean and stdev for each of the metrics
+d,ca,v,co = (np.zeros(100) for i in range(4))
+for i in range(100):
+    d[i],ca[i],v[i],co[i] = simulate("Niamey.csv")
+
+for arr in [d,ca,v,co]:
+    print()
+    print(np.average(arr))
+    print(np.std(arr,ddof=1))
+
+
 quit()
 
 # Grid search for best R0, iCR values
