@@ -974,7 +974,7 @@ droneVaccineCapacity = 60           #number of vaccine doses per drone
 costPerDoseMono = 2.85              #the cost per dose of monodose measles vaccine
 costPerFlight = 17                  #$17 per drone flight
 #strategies
-vaccStrategy = 'N'                  #I, S, N, EPE, uncapped, absI, absS, absN
+vaccStrategy = 'absN'               #I, S, N, EPE, uncapped, absI, absS, absN
 teamStrategy = 'N'                  #I, S, N, EPE, I/N, spread
 deliveryType = 'drone'               #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
