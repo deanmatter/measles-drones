@@ -559,62 +559,6 @@ def teamPreventedExposures(pod, teams, params):
     #return the difference between exposure values - how many exposures did the flights prevent
     return max(noTeamsPOD.E - afterTeamsPOD.E, 0)
   
-def calcSavings(oRT, dcI):
-    S = np.zeros(np.shape(oRT))
-    for i in range(0,len(oRT)):
-        for j in range(0,len(oRT[i])):
-            if i == dcI or j == dcI:
-                S[i][j] = -100000
-                continue
-            if i != j:
-                S[i][j] = oRT[dcI][i] + oRT[dcI][j] - oRT[i][j]        
-    return S            
-    
-def findPoint(routes, node, dcI):
-    '''If the node is interior or the DC, returns -1. If the node is on an edge,
-    returns the index of the route it is in.'''
-    if node == dcI:
-        return -1
-    
-    routeIndex = -1
-    for route in routes:
-        routeIndex += 1
-        if route[0] == node or route[-1] == node:
-            return routeIndex
-    return -1
-  
-def findShortestPath(i,j,oRT):
-    '''Finds the shortest path between i and j using Dijkstra's algorithm.'''  
-    nodeVisited = np.full(len(oRT), False)  #True if node has been visited in Dijkstra's alg
-    times = np.full(len(oRT), 100000)       #holds the min time to reach each node from initial
-    prevNode = np.full(len(oRT), -1)        #holds the previous node in the shortest path
-    times[i] = 0
-    while all(nodeVisited) == False:
-        minUnvisitedTime = 100000
-        minUnvisitedNode = -1
-        for i in range(0,len(nodeVisited)):
-            if nodeVisited[i] == False:
-                if times[i] < minUnvisitedTime:
-                    minUnvisitedTime = times[i]
-                    minUnvisitedNode = i
-        if minUnvisitedNode == -1:
-            break
-        currNode = minUnvisitedNode
-        nodeVisited[currNode] = True
-        #update distance values
-        for node in range(0,len(oRT[currNode])):
-            if oRT[currNode][node] != 100000 and oRT[currNode][node] != 0:
-                if times[currNode] + oRT[currNode][node] < times[node]:
-                    times[node] = times[currNode] + oRT[currNode][node]
-                    prevNode[node] = currNode
-    pN = -2
-    ijPath = [j]
-    while pN != -1:
-        pN = prevNode[ijPath[-1]]
-        if pN != -1:
-            ijPath.append(pN)
-    ijPath.reverse()
-    return times[j], ijPath
   
 def assignTeams(PODs, numTeams, tStrategy):
     if tStrategy == 'spread':   
@@ -975,6 +919,29 @@ def simulate(filename='Likasi.csv'):
 
     return total_cases, deaths, totVaccs, deliveryCost + vaccineCost  #totExpired, vaccsPerDay #,Vactots,Stots
 
+
+def simulateRepeatedly(filename, repetitions=50):
+    ''' Performs repeated simulations, returning the averages of the result metrics. '''
+    ca, d, v, co = (np.zeros(repetitions) for i in range(4))    # creates one np zero array each
+    for i in range(repetitions):
+        ca[i],d[i],v[i],co[i] = simulate(filename)
+    
+    # Check that standard deviation is acceptable
+    for arr in [ca,d,v,co]:
+        mean = np.average(arr)
+        stdev = np.std(arr,ddof=1)          # 1 degree of freedom for sample stdev
+        Zval = 1.96                         # using alpha = 0.05
+        error = 0.05                        # denoted by epsilon in formula
+
+        if mean == 0:
+            continue
+
+        sims_required = ((Zval*stdev)/(error*mean))**2
+        if sims_required > repetitions:
+            print(f"ERROR: Insufficient simulations:{sims_required} needed, {repetitions} done.")
+            return(-1,-1,-1,-1)
+    return np.average(ca),np.average(d),np.average(v),np.average(co)
+    
 
 #Parameters    ========================================================================
 simulationRuntime = 280             #days to run the simulation for
