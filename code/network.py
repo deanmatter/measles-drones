@@ -558,65 +558,9 @@ def teamPreventedExposures(pod, teams, params):
     #return the difference between exposure values - how many exposures did the flights prevent
     return max(noTeamsPOD.E - afterTeamsPOD.E, 0)
   
-def calcSavings(oRT, dcI):
-    S = np.zeros(np.shape(oRT))
-    for i in range(0,len(oRT)):
-        for j in range(0,len(oRT[i])):
-            if i == dcI or j == dcI:
-                S[i][j] = -100000
-                continue
-            if i != j:
-                S[i][j] = oRT[dcI][i] + oRT[dcI][j] - oRT[i][j]        
-    return S            
-    
-def findPoint(routes, node, dcI):
-    '''If the node is interior or the DC, returns -1. If the node is on an edge,
-    returns the index of the route it is in.'''
-    if node == dcI:
-        return -1
-    
-    routeIndex = -1
-    for route in routes:
-        routeIndex += 1
-        if route[0] == node or route[-1] == node:
-            return routeIndex
-    return -1
-  
-def findShortestPath(i,j,oRT):
-    '''Finds the shortest path between i and j using Dijkstra's algorithm.'''  
-    nodeVisited = np.full(len(oRT), False)  #True if node has been visited in Dijkstra's alg
-    times = np.full(len(oRT), 100000)       #holds the min time to reach each node from initial
-    prevNode = np.full(len(oRT), -1)        #holds the previous node in the shortest path
-    times[i] = 0
-    while all(nodeVisited) == False:
-        minUnvisitedTime = 100000
-        minUnvisitedNode = -1
-        for i in range(0,len(nodeVisited)):
-            if nodeVisited[i] == False:
-                if times[i] < minUnvisitedTime:
-                    minUnvisitedTime = times[i]
-                    minUnvisitedNode = i
-        if minUnvisitedNode == -1:
-            break
-        currNode = minUnvisitedNode
-        nodeVisited[currNode] = True
-        #update distance values
-        for node in range(0,len(oRT[currNode])):
-            if oRT[currNode][node] != 100000 and oRT[currNode][node] != 0:
-                if times[currNode] + oRT[currNode][node] < times[node]:
-                    times[node] = times[currNode] + oRT[currNode][node]
-                    prevNode[node] = currNode
-    pN = -2
-    ijPath = [j]
-    while pN != -1:
-        pN = prevNode[ijPath[-1]]
-        if pN != -1:
-            ijPath.append(pN)
-    ijPath.reverse()
-    return times[j], ijPath
   
 def assignTeams(PODs, numTeams, tStrategy):
-    if tStrategy == 'spread':
+    if tStrategy == 'spread':         
         # Splits teams equally among locations, randomly assigns remaining teams.
         remainingTeams = numTeams
         for pod in PODs:
@@ -632,7 +576,7 @@ def assignTeams(PODs, numTeams, tStrategy):
             PODs[randIndex].teamsAtPOD += 1
             remainingTeams -= 1
             PODs[randIndex].maxVaccinationsPerDay = PODs[randIndex].vaccsPerTeamDay * PODs[randIndex].teamsAtPOD
-    elif tStrategy == 'S':
+    elif tStrategy == 'S':          
         podSs = np.zeros(np.shape(PODs))
         for i in range(0,len(PODs)):
             PODs[i].teamsAtPOD = 0
@@ -647,7 +591,7 @@ def assignTeams(PODs, numTeams, tStrategy):
             teamsLeft -= PODs[bestSindex].teamsAtPOD
             #print(PODs[bestSindex].teamsAtPOD, "teams at", PODs[bestSindex].name)
             podSs[bestSindex] = 0            
-    elif tStrategy == 'I':
+    elif tStrategy == 'I':            
         podIs = np.zeros(np.shape(PODs))
         for i in range(0,len(PODs)):
             PODs[i].teamsAtPOD = 0
@@ -662,7 +606,7 @@ def assignTeams(PODs, numTeams, tStrategy):
             teamsLeft -= PODs[bestIindex].teamsAtPOD
             #print(PODs[bestIindex].teamsAtPOD, "teams at", PODs[bestIindex].name)
             podIs[bestIindex] = 0
-    elif tStrategy == 'N':
+    elif tStrategy == 'N':  
         podNs = np.zeros(np.shape(PODs))
         for i in range(0,len(PODs)):
             PODs[i].teamsAtPOD = 0
@@ -677,7 +621,7 @@ def assignTeams(PODs, numTeams, tStrategy):
             teamsLeft -= PODs[bestNindex].teamsAtPOD
             #print(PODs[bestNindex].teamsAtPOD, "teams at", PODs[bestNindex].name)
             podNs[bestNindex] = 0
-    elif tStrategy == 'I/N':
+    elif tStrategy == 'I/N':                 
         podINs = np.zeros(np.shape(PODs))
         for i in range(0,len(PODs)):
             PODs[i].teamsAtPOD = 0
@@ -693,7 +637,7 @@ def assignTeams(PODs, numTeams, tStrategy):
             #print(PODs[bestINindex].teamsAtPOD, "teams at", PODs[bestINindex].name)
             podINs[bestINindex] = 0
             
-    elif tStrategy == 'EPE':
+    elif tStrategy == 'EPE':         
         podEPEs = np.zeros((len(PODs),numTeams+1))
         podEPEperTeam = np.zeros((len(PODs),numTeams+1))
         podTeamsAssigned = np.zeros(len(PODs),dtype=int)    #current teams assigned to each pod
@@ -1002,8 +946,8 @@ droneVaccineCapacity = 60           #number of vaccine doses per drone
 costPerDoseMono = 2.85              #the cost per dose of monodose measles vaccine
 costPerFlight = 17                  #$17 per drone flight
 #strategies
-vaccStrategy = 'S'                  #I, S, N, EPE, uncapped, absI, absS, absN
-teamStrategy = 'S'                  #I, S, N, EPE, I/N, spread
+vaccStrategy = 'N'                  #I, S, N, EPE, uncapped, absI, absS, absN
+teamStrategy = 'N'                  #I, S, N, EPE, I/N, spread
 deliveryType = 'none'               #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
