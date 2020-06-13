@@ -1,0 +1,33 @@
+,,
+Parameter,Variable Name,Default value
+Average days exposed before infectious,exposedDays,10
+Average days infectious before recovery,infectiousDays,8
+Basic reproductive number of measles,R0,15
+Migration multiplier,migrationIntensity,1
+Case mortality ratio,deathRate,3.29\%
+Vaccine efficacy in susceptible individuals,vaccineEffectiveness,95\%
+Vaccine efficacy in recently-exposed individuals,prophylaxis72hrSuccessRate,83\%
+Number of response teams in network,numTeams,15
+Working minutes per day for deliveries and vaccinations,workingMinutesPerDay,660
+Number of vaccines administered per team per day,maxVaccsTeamDay,2000
+Number of vaccines delivered per drone flight,droneVaccineCapacity,60
+Days of measles vaccine potency before expiry,monoDaysPotency,3
+Proportion of a location's population to be infected before epidemic declaration,interventionCaseRatio,0.9\%
+Delay in days between the declaration of an epidemic and intervention starting,interventionLeadTime,15
+Number of delivery drones,numberOfDrones,5
+Average drone flight speed in kilometres per hour,droneSpeed,100
+Time taken to launch each drone in minutes,flightLaunchTime,10
+Vaccination rate in population,vaccinationRate,66\%
+Scaled diameter of network - monocentric,maxDistance,40
+,,
+Others to manually test:,,
+Working days per week for deliveries and vaccinations,workDaysPerWeek,7
+Intervention length,interventionLength,inf
+,,
+Notes:,,
+Note all of the above results use the following strategies,,
+vaccine delivery strategy,,N
+team strategy,,N
+delivery type,,drone
+Targeted vaccination or not,,FALSE
+network structure,,monocentric

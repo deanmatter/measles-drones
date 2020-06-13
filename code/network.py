@@ -983,9 +983,6 @@ maxDistance = 40                    #The distance in km that the max inter-locat
 vaccinationRate = 0.66              #66% vaccination rate in network
 populationMultiplier = 1            #Used for sensitivity analysis only. Multiplier for population size
 
-print(simulate("Generic_network_monocentric.csv"))
-quit()
-
 # Sensitivity Analysis
 epidemic_parameters = [
     "exposedDays",
@@ -1024,12 +1021,16 @@ drone_parameters = [
 
 network_type = 'monocentric'
 maxDistance = 40
-output_folder = f"measles-drones/results/sensitivity"
+output_folder = f"results/sensitivity"
 
 with open(f"{output_folder}/{network_type}.csv","a+") as f:
+    f.write("Parameter,-50%,,,,-30%,,,,-20%,,,,-10%,,,,+10%,,,,+20%,,,,+30%,,,,+50%,,,,")
     for param_set in [epidemic_parameters,vaccination_parameters,intervention_parameters,network_parameters,drone_parameters]:
         f.write("\n")
         for p_name in param_set:
+            # Print parameter name to file
+            f.write(f"{p_name},")
+
             # Set p_val = original variable value
             p_val = vars()[p_name]
             print(f"Testing {p_name}, with initial value {p_val}")
