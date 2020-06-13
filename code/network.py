@@ -6,6 +6,7 @@ from matplotlib import patches
 import copy
 from collections import deque
 import os
+from json import loads, dumps
 
 class vaccineDelivery:
     def __init__(self, d, eD):
@@ -616,7 +617,7 @@ def findShortestPath(i,j,oRT):
     return times[j], ijPath
   
 def assignTeams(PODs, numTeams, tStrategy):
-    if tStrategy == 'spread':
+    if tStrategy == 'spread':   
         # Splits teams equally among locations, randomly assigns remaining teams.
         remainingTeams = numTeams
         for pod in PODs:
@@ -632,7 +633,7 @@ def assignTeams(PODs, numTeams, tStrategy):
             PODs[randIndex].teamsAtPOD += 1
             remainingTeams -= 1
             PODs[randIndex].maxVaccinationsPerDay = PODs[randIndex].vaccsPerTeamDay * PODs[randIndex].teamsAtPOD
-    elif tStrategy == 'S':
+    elif tStrategy == 'S':    
         podSs = np.zeros(np.shape(PODs))
         for i in range(0,len(PODs)):
             PODs[i].teamsAtPOD = 0
@@ -647,7 +648,7 @@ def assignTeams(PODs, numTeams, tStrategy):
             teamsLeft -= PODs[bestSindex].teamsAtPOD
             #print(PODs[bestSindex].teamsAtPOD, "teams at", PODs[bestSindex].name)
             podSs[bestSindex] = 0            
-    elif tStrategy == 'I':
+    elif tStrategy == 'I':     
         podIs = np.zeros(np.shape(PODs))
         for i in range(0,len(PODs)):
             PODs[i].teamsAtPOD = 0
@@ -662,7 +663,7 @@ def assignTeams(PODs, numTeams, tStrategy):
             teamsLeft -= PODs[bestIindex].teamsAtPOD
             #print(PODs[bestIindex].teamsAtPOD, "teams at", PODs[bestIindex].name)
             podIs[bestIindex] = 0
-    elif tStrategy == 'N':
+    elif tStrategy == 'N':   
         podNs = np.zeros(np.shape(PODs))
         for i in range(0,len(PODs)):
             PODs[i].teamsAtPOD = 0
@@ -677,7 +678,7 @@ def assignTeams(PODs, numTeams, tStrategy):
             teamsLeft -= PODs[bestNindex].teamsAtPOD
             #print(PODs[bestNindex].teamsAtPOD, "teams at", PODs[bestNindex].name)
             podNs[bestNindex] = 0
-    elif tStrategy == 'I/N':
+    elif tStrategy == 'I/N':    
         podINs = np.zeros(np.shape(PODs))
         for i in range(0,len(PODs)):
             PODs[i].teamsAtPOD = 0
@@ -693,7 +694,7 @@ def assignTeams(PODs, numTeams, tStrategy):
             #print(PODs[bestINindex].teamsAtPOD, "teams at", PODs[bestINindex].name)
             podINs[bestINindex] = 0
             
-    elif tStrategy == 'EPE':
+    elif tStrategy == 'EPE':   
         podEPEs = np.zeros((len(PODs),numTeams+1))
         podEPEperTeam = np.zeros((len(PODs),numTeams+1))
         podTeamsAssigned = np.zeros(len(PODs),dtype=int)    #current teams assigned to each pod
@@ -963,7 +964,7 @@ def simulate(filename='Likasi.csv'):
     #print("Total number of vaccines delivered, plus those used at the DC:",totVaccs)
     #print("Total number of vaccines actually administered to patients:", totVaccsGiven)
     
-    plotPODSum(simulationRuntime, plots, np.arange(0,len(PODs)), PODs)
+    #plotPODSum(simulationRuntime, plots, np.arange(0,len(PODs)), PODs)
     #plotPOD(simulationRuntime, plots, 7, "Likasi")
     #plotMap(PODs,  t, waitingForIntervention, interventionStartTime, interventionOver,
     #      totExpired, totVaccs, totVaccsGiven, vaccineCost + deliveryCost)
@@ -1014,77 +1015,71 @@ targetedVaccination = False         #True: already-vaccd people go to V. False: 
 maxDistance = 40                    #The distance in km that the max inter-location distance is scaled to
 vaccinationRate = 0.66              #66% vaccination rate in network
 
+print(simulate("Generic_network_city.csv"))
+quit()
 
 # Sensitivity Analysis
-sensitivity_parameter_values = [
-    exposedDays,
-    infectiousDays,
-    R0,
-    migrationIntensity,
-    deathRate,
-    vaccineEffectiveness,
-    prophylaxis72hrSuccessRate,
-    numTeams,
-    workingMinutesPerDay,
-    maxVaccsTeamDay,
-    droneVaccineCapacity,
-    monoDaysPotency,
-    interventionCaseRatio,
-    interventionLeadTime,
-    numberOfDrones,
-    droneSpeed,
-    flightLaunchTime,
-    vaccinationRate,
-    maxDistance
-]
-
-sensitivity_parameter_names = [
+epidemic_parameters = [
     "exposedDays",
     "infectiousDays",
     "R0",
-    "migrationIntensity",
     "deathRate",
+]
+
+vaccination_parameters = [
     "vaccineEffectiveness",
     "prophylaxis72hrSuccessRate",
+    "monoDaysPotency",
+    "vaccinationRate"
+]
+
+intervention_parameters = [
     "numTeams",
     "workingMinutesPerDay",
     "maxVaccsTeamDay",
-    "droneVaccineCapacity",
-    "monoDaysPotency",
     "interventionCaseRatio",
-    "interventionLeadTime",
-    "numberOfDrones",
-    "droneSpeed",
-    "flightLaunchTime",
-    "vaccinationRate",
-    "maxDistance"
+    "interventionLeadTime"
 ]
 
+spatial_parameters = [
+    "migrationIntensity",
+    "maxDistance"
 
+]
 
-print(sensitivity_parameter_values)
-print(sensitivity_parameter_names)
-quit()
+drone_parameters = [
+    "droneVaccineCapacity",
+    "numberOfDrones",
+    "droneSpeed",
+    "flightLaunchTime"
+]
 
-# So I'm a little stuck. How do I dynamically assign values to each of the variables?
-# I need something like: droneSpeed = i in the loop below, but how do I know the variable is droneSpeed!
+network_type = 'rural'
+maxDistance = 150
+output_folder = f"measles-drones/results/sensitivity"
 
-experiment_name = 'sensitivity'
-output_folder = f"measles-drones/results/{experiment_name}"
+with open(f"{output_folder}/{network_type}.csv","a+") as f:
+    for p_name in epidemic_parameters:
+        # Set p_val = original variable value
+        p_val = vars()[p_name]
+        print(f"Testing {p_name}, with initial value {p_val}")
 
-with open(f"{output_folder}/sensitivity.csv","a+") as f:
-    for p in sensitivity_parameters:
-        for i in [0.7*p, 0.8*p, 0.9*p, 1.1*p, 1.2*p, 1.3*p]:
-            c,d,v,cost = simulate(f"Generic_network_monocentric.csv")
-            f.write(f"{c},{d},{v},{cost}")
+        for i in [0.5*p_val,0.7*p_val, 0.8*p_val, 0.9*p_val, 1.1*p_val, 1.2*p_val, 1.3*p_val,1.5*p_val]:
+            # Set the variable's value to i for each iteration, potentially with truncation to integer
+            if p_name in ['numTeams','interventionLeadTime','numberOfDrones']:
+                i = int(i)
+            vars()[p_name] = i
+            print(f"Set {p_name}={i}")
+
+            # Update the parameters to be used
+            params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
+            
+            #Simulate this epidemic and write results to file
+            c,d,v,cost = simulate(f"Generic_network_{network_type}.csv")
+            f.write(f"{c},{d},{v},{cost},")
+        vars()[p_name] = p_val
+        print(f"Reset {p_name}={p_val}")
         f.write("\n")
         
-
-print(network_type, c, d, v, cost)
-
-
-    
-
-
 #TODO: (Optional) Randomly generated networks
 #TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
