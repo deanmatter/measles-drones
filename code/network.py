@@ -558,22 +558,9 @@ def teamPreventedExposures(pod, teams, params):
     #return the difference between exposure values - how many exposures did the flights prevent
     return max(noTeamsPOD.E - afterTeamsPOD.E, 0)
   
-def calcSavings(oRT, dcI):
-    S = np.zeros(np.shape(oRT))
-    for i in range(0,len(oRT)):
-        for j in range(0,len(oRT[i])):
-            if i == dcI or j == dcI:
-                S[i][j] = -100000
-                continue
-            if i != j:
-                S[i][j] = oRT[dcI][i] + oRT[dcI][j] - oRT[i][j]        
-    return S            
-    
-
   
- 
 def assignTeams(PODs, numTeams, tStrategy):
-    if tStrategy == 'spread':
+    if tStrategy == 'spread':         
         # Splits teams equally among locations, randomly assigns remaining teams.
         remainingTeams = numTeams
         for pod in PODs:
@@ -589,7 +576,7 @@ def assignTeams(PODs, numTeams, tStrategy):
             PODs[randIndex].teamsAtPOD += 1
             remainingTeams -= 1
             PODs[randIndex].maxVaccinationsPerDay = PODs[randIndex].vaccsPerTeamDay * PODs[randIndex].teamsAtPOD
-    elif tStrategy == 'S':
+    elif tStrategy == 'S':          
         podSs = np.zeros(np.shape(PODs))
         for i in range(0,len(PODs)):
             PODs[i].teamsAtPOD = 0
@@ -604,7 +591,7 @@ def assignTeams(PODs, numTeams, tStrategy):
             teamsLeft -= PODs[bestSindex].teamsAtPOD
             #print(PODs[bestSindex].teamsAtPOD, "teams at", PODs[bestSindex].name)
             podSs[bestSindex] = 0            
-    elif tStrategy == 'I':
+    elif tStrategy == 'I':            
         podIs = np.zeros(np.shape(PODs))
         for i in range(0,len(PODs)):
             PODs[i].teamsAtPOD = 0
@@ -619,7 +606,7 @@ def assignTeams(PODs, numTeams, tStrategy):
             teamsLeft -= PODs[bestIindex].teamsAtPOD
             #print(PODs[bestIindex].teamsAtPOD, "teams at", PODs[bestIindex].name)
             podIs[bestIindex] = 0
-    elif tStrategy == 'N':
+    elif tStrategy == 'N':  
         podNs = np.zeros(np.shape(PODs))
         for i in range(0,len(PODs)):
             PODs[i].teamsAtPOD = 0
@@ -634,7 +621,7 @@ def assignTeams(PODs, numTeams, tStrategy):
             teamsLeft -= PODs[bestNindex].teamsAtPOD
             #print(PODs[bestNindex].teamsAtPOD, "teams at", PODs[bestNindex].name)
             podNs[bestNindex] = 0
-    elif tStrategy == 'I/N':
+    elif tStrategy == 'I/N':                 
         podINs = np.zeros(np.shape(PODs))
         for i in range(0,len(PODs)):
             PODs[i].teamsAtPOD = 0
@@ -650,7 +637,7 @@ def assignTeams(PODs, numTeams, tStrategy):
             #print(PODs[bestINindex].teamsAtPOD, "teams at", PODs[bestINindex].name)
             podINs[bestINindex] = 0
             
-    elif tStrategy == 'EPE':
+    elif tStrategy == 'EPE':         
         podEPEs = np.zeros((len(PODs),numTeams+1))
         podEPEperTeam = np.zeros((len(PODs),numTeams+1))
         podTeamsAssigned = np.zeros(len(PODs),dtype=int)    #current teams assigned to each pod
@@ -920,7 +907,7 @@ def simulate(filename='Likasi.csv'):
     #print("Total number of vaccines delivered, plus those used at the DC:",totVaccs)
     #print("Total number of vaccines actually administered to patients:", totVaccsGiven)
     
-    plotPODSum(simulationRuntime, plots, np.arange(0,len(PODs)), PODs)
+    #plotPODSum(simulationRuntime, plots, np.arange(0,len(PODs)), PODs)
     #plotPOD(simulationRuntime, plots, 7, "Likasi")
     #plotMap(PODs,  t, waitingForIntervention, interventionStartTime, interventionOver,
     #      totExpired, totVaccs, totVaccsGiven, vaccineCost + deliveryCost)
@@ -931,6 +918,29 @@ def simulate(filename='Likasi.csv'):
 
     return total_cases, deaths, totVaccs, deliveryCost + vaccineCost  #totExpired, vaccsPerDay #,Vactots,Stots
 
+
+def simulateRepeatedly(filename, repetitions=50):
+    ''' Performs repeated simulations, returning the averages of the result metrics. '''
+    ca, d, v, co = (np.zeros(repetitions) for i in range(4))    # creates one np zero array each
+    for i in range(repetitions):
+        ca[i],d[i],v[i],co[i] = simulate(filename)
+    
+    # Check that standard deviation is acceptable
+    for arr in [ca,d,v,co]:
+        mean = np.average(arr)
+        stdev = np.std(arr,ddof=1)          # 1 degree of freedom for sample stdev
+        Zval = 1.96                         # using alpha = 0.05
+        error = 0.05                        # denoted by epsilon in formula
+
+        if mean == 0:
+            continue
+
+        sims_required = ((Zval*stdev)/(error*mean))**2
+        if sims_required > repetitions:
+            print(f"ERROR: Insufficient simulations:{sims_required} needed, {repetitions} done.")
+            return(-1,-1,-1,-1)
+    return np.average(ca),np.average(d),np.average(v),np.average(co)
+    
 
 #Parameters    ========================================================================
 simulationRuntime = 280             #days to run the simulation for
@@ -968,7 +978,7 @@ teamStrategy = 'N'                  #I, S, N, EPE, I/N, spread
 deliveryType = 'none'               #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
-maxDistance = 20                    #The distance in km that the max inter-location distance is scaled to
+maxDistance = 40                    #The distance in km that the max inter-location distance is scaled to
 vaccinationRate = 0.66              #66% vaccination rate in network
 
 input_networks_distances = [("Generic_network_city.csv",20),("Generic_network_rural.csv",150),
@@ -978,9 +988,8 @@ experiment_name = 'base_novaccs'
 for filename, maxDistance in input_networks_distances:
     network_type = filename[16:-4]
     plot_filename = f"figures/{experiment_name}/{network_type}_{maxDistance}km_novaccs"
-    c,d,v,cost = simulate(filename)
+    c,d,v,cost = simulateRepeatedly(filename)
     print(network_type, c, d, v, cost)
     #TODO: write output to a csv file in the base_novaccs directory
-
 #TODO: (Optional) Randomly generated networks
 #TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
