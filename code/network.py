@@ -903,7 +903,7 @@ def simulate(filename='Likasi.csv'):
     #print("Total number of vaccines delivered, plus those used at the DC:",totVaccs)
     #print("Total number of vaccines actually administered to patients:", totVaccsGiven)
     
-    plotPODSum(simulationRuntime, plots, np.arange(0,len(PODs)), PODs)
+    #plotPODSum(simulationRuntime, plots, np.arange(0,len(PODs)), PODs)
     #plotPOD(simulationRuntime, plots, 7, "Likasi")
     #plotMap(PODs,  t, waitingForIntervention, interventionStartTime, interventionOver,
     #      totExpired, totVaccs, totVaccsGiven, vaccineCost + deliveryCost)
@@ -914,6 +914,29 @@ def simulate(filename='Likasi.csv'):
 
     return total_cases, deaths, totVaccs, deliveryCost + vaccineCost  #totExpired, vaccsPerDay #,Vactots,Stots
 
+
+def simulateRepeatedly(filename, repetitions=50):
+    ''' Performs repeated simulations, returning the averages of the result metrics. '''
+    ca, d, v, co = (np.zeros(repetitions) for i in range(4))    # creates one np zero array each
+    for i in range(repetitions):
+        ca[i],d[i],v[i],co[i] = simulate(filename)
+    
+    # Check that standard deviation is acceptable
+    for arr in [ca,d,v,co]:
+        mean = np.average(arr)
+        stdev = np.std(arr,ddof=1)          # 1 degree of freedom for sample stdev
+        Zval = 1.96                         # using alpha = 0.05
+        error = 0.05                        # denoted by epsilon in formula
+
+        if mean == 0:
+            continue
+
+        sims_required = ((Zval*stdev)/(error*mean))**2
+        if sims_required > repetitions:
+            print(f"ERROR: Insufficient simulations:{sims_required} needed, {repetitions} done.")
+            return(-1,-1,-1,-1)
+    return np.average(ca),np.average(d),np.average(v),np.average(co)
+    
 
 #Parameters    ========================================================================
 simulationRuntime = 280             #days to run the simulation for
@@ -951,10 +974,10 @@ teamStrategy = 'N'                  #I, S, N, EPE, I/N, spread
 deliveryType = 'none'               #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
-maxDistance = 20                    #The distance in km that the max inter-location distance is scaled to
+maxDistance = 40                    #The distance in km that the max inter-location distance is scaled to
 vaccinationRate = 0.66              #66% vaccination rate in network
 
-print(simulate("Generic_network_city.csv"))
+print(simulateRepeatedly("Generic_network_monocentric.csv"))
 
 #TODO: (Optional) Randomly generated networks
 #TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
