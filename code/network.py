@@ -1046,7 +1046,7 @@ with open(f"{output_folder}/{network_type}.csv","a+") as f:
                 params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
                 
                 #Simulate this epidemic and write results to file
-                c,d,v,cost = simulateRepeatedly(f"Generic_network_{network_type}.csv", 1)
+                c,d,v,cost = simulateRepeatedly(f"Generic_network_{network_type}.csv", 50)
                 f.write(f"{c},{d},{v},{cost},")
             vars()[p_name] = p_val
             print(f"Reset {p_name}={p_val}")
