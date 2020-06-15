@@ -912,17 +912,17 @@ def simulate(filename='Likasi.csv'):
         # In this case, the total vaccines delivered and used is just the total vaccs given (which includes DC)
         totVaccs = totVaccsGiven
 
-    return total_cases, deaths, totVaccs, deliveryCost + vaccineCost  #totExpired, vaccsPerDay #,Vactots,Stots
+    return total_cases, deaths, totVaccs, totDroneDelvs
 
 
 def simulateRepeatedly(filename, repetitions=50):
     ''' Performs repeated simulations, returning the averages of the result metrics. '''
-    ca, d, v, co = (np.zeros(repetitions) for i in range(4))    # creates one np zero array each
+    ca, d, v, dd = (np.zeros(repetitions) for i in range(4))    # creates one np zero array each
     for i in range(repetitions):
-        ca[i],d[i],v[i],co[i] = simulate(filename)
+        ca[i],d[i],v[i],dd[i] = simulate(filename)
     
     # Check that standard deviation is acceptable
-    for arr in [ca,d,v,co]:
+    for arr in [ca,d,v,dd]:
         mean = np.average(arr)
         stdev = np.std(arr,ddof=1)          # 1 degree of freedom for sample stdev
         Zval = 1.96                         # using alpha = 0.05
@@ -935,7 +935,7 @@ def simulateRepeatedly(filename, repetitions=50):
         if sims_required > repetitions:
             print(f"ERROR: Insufficient simulations:{sims_required} needed, {repetitions} done.")
             return(-1,-1,-1,-1)
-    return np.average(ca),np.average(d),np.average(v),np.average(co)
+    return np.average(ca),np.average(d),np.average(v),np.average(dd)
     
 
 #Parameters    ========================================================================
@@ -971,7 +971,7 @@ costPerFlight = 17                  #$17 per drone flight
 #strategies
 vaccStrategy = 'N'                  #I, S, N, EPE, uncapped, absI, absS, absN
 teamStrategy = 'N'                  #I, S, N, EPE, I/N, spread
-deliveryType = 'none'               #"none", "drone"
+deliveryType = 'drone'               #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
 maxDistance = 40                    #The distance in km that the max inter-location distance is scaled to
