@@ -988,8 +988,8 @@ experiment_name = 'base_vaccs'
 for filename, maxDistance in input_networks_distances:
     network_type = filename[16:-4]
     plot_filename = f"measles-drones/figures/{experiment_name}/{network_type}_{maxDistance}km_vaccs"
-    c,d,v,cost = simulateRepeatedly(filename)
-    print(network_type, c, d, v, cost)
+    c,d,v,dd = simulateRepeatedly(filename)
+    print(network_type, c, d, v, dd)
 
 #TODO: (Optional) Randomly generated networks
 #TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
