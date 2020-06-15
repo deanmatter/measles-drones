@@ -973,9 +973,9 @@ droneVaccineCapacity = 60           #number of vaccine doses per drone
 costPerDoseMono = 2.85              #the cost per dose of monodose measles vaccine
 costPerFlight = 17                  #$17 per drone flight
 #strategies
-vaccStrategy = 'N'                  #I, S, N, EPE, uncapped, absI, absS, absN
+vaccStrategy = 'absN'               #I, S, N, EPE, uncapped, absI, absS, absN
 teamStrategy = 'N'                  #I, S, N, EPE, I/N, spread
-deliveryType = 'none'               #"none", "drone"
+deliveryType = 'drone'               #"none", "drone"
 targetedVaccination = False         #True: already-vaccd people go to V. False: they go to R category.
 #input dataset
 maxDistance = 40                    #The distance in km that the max inter-location distance is scaled to
@@ -983,13 +983,13 @@ vaccinationRate = 0.66              #66% vaccination rate in network
 
 input_networks_distances = [("Generic_network_city.csv",20),("Generic_network_rural.csv",150),
                     ("Generic_network_monocentric.csv",40),("Generic_network_polycentric.csv",100)]
-experiment_name = 'base_novaccs'
+experiment_name = 'base_vaccs'
 
 for filename, maxDistance in input_networks_distances:
     network_type = filename[16:-4]
-    plot_filename = f"figures/{experiment_name}/{network_type}_{maxDistance}km_novaccs"
+    plot_filename = f"measles-drones/figures/{experiment_name}/{network_type}_{maxDistance}km_vaccs"
     c,d,v,cost = simulateRepeatedly(filename)
     print(network_type, c, d, v, cost)
-    #TODO: write output to a csv file in the base_novaccs directory
+
 #TODO: (Optional) Randomly generated networks
 #TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
