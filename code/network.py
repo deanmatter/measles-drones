@@ -503,6 +503,10 @@ def choosePODtoFlyTo(vaccStrategy, PODs, time, workingMinutesPerDay, mdP):
     return maxpod
                
 def flightPreventedExposures(pod, droneVC, params, numFlights):
+    # If there are no teams at this pod, EPE = 0
+    if pod.teamsAtPOD == 0:
+        return 0
+
     #create two variations of this POD, with differing vaccinesInStock values
     beforeFlightsPOD = copy.deepcopy(pod)
     afterFlightsPOD = copy.deepcopy(pod)
@@ -980,7 +984,7 @@ targetedVaccination = False         #True: already-vaccd people go to V. False: 
 maxDistance = 40                    #The distance in km that the max inter-location distance is scaled to
 vaccinationRate = 0.66              #66% vaccination rate in network
 
-print(simulateRepeatedly("Generic_network_monocentric.csv"))
+print(simulate("Generic_network_monocentric.csv"))
 
 #TODO: (Optional) Randomly generated networks
 #TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
