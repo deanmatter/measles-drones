@@ -473,6 +473,7 @@ def choosePODtoFlyTo(vaccStrategy, PODs, time, workingMinutesPerDay, mdP):
         #Different strategies for selecting the order of deliveries
         if pod.flightTime == 0:
             continue
+        
         elif vaccStrategy == 'S':
             podVal = pod.S / pod.flightTime
         elif vaccStrategy == 'I':
@@ -503,6 +504,10 @@ def choosePODtoFlyTo(vaccStrategy, PODs, time, workingMinutesPerDay, mdP):
     return maxpod
                
 def flightPreventedExposures(pod, droneVC, params, numFlights):
+    # If there are no teams at this pod, EPE = 0
+    if pod.teamsAtPOD == 0:
+        return 0
+
     #create two variations of this POD, with differing vaccinesInStock values
     beforeFlightsPOD = copy.deepcopy(pod)
     afterFlightsPOD = copy.deepcopy(pod)
@@ -510,28 +515,28 @@ def flightPreventedExposures(pod, droneVC, params, numFlights):
     thisDelivery = vaccineDelivery(droneVC * numFlights, np.inf)
     afterFlightsPOD.vaccineDeliveries.append(thisDelivery)
     
-    #print("\nAfter delivery of", droneVC * numFlights)
-    #print("Before",vars(beforeFlightsPOD))
-    #print("After",vars(afterFlightsPOD))
+    # print("\nAfter delivery of", droneVC * numFlights)
+    # print("Before",vars(beforeFlightsPOD))
+    # print("After",vars(afterFlightsPOD))
 
     #vaccinate both PODs with the vaccines available at each
     vaccinateOnePOD(beforeFlightsPOD)
     vaccinateOnePOD(afterFlightsPOD)
 
-    #print("\nAfter vaccination")
-    #print("Before",vars(beforeFlightsPOD))
-    #print("After",vars(afterFlightsPOD))
+    # print("\nAfter vaccination")
+    # print("Before",vars(beforeFlightsPOD))
+    # print("After",vars(afterFlightsPOD))
     
     #progress both PODs another day
     progressSinglePOD(beforeFlightsPOD, params)
     progressSinglePOD(afterFlightsPOD, params)
 
-    #print("\nAfter progression")
-    #print("Before",vars(beforeFlightsPOD))
-    #print("After",vars(afterFlightsPOD))
-    #print("Thus EPE",max(beforeFlightsPOD.E - afterFlightsPOD.E, 0))
-    #print()
-    #quit()
+    # print("\nAfter progression")
+    # print("Before",vars(beforeFlightsPOD))
+    # print("After",vars(afterFlightsPOD))
+    # print("Thus EPE",max(beforeFlightsPOD.E - afterFlightsPOD.E, 0))
+    # print()
+    # quit()
     
     #return the difference between exposure values - how many exposures did the flights prevent for the following day
     return max(beforeFlightsPOD.E - afterFlightsPOD.E, 0)
@@ -541,21 +546,26 @@ def teamPreventedExposures(pod, teams, params):
     noTeamsPOD = copy.deepcopy(pod)
     afterTeamsPOD = copy.deepcopy(pod)
     
+    # Set max vaccs per day at each POD
     noTeamsPOD.teamsAtPOD = 0
     noTeamsPOD.maxVaccinationsPerDay = 0
-    
     afterTeamsPOD.teamsAtPOD = teams
     afterTeamsPOD.maxVaccinationsPerDay = afterTeamsPOD.vaccsPerTeamDay * afterTeamsPOD.teamsAtPOD
+    
+    # Set vaccine stock to be infinite for test POD, so there's no dependency on it
+    afterTeamsPOD.vaccinesInStock = np.inf
         
-    #vaccinate both PODs with the vaccines available at each
-    vaccinateOnePOD(noTeamsPOD)
-    vaccinateOnePOD(afterTeamsPOD)
+    #vaccinate both PODs
+    vaccinateOnePOD(noTeamsPOD)         # No vaccinations will occur
+    vaccinateOnePOD(afterTeamsPOD)      # Vaccinations occur acc. to team assignment
     
     #progress both PODs another day
     progressSinglePOD(noTeamsPOD, params)
     progressSinglePOD(afterTeamsPOD, params)
+
+    #print(f"Before:{vars(noTeamsPOD)}\nAfter:{vars(afterTeamsPOD)}\nEPE:{noTeamsPOD.E - afterTeamsPOD.E}\n")
     
-    #return the difference between exposure values - how many exposures did the flights prevent
+    #return the difference between exposure values - how many exposures did the team assignment prevent
     return max(noTeamsPOD.E - afterTeamsPOD.E, 0)
   
   
@@ -640,7 +650,7 @@ def assignTeams(PODs, numTeams, tStrategy):
     elif tStrategy == 'EPE':         
         podEPEs = np.zeros((len(PODs),numTeams+1))
         podEPEperTeam = np.zeros((len(PODs),numTeams+1))
-        podTeamsAssigned = np.zeros(len(PODs),dtype=int)    #current teams assigned to each pod
+        podTeamsAssigned = np.zeros(len(PODs),dtype=int)    #'current' teams assigned to each pod - each iteration
         add1teamEPEs = np.zeros(len(PODs))    #array of EPE vals for adding one more team at each pod
         for nT in range(1,numTeams+1):        #build each column before the row
             for podI in range(0,len(PODs)):
@@ -986,6 +996,11 @@ vaccinationRate = 0.66              #66% vaccination rate in network
 network_type = 'monocentric'
 maxDistance = 40
 output_folder = "results/strategies"
+
+teamStrategy = 'EPE'
+vaccStrategy = 'N'
+print(simulate(f"Generic_network_{network_type}.csv"))
+quit()
 
 with open(f"{output_folder}/strategy_comparisons.csv","a+") as f:
     # Write a header to the file
