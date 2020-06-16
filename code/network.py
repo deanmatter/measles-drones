@@ -981,15 +981,22 @@ targetedVaccination = False         #True: already-vaccd people go to V. False: 
 maxDistance = 40                    #The distance in km that the max inter-location distance is scaled to
 vaccinationRate = 0.66              #66% vaccination rate in network
 
-input_networks_distances = [("Generic_network_city.csv",20),("Generic_network_rural.csv",150),
-                    ("Generic_network_monocentric.csv",40),("Generic_network_polycentric.csv",100)]
-experiment_name = 'base_vaccs'
 
-for filename, maxDistance in input_networks_distances:
-    network_type = filename[16:-4]
-    plot_filename = f"measles-drones/figures/{experiment_name}/{network_type}_{maxDistance}km_vaccs"
-    c,d,v,dd = simulateRepeatedly(filename)
-    print(network_type, c, d, v, dd)
+# Strategy comparison ------------------------ 
+network_type = 'monocentric'
+maxDistance = 40
+output_folder = "results/strategies"
+
+with open(f"{output_folder}/strategy_comparisons.csv","a+") as f:
+    # Write a header to the file
+    f.write("Team strategy,Delivery strategy,Network type,Cases,Deaths,Vaccinations,Drone Deliveries")
+    # Iterate over each possible strategy pair and print output to file
+    for teamStrategy in ['I', 'S', 'N', 'EPE', 'I/N', 'spread']:
+        for vaccStrategy in ['uncapped','I', 'S', 'N', 'EPE', 'absI', 'absS', 'absN']:
+            c,d,v,dd = simulateRepeatedly(f"Generic_network_{network_type}.csv",100)
+            print(f"Teams {teamStrategy}: Vaccs {vaccStrategy}")
+            f.write(f"{teamStrategy},{vaccStrategy},{network_type},{c},{d},{v},{dd}")
+
 
 #TODO: (Optional) Randomly generated networks
 #TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
