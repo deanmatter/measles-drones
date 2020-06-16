@@ -1,33 +1,40 @@
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
 import numpy as np
 import matplotlib as mpl
 mpl.rcParams['figure.dpi'] = 150
+import pandas as pd
 
-with open("results/strategies/strategy_comparisons.csv") as f:
+df = pd.read_csv('results/strategies/strategy_comparisons.csv')
+print(df)
+
+#plt.xlim()
+#plt.ylim()
+plt.title("Comparison of team and vaccine resource allocation strategies")
+plt.ylabel("")
+plt.xlabel("")
+
+team_colours = {
+    'I':'',
+    'S':'',
+    'N':'',
+    'EPE':'',
+    'I/N':'',
+    'spread':'',
+}
+vacc_letters = {
+    'I':'I',
+    'S':'S',
+    'N':'N',
+    'EPE':'E',
+    'absI':'i',
+    'absS':'s',
+    'absN':'n',
+}
 
 
-plt.xlim()
-plt.ylim()
-plt.title()
-plt.ylabel()
-plt.xlabel()
-line = plt.scatter(0, 0, s = 50, color="k", label="No vaccinations.")
-line.set_clip_on(False)
-
-#fitting trendline
-linear_reg = LinearRegression()
-X = vehicleCosts
-X.extend(droneCosts)
-X.extend(combinedCosts)
-X = np.array(X).reshape(-1,1)
-Y = vehicleDeaths
-Y.extend(droneDeaths)
-Y.extend(combinedDeaths)
-Y = np.array(Y).reshape(-1,1)
-linear_reg.fit(X, Y)
-y_pred = linear_reg.predict(X)
-#plt.plot(X, y_pred, color="k", linewidth=0.1)
+for ts in ['I','S','N','EPE','I/N','spread']:
+    ts_df = df[df['Team strategy']==ts]
+    plt.scatter(ts_df['Vaccinations'], ts_df['Cases'], s = 50, label=ts_df['Delivery strategy'])
 
 plt.legend()
 plt.show()
