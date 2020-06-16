@@ -543,11 +543,14 @@ def teamPreventedExposures(pod, teams, params):
     
     noTeamsPOD.teamsAtPOD = 0
     noTeamsPOD.maxVaccinationsPerDay = 0
-    
     afterTeamsPOD.teamsAtPOD = teams
     afterTeamsPOD.maxVaccinationsPerDay = afterTeamsPOD.vaccsPerTeamDay * afterTeamsPOD.teamsAtPOD
         
-    #vaccinate both PODs with the vaccines available at each
+    # Set vaccine stock to be infinite for test POD, so there's no dependency on it
+    afterTeamsPOD.vaccinesInStock = np.inf
+        
+    #vaccinate both PODs
+    #vaccinate both PODs 
     vaccinateOnePOD(noTeamsPOD)
     vaccinateOnePOD(afterTeamsPOD)
     
@@ -555,7 +558,7 @@ def teamPreventedExposures(pod, teams, params):
     progressSinglePOD(noTeamsPOD, params)
     progressSinglePOD(afterTeamsPOD, params)
     
-    #return the difference between exposure values - how many exposures did the flights prevent
+    #return the difference between exposure values
     return max(noTeamsPOD.E - afterTeamsPOD.E, 0)
   
   
