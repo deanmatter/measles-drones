@@ -997,11 +997,6 @@ network_type = 'monocentric'
 maxDistance = 40
 output_folder = "results/strategies"
 
-teamStrategy = 'EPE'
-vaccStrategy = 'N'
-print(simulate(f"Generic_network_{network_type}.csv"))
-quit()
-
 with open(f"{output_folder}/strategy_comparisons.csv","a+") as f:
     # Write a header to the file
     f.write("Team strategy,Delivery strategy,Network type,Cases,Deaths,Vaccinations,Drone Deliveries")
@@ -1010,7 +1005,7 @@ with open(f"{output_folder}/strategy_comparisons.csv","a+") as f:
         for vaccStrategy in ['uncapped','I', 'S', 'N', 'EPE', 'absI', 'absS', 'absN']:
             c,d,v,dd = simulateRepeatedly(f"Generic_network_{network_type}.csv",100)
             print(f"Teams {teamStrategy}: Vaccs {vaccStrategy}")
-            f.write(f"{teamStrategy},{vaccStrategy},{network_type},{c},{d},{v},{dd}")
+            f.write(f"{teamStrategy},{vaccStrategy},{network_type},{c},{d},{v},{dd}\n")
 
 
 #TODO: (Optional) Randomly generated networks
