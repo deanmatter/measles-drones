@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
 mpl.rcParams['figure.dpi'] = 150
-base = [178220,5677,724477,8772]                  # The base results set
+base = [178297,5679,724251,8782]                  # The base results set
 
 param_names = {
     "":""
