@@ -5,7 +5,25 @@ mpl.rcParams['figure.dpi'] = 150
 base = [178297,5679,724251,8782]                  # The base results set
 
 param_names = {
-    "":""
+    "exposedDays": "Days exposed",
+    "infectiousDays": "Days infectious",
+    "R0": "$R_{0}$",
+    "migrationIntensity": "Amount of migration",
+    "deathRate": "Mortality rate",
+    "vaccineEffectiveness": "Vaccine efficacy - susceptible",
+    "prophylaxis72hrSuccessRate": "Vaccine efficacy - exposed",
+    "numTeams": "Number of response teams",
+    "workingMinutesPerDay": "Working hours per day",
+    "maxVaccsTeamDay": "Daily vaccinations per team",
+    "droneVaccineCapacity": "Vaccines per drone delivery",
+    "monoDaysPotency": "Days of vaccine potency",
+    "interventionCaseRatio": "Epidemic detection delay",
+    "interventionLeadTime": "Intervention delay in days",
+    "numberOfDrones": "Number of drones available",
+    "droneSpeed": "Average drone flight speed",
+    "flightLaunchTime": "Launch time per drone flight",
+    "vaccinationRate": "Population vaccination rate",
+    "maxDistance": "Diameter of network"
 }
 
 def plot_param_set(p_set):
@@ -31,7 +49,7 @@ def plot_param_set(p_set):
             print(ys)
 
             # Plot the values, with the label being the parameter name
-            plt.plot(xs, ys, label=p[0])
+            plt.plot(xs, ys, label=param_names[p[0]])
 
         #plt.savefig(f"results/sensitivity/{metric}.pdf",bbox_inches='tight')
         plt.legend()
