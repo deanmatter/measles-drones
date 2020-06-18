@@ -747,8 +747,8 @@ def plotPODSum(daysOfIntervention, plots, podIndexes, PODs):
     
     import matplotlib as mpl
     mpl.rcParams['figure.dpi'] = 150
-    plt.savefig(f"{plot_filename}.pdf",bbox_inches='tight')
-    #plt.show()
+    #plt.savefig(f"{plot_filename}.pdf",bbox_inches='tight')
+    plt.show()
     plt.close()
 
     
@@ -915,7 +915,7 @@ def simulate(filename='Likasi.csv'):
     #print("Total number of vaccines delivered, plus those used at the DC:",totVaccs)
     #print("Total number of vaccines actually administered to patients:", totVaccsGiven)
     
-    #plotPODSum(simulationRuntime, plots, np.arange(0,len(PODs)), PODs)
+    plotPODSum(simulationRuntime, plots, np.arange(0,len(PODs)), PODs)
     #plotPOD(simulationRuntime, plots, 7, "Likasi")
     #plotMap(PODs,  t, waitingForIntervention, interventionStartTime, interventionOver,
     #      totExpired, totVaccs, totVaccsGiven, vaccineCost + deliveryCost)
@@ -990,49 +990,56 @@ maxDistance = 40                    #The distance in km that the max inter-locat
 vaccinationRate = 0.66              #66% vaccination rate in network
 populationMultiplier = 1            #Used for sensitivity analysis only. Multiplier for population size
 
-# Sensitivity Analysis
-epidemic_parameters = [
-    "exposedDays",
-    "infectiousDays",
-    "R0",
-    "deathRate"
-]
 
-vaccination_parameters = [
-    "vaccineEffectiveness",
-    "prophylaxis72hrSuccessRate",
-    "monoDaysPotency",
-    "vaccinationRate"
-]
+numTeams = 7
+print(simulate("Generic_network_monocentric.csv"))
+quit()
+
+
+# Sensitivity Analysis
+# epidemic_parameters = [
+#     "exposedDays",
+#     "infectiousDays",
+#     "R0",
+#     "deathRate"
+# ]
+
+# vaccination_parameters = [
+#     "vaccineEffectiveness",
+#     "prophylaxis72hrSuccessRate",
+#     "monoDaysPotency",
+#     "vaccinationRate"
+# ]
 
 intervention_parameters = [
     "numTeams",
-    "workingMinutesPerDay",
-    "maxVaccsTeamDay",
-    "interventionCaseRatio",
-    "interventionLeadTime"
+    # "workingMinutesPerDay",
+    # "maxVaccsTeamDay",
+    # "interventionCaseRatio",
+    # "interventionLeadTime"
 ]
 
-network_parameters = [
-    "migrationIntensity",
-    "maxDistance",
-    "populationMultiplier"
-]
+# network_parameters = [
+#     "migrationIntensity",
+#     "maxDistance",
+#     "populationMultiplier"
+# ]
 
-drone_parameters = [
-    "droneVaccineCapacity",
-    "numberOfDrones",
-    "droneSpeed",
-    "flightLaunchTime"
-]
+# drone_parameters = [
+#     "droneVaccineCapacity",
+#     "numberOfDrones",
+#     "droneSpeed",
+#     "flightLaunchTime"
+# ]
 
 network_type = 'monocentric'
 maxDistance = 40
 output_folder = f"results/sensitivity"
 
-with open(f"{output_folder}/{network_type}.csv","a+") as f:
+with open(f"{output_folder}/{network_type}_teamsonly.csv","a+") as f:
     f.write("Parameter,-50%,,,,-30%,,,,-20%,,,,-10%,,,,+10%,,,,+20%,,,,+30%,,,,+50%,,,,")
-    for param_set in [epidemic_parameters,vaccination_parameters,intervention_parameters,network_parameters,drone_parameters]:
+   # for param_set in [epidemic_parameters,vaccination_parameters,intervention_parameters,network_parameters,drone_parameters]:
+    for param_set in [intervention_parameters]:
         f.write("\n")
         for p_name in param_set:
             # Print parameter name to file

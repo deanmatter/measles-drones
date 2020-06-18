@@ -1,4 +1,3 @@
-,,
 Parameter,Variable Name,Default value
 Average days exposed before infectious,exposedDays,10
 Average days infectious before recovery,infectiousDays,8
