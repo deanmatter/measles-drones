@@ -2,7 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
 mpl.rcParams['figure.dpi'] = 150
-base = [178297,5679,724251,8782]                  # The base results set
+untargeted_base = [178297,5679,724251,8782]                  # The base results set
+targeted_base = [148102,4718,462797,5798]
 
 param_names = {
     "exposedDays": "Days exposed",
@@ -24,7 +25,9 @@ param_names = {
     "flightLaunchTime": "Launch time per drone flight",
     "vaccinationRate": "Population vaccination rate",
     "maxDistance": "Diameter of network",
-    "populationMultiplier": "Total population in network"
+    "populationMultiplier": "Total population in network",
+    "numTeams targeted": "Number of response teams, targeted",
+    "numTeams untargeted": "Number of response teams, untargeted"
 }
 
 def plot_param_set(p_set):
@@ -46,8 +49,12 @@ def plot_param_set(p_set):
 
         # Iterate through parameters, plotting this metric for each parameter
         for p in p_set:
-            # ys is an array of y-values: percentage change in parameter value
-            ys = [(float(p[i+1+4*j])/base[i]-1)*100 for j in range(len(xs))]
+            # Split the y calculation based on whether the parameter is targeted vaccination or not
+            if p[0] != 'numTeams targeted':
+                # ys is an array of y-values: percentage change in parameter value
+                ys = [(float(p[i+1+4*j])/untargeted_base[i]-1)*100 for j in range(len(xs))]
+            else:
+                ys = [(float(p[i+1+4*j])/targeted_base[i]-1)*100 for j in range(len(xs))]
 
             # Set the y-scale based on the max y value
             curr_low, curr_high = plt.ylim()
@@ -56,13 +63,13 @@ def plot_param_set(p_set):
             # Plot the values, with the label being the parameter name
             plt.plot(xs, ys, label=param_names[p[0]])
 
-        plt.savefig(f"results/sensitivity/absN vaccStrat/{p[0]}_{metric}.pdf",bbox_inches='tight')
         plt.legend()
-        #plt.show()
-
+        plt.savefig(f"results/sensitivity/absN vaccStrat/{p[0]}_{metric}.pdf",bbox_inches='tight')
+        plt.show()
+        plt.close()
 
 # Input data from csv
-data = open("results/sensitivity/monocentric.csv","r")
+data = open("results/sensitivity/monocentric_numteams.csv","r")
 
 # Skip the header row. For each parameter set, plot the sensitivity chart
 lineCount = 0
