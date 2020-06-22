@@ -65,11 +65,11 @@ def plot_param_set(p_set):
 
         plt.legend()
         plt.savefig(f"results/sensitivity/absN vaccStrat/{p[0]}_{metric}.pdf",bbox_inches='tight')
-        plt.show()
+        #plt.show()
         plt.close()
 
 # Input data from csv
-data = open("results/sensitivity/monocentric_numteams.csv","r")
+data = open("results/sensitivity/monocentric.csv","r")
 
 # Skip the header row. For each parameter set, plot the sensitivity chart
 lineCount = 0
