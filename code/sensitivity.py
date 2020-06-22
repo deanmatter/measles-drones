@@ -23,7 +23,8 @@ param_names = {
     "droneSpeed": "Average drone flight speed",
     "flightLaunchTime": "Launch time per drone flight",
     "vaccinationRate": "Population vaccination rate",
-    "maxDistance": "Diameter of network"
+    "maxDistance": "Diameter of network",
+    "populationMultiplier": "Total population in network"
 }
 
 def plot_param_set(p_set):
@@ -31,12 +32,13 @@ def plot_param_set(p_set):
     xlabel = f"Percentage change in parameter"
     metrics = ["cases","deaths","vaccines","drone deliveries"]
 
-    print(p_set)
+    for i, metric in enumerate(metrics):
+        if metric in ["deaths", "drone deliveries"]:
+            # These metrics are not plotted for sensitivity by default
+            continue
 
-    for i in range(len(metrics)):
-        metric = metrics[i]
         title = f"Sensitivity of {metric} to changes in parameters"
-        ylabel = f"Percentage change in {metric} (%)"
+        ylabel = f"Percentage change in number of {metric} (%)"
         xlabel = f"Percentage change in parameter value (%)"
         plt.title(title)
         plt.xlabel(xlabel)
@@ -46,14 +48,17 @@ def plot_param_set(p_set):
         for p in p_set:
             # ys is an array of y-values: percentage change in parameter value
             ys = [(float(p[i+1+4*j])/base[i]-1)*100 for j in range(len(xs))]
-            print(ys)
+
+            # Set the y-scale based on the max y value
+            curr_low, curr_high = plt.ylim()
+            plt.ylim(min(-20,np.min(ys)-5,curr_low), max(20,np.max(ys)+5,curr_high))
 
             # Plot the values, with the label being the parameter name
             plt.plot(xs, ys, label=param_names[p[0]])
 
-        #plt.savefig(f"results/sensitivity/{metric}.pdf",bbox_inches='tight')
+        plt.savefig(f"results/sensitivity/absN vaccStrat/{p[0]}_{metric}.pdf",bbox_inches='tight')
         plt.legend()
-        plt.show()
+        #plt.show()
 
 
 # Input data from csv
