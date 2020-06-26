@@ -1006,11 +1006,11 @@ populationMultiplier = 1            #Used for sensitivity analysis only. Multipl
 # ]
 
 intervention_parameters = [
-    "numTeams",
+    # "numTeams",
     # "workingMinutesPerDay",
     # "maxVaccsTeamDay",
-    # "interventionCaseRatio",
-    # "interventionLeadTime"
+    "interventionCaseRatio",
+    "interventionLeadTime"
 ]
 
 # network_parameters = [
@@ -1030,38 +1030,37 @@ network_type = 'monocentric'
 maxDistance = 40
 output_folder = f"results/sensitivity"
 
-#targeted vaccination
-targetedVaccination = True
-
-with open(f"{output_folder}/{network_type}_teams_targetedvacc.csv","a+") as f:
-    f.write("Parameter,-50%,,,,-30%,,,,-20%,,,,-10%,,,,+10%,,,,+20%,,,,+30%,,,,+50%,,,,")
-   # for param_set in [epidemic_parameters,vaccination_parameters,intervention_parameters,network_parameters,drone_parameters]:
-    for param_set in [intervention_parameters]:
-        f.write("\n")
-        for p_name in param_set:
-            # Print parameter name to file
-            f.write(f"{p_name},")
-
-            # Set p_val = original variable value
-            p_val = vars()[p_name]
-            print(f"Testing {p_name}, with initial value {p_val}")
-
-            for i in [0.5*p_val,0.7*p_val, 0.8*p_val, 0.9*p_val, 1.1*p_val, 1.2*p_val, 1.3*p_val,1.5*p_val]:
-                # Set the variable's value to i for each iteration, potentially with truncation to integer
-                if p_name in ['numTeams','interventionLeadTime','numberOfDrones']:
-                    i = int(i)
-                vars()[p_name] = i
-                print(f"Set {p_name}={i}")
-
-                # Update the parameters to be used
-                params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
-                
-                #Simulate this epidemic and write results to file
-                c,d,v,dd = simulateRepeatedly(f"Generic_network_{network_type}.csv", 100)
-                f.write(f"{c},{d},{v},{dd},")
-            vars()[p_name] = p_val
-            print(f"Reset {p_name}={p_val}")
+for network_type, maxDistance in [('monocentric',40),('polycentric',100),('rural',150),('city',20)]:
+    print(f"Network type:{network_type}")
+    with open(f"{output_folder}/delay_investigation.csv","a+") as f:
+        f.write("Network,Parameter,-50%,,,,-30%,,,,-20%,,,,-10%,,,,+10%,,,,+20%,,,,+30%,,,,+50%,,,,")
+        # for param_set in [epidemic_parameters,vaccination_parameters,intervention_parameters,network_parameters,drone_parameters]:
+        for param_set in [intervention_parameters]:
             f.write("\n")
+            for p_name in param_set:
+                # Print parameter name to file
+                f.write(f"{network_type},{p_name},")
+
+                # Set p_val = original variable value
+                p_val = vars()[p_name]
+                print(f"Testing {p_name}, with initial value {p_val}")
+
+                for i in [0.5*p_val,0.7*p_val, 0.8*p_val, 0.9*p_val, 1.1*p_val, 1.2*p_val, 1.3*p_val,1.5*p_val]:
+                    # Set the variable's value to i for each iteration, potentially with truncation to integer
+                    if p_name in ['numTeams','interventionLeadTime','numberOfDrones']:
+                        i = int(i)
+                    vars()[p_name] = i
+                    print(f"Set {p_name}={i}")
+
+                    # Update the parameters to be used
+                    params = [R0 / infectiousDays, 1/exposedDays, 1/infectiousDays, deathRate]
+                    
+                    #Simulate this epidemic and write results to file
+                    c,d,v,dd = simulateRepeatedly(f"Generic_network_{network_type}.csv", 100)
+                    f.write(f"{c},{d},{v},{dd},")
+                vars()[p_name] = p_val
+                print(f"Reset {p_name}={p_val}")
+                f.write("\n")
         
 #TODO: (Optional) Randomly generated networks
 #TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
