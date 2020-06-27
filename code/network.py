@@ -988,16 +988,13 @@ targetedVaccination = False         #True: already-vaccd people go to V. False: 
 maxDistance = 40                    #The distance in km that the max inter-location distance is scaled to
 vaccinationRate = 0.66              #66% vaccination rate in network
 
-input_networks_distances = [("Generic_network_city.csv",20),("Generic_network_rural.csv",150),
-                    ("Generic_network_monocentric.csv",40),("Generic_network_polycentric.csv",100)]
-experiment_name = 'base_vaccs_targeted'
-targetedVaccination = True
+experiment_name = 'monocentric_monoDaysPotency_changes'
+network_type = 'monocentric'
 
-for filename, maxDistance in input_networks_distances:
-    network_type = filename[16:-4]
-    plot_filename = f"measles-drones/figures/{experiment_name}/{network_type}_{maxDistance}km_vaccs_targeted"
-    c,d,v,dd = simulateRepeatedly(filename)
-    print(network_type, c, d, v, dd)
+for monoDaysPotency in [1,2,3,4,5]:
+    plot_filename = f"measles-drones/figures/{experiment_name}/{network_type}"
+    c,d,v,dd = simulateRepeatedly("Generic_network_monocentric.csv")
+    print(monoDaysPotency, c, d, v, dd)
 
 #TODO: (Optional) Randomly generated networks
 #TODO: (Optional) Lockdown scenario of less migration between nodes. Reduced Ro?
