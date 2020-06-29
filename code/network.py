@@ -556,8 +556,8 @@ def teamPreventedExposures(pod, teams, params):
     afterTeamsPOD.vaccinesInStock = np.inf
         
     #vaccinate both PODs
-    vaccinateOnePOD(noTeamsPOD)         # No vaccinations will occur
-    vaccinateOnePOD(afterTeamsPOD)      # Vaccinations occur acc. to team assignment
+    vaccinateOnePOD(noTeamsPOD)
+    vaccinateOnePOD(afterTeamsPOD)
     
     #progress both PODs another day
     progressSinglePOD(noTeamsPOD, params)
@@ -990,7 +990,6 @@ targetedVaccination = False         #True: already-vaccd people go to V. False: 
 #input dataset
 maxDistance = 40                    #The distance in km that the max inter-location distance is scaled to
 vaccinationRate = 0.66              #66% vaccination rate in network
-
 
 # Strategy comparison ------------------------ 
 network_type = 'monocentric'
