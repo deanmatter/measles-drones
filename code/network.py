@@ -992,17 +992,18 @@ maxDistance = 40                    #The distance in km that the max inter-locat
 vaccinationRate = 0.66              #66% vaccination rate in network
 
 # Strategy comparison ------------------------ 
-network_type = 'monocentric'
-maxDistance = 40
+#network_type = 'monocentric'
+#maxDistance = 40
 output_folder = "results/strategies"
-targetedVaccination = True
 
-with open(f"{output_folder}/strategy_comparisons_targeted_monocentric.csv","a+") as f:
-    # Write a header to the file
-    f.write("Team strategy,Delivery strategy,Network type,Cases,Deaths,Vaccinations,Drone Deliveries")
-    # Iterate over each possible strategy pair and print output to file
-    for teamStrategy in ['I', 'S', 'N', 'EPE', 'I/N', 'spread']:
-        for vaccStrategy in ['uncapped','I', 'S', 'N', 'EPE', 'absI', 'absS', 'absN']:
-            c,d,v,dd = simulateRepeatedly(f"Generic_network_{network_type}.csv",100)
-            print(f"Teams {teamStrategy}: Vaccs {vaccStrategy}")
-            f.write(f"{teamStrategy},{vaccStrategy},{network_type},{c},{d},{v},{dd}\n")
+for network_type, maxDistance in [('polycentric',100),('city',20),('rural',150)]:
+    print(network_type)
+    with open(f"{output_folder}/strategy_comparisons_untargeted_{network_type}.csv","a+") as f:
+        # Write a header to the file
+        f.write("Team strategy,Delivery strategy,Network type,Cases,Deaths,Vaccinations,Drone Deliveries\n")
+        # Iterate over each possible strategy pair and print output to file
+        for teamStrategy in ['I', 'S', 'N', 'EPE', 'I/N', 'spread']:
+            for vaccStrategy in ['uncapped','I', 'S', 'N', 'EPE', 'absI', 'absS', 'absN']:
+                c,d,v,dd = simulateRepeatedly(f"Generic_network_{network_type}.csv",100)
+                print(f"Teams {teamStrategy}: Vaccs {vaccStrategy}")
+                f.write(f"{teamStrategy},{vaccStrategy},{network_type},{c},{d},{v},{dd}\n")

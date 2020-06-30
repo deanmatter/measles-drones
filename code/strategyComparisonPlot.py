@@ -22,7 +22,7 @@ def scatter_markers(vs, cs, s, col, ms, l):
         sc_letters.append(vacc_strat_names[m])                              # append vacc strat name
 
 # Read in input from CSV
-df = pd.read_csv('results/strategies/strategy_comparisons.csv')
+df = pd.read_csv('results/strategies/strategy_comparisons_untargeted_monocentric.csv')
 df_capped = df[df['Delivery strategy'] != 'uncapped']
 
 # Prepare the figure for scatters
@@ -95,5 +95,5 @@ handles, labels = scatters, sc_letters
 by_label = OrderedDict(zip(labels,handles))
 leg2 =ax.legend(by_label.values(), by_label.keys(), loc ='lower right', title="Team strategy (letter):")
 
-fig.savefig("results/strategies/team_vaccine_scatter.pdf",bbox_inches='tight')
+#fig.savefig("results/strategies/team_vaccine_scatter.pdf",bbox_inches='tight')
 plt.show()
