@@ -22,17 +22,17 @@ def scatter_markers(vs, cs, s, col, ms, l):
         sc_letters.append(vacc_strat_names[m])                              # append vacc strat name
 
 # Read in input from CSV
-df = pd.read_csv('results/strategies/strategy_comparisons_targeted_monocentric.csv')
+df = pd.read_csv('results/strategies/strategy_comparisons_untargeted_monocentric.csv')
 df_capped = df[df['Delivery strategy'] != 'uncapped']
 
 # Prepare the figure for scatters
 fig, ax = plt.subplots()
 scatters = []
 sc_letters = []
-ax.set_title("Comparison of team and vaccine resource allocation strategies")
+ax.set_title("Comparison of allocation strategy pairs - monocentric, untargeted")
 ax.set_ylabel("Total number of cases")
 ax.set_xlabel("Total number of vaccines given")
-ax.set_xlim(300000,650000)
+ax.set_xlim(600000,850000)
 
 # Dicts for information
 ts_names = {                        # Key: team allocation strategy shortname
@@ -87,13 +87,13 @@ for ts in ['I','S','N','EPE','I/N','spread']:
 # Delivery strategy legend, made using the labels added when calling ax.scatter()
 handles, labels = plt.gca().get_legend_handles_labels()
 by_label = OrderedDict(zip(labels,handles))
-leg1 = ax.legend(by_label.values(), by_label.keys(), title="Delivery strategy (colour):")
+leg1 = ax.legend(by_label.values(), by_label.keys(), title="Team strategy (colour):")
 plt.gca().add_artist(leg1)
 
 # Team allocation strategy legend, made manually by adding scatter points and scatter markers to scatters,sc_letters
 handles, labels = scatters, sc_letters
 by_label = OrderedDict(zip(labels,handles))
-leg2 =ax.legend(by_label.values(), by_label.keys(), loc ='lower right', title="Team strategy (letter):")
+leg2 =ax.legend(by_label.values(), by_label.keys(), loc ='lower right', title="Delivery strategy (letter):")
 
-fig.savefig("results/strategies/team_vaccine_scatter_targeted_mono.pdf",bbox_inches='tight')
+fig.savefig("results/strategies/team_vaccine_scatter.pdf",bbox_inches='tight')
 plt.show()
