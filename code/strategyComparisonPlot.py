@@ -22,17 +22,32 @@ def scatter_markers(vs, cs, s, col, ms, l):
         sc_letters.append(vacc_strat_names[m])                              # append vacc strat name
 
 # Read in input from CSV
-df = pd.read_csv('results/strategies/strategy_comparisons_untargeted_monocentric.csv')
-df_capped = df[df['Delivery strategy'] != 'uncapped']
+df_poly = pd.read_csv('results/strategies/strategy_comparisons_untargeted_polycentric.csv')
+df_city = pd.read_csv('results/strategies/strategy_comparisons_untargeted_city.csv')
+df_rural = pd.read_csv('results/strategies/strategy_comparisons_untargeted_rural.csv')
+
+# Change the columns to percentage change from average
+for df in [df_poly, df_city, df_rural]:
+    # Remove uncapped delivery strategy from df
+    df = df[df['Delivery strategy'] != 'uncapped']
+
+    # Standardize each column
+    for col in ['Cases','Deaths','Vaccinations','Drone Deliveries']:
+        col_mean = df[col].mean()
+        df[col] = (df[col] - col_mean) / col_mean
+
+# Combine the three into a single network
+df_capped = pd.concat([df_poly, df_city, df_rural])
+print(df_capped.head())
 
 # Prepare the figure for scatters
 fig, ax = plt.subplots()
 scatters = []
 sc_letters = []
-ax.set_title("Comparison of allocation strategy pairs - monocentric, untargeted")
+ax.set_title("Comparison of allocation strategy pairs - untargeted")
 ax.set_ylabel("Total number of cases")
 ax.set_xlabel("Total number of vaccines given")
-ax.set_xlim(600000,850000)
+#ax.set_xlim(600000,850000)
 
 # Dicts for information
 ts_names = {                        # Key: team allocation strategy shortname
@@ -95,5 +110,5 @@ handles, labels = scatters, sc_letters
 by_label = OrderedDict(zip(labels,handles))
 leg2 =ax.legend(by_label.values(), by_label.keys(), loc ='lower right', title="Delivery strategy (letter):")
 
-fig.savefig("results/strategies/team_vaccine_scatter.pdf",bbox_inches='tight')
+#fig.savefig("results/strategies/team_vaccine_scatter.pdf",bbox_inches='tight')
 plt.show()
