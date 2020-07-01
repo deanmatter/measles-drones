@@ -26,11 +26,13 @@ df_poly = pd.read_csv('results/strategies/strategy_comparisons_untargeted_polyce
 df_city = pd.read_csv('results/strategies/strategy_comparisons_untargeted_city.csv')
 df_rural = pd.read_csv('results/strategies/strategy_comparisons_untargeted_rural.csv')
 
+# Remove uncapped delivery strategy from each df
+df_poly = df_poly[df_poly['Delivery strategy'] != 'uncapped']
+df_city = df_city[df_city['Delivery strategy'] != 'uncapped']
+df_rural = df_rural[df_rural['Delivery strategy'] != 'uncapped']
+
 # Change the columns to percentage change from average
 for df in [df_poly, df_city, df_rural]:
-    # Remove uncapped delivery strategy from df
-    df = df[df['Delivery strategy'] != 'uncapped']
-
     # Standardize each column
     for col in ['Cases','Deaths','Vaccinations','Drone Deliveries']:
         col_mean = df[col].mean()
