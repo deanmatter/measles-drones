@@ -38,7 +38,7 @@ for df in [df_mono, df_poly, df_city, df_rural]:
     # Standardize each column
     for col in ['Cases','Deaths','Vaccinations','Drone Deliveries']:
         col_mean = df[col].mean()
-        df[col] = (df[col] - col_mean) / col_mean
+        df[col] = (df[col] - col_mean) / col_mean * 100
 
 # Combine the three into a single network
 df_capped = pd.concat([df_mono, df_poly, df_city, df_rural])
@@ -48,11 +48,11 @@ print(df_capped.head())
 fig, ax = plt.subplots()
 scatters = []
 sc_letters = []
-ax.set_title("Comparison of allocation strategy pairs - untargeted")
-ax.set_ylabel("Total number of cases")
-ax.set_xlabel("Total number of vaccines given")
-ax.set_xlim(-0.1,0.25)
-ax.set_ylim(-0.2,0.4)
+ax.set_title("Comparison of allocation strategy pairs -- untargeted, all networks")
+ax.set_ylabel("Percentage deviation from network mean for cases (\%)")
+ax.set_xlabel("Percentage deviation from network mean for vaccinations (\%)")
+ax.set_xlim(-10,25)
+ax.set_ylim(-20,40)
 
 # Dicts for information
 ts_names = {                        # Key: team allocation strategy shortname
@@ -115,5 +115,5 @@ handles, labels = scatters, sc_letters
 by_label = OrderedDict(zip(labels,handles))
 leg2 =ax.legend(by_label.values(), by_label.keys(), loc ='lower right', title="Delivery strategy (letter):")
 
-#fig.savefig("results/strategies/team_vaccine_scatter.pdf",bbox_inches='tight')
+fig.savefig("results/strategies/team_vaccine_scatter_untargeted_all.pdf",bbox_inches='tight')
 plt.show()
