@@ -22,24 +22,26 @@ def scatter_markers(vs, cs, s, col, ms, l):
         sc_letters.append(vacc_strat_names[m])                              # append vacc strat name
 
 # Read in input from CSV
+df_mono = pd.read_csv('results/strategies/strategy_comparisons_untargeted_monocentric.csv')
 df_poly = pd.read_csv('results/strategies/strategy_comparisons_untargeted_polycentric.csv')
 df_city = pd.read_csv('results/strategies/strategy_comparisons_untargeted_city.csv')
 df_rural = pd.read_csv('results/strategies/strategy_comparisons_untargeted_rural.csv')
 
 # Remove uncapped delivery strategy from each df
+df_mono = df_mono[df_mono['Delivery strategy'] != 'uncapped']
 df_poly = df_poly[df_poly['Delivery strategy'] != 'uncapped']
 df_city = df_city[df_city['Delivery strategy'] != 'uncapped']
 df_rural = df_rural[df_rural['Delivery strategy'] != 'uncapped']
 
 # Change the columns to percentage change from average
-for df in [df_poly, df_city, df_rural]:
+for df in [df_mono, df_poly, df_city, df_rural]:
     # Standardize each column
     for col in ['Cases','Deaths','Vaccinations','Drone Deliveries']:
         col_mean = df[col].mean()
         df[col] = (df[col] - col_mean) / col_mean
 
 # Combine the three into a single network
-df_capped = pd.concat([df_poly, df_city, df_rural])
+df_capped = pd.concat([df_mono, df_poly, df_city, df_rural])
 print(df_capped.head())
 
 # Prepare the figure for scatters
@@ -49,7 +51,8 @@ sc_letters = []
 ax.set_title("Comparison of allocation strategy pairs - untargeted")
 ax.set_ylabel("Total number of cases")
 ax.set_xlabel("Total number of vaccines given")
-#ax.set_xlim(600000,850000)
+ax.set_xlim(-0.1,0.25)
+ax.set_ylim(-0.2,0.4)
 
 # Dicts for information
 ts_names = {                        # Key: team allocation strategy shortname
@@ -104,7 +107,7 @@ for ts in ['I','S','N','EPE','I/N','spread']:
 # Delivery strategy legend, made using the labels added when calling ax.scatter()
 handles, labels = plt.gca().get_legend_handles_labels()
 by_label = OrderedDict(zip(labels,handles))
-leg1 = ax.legend(by_label.values(), by_label.keys(), title="Team strategy (colour):")
+leg1 = ax.legend(by_label.values(), by_label.keys(), loc ='upper right', title="Team strategy (colour):")
 plt.gca().add_artist(leg1)
 
 # Team allocation strategy legend, made manually by adding scatter points and scatter markers to scatters,sc_letters
