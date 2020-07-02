@@ -49,8 +49,8 @@ fig, ax = plt.subplots()
 scatters = []
 sc_letters = []
 ax.set_title("Comparison of allocation strategy pairs -- untargeted, all networks")
-ax.set_ylabel("Percentage deviation from network mean for cases (\%)")
-ax.set_xlabel("Percentage deviation from network mean for vaccinations (\%)")
+ax.set_ylabel("Percentage deviation from network mean for cases (%)")
+ax.set_xlabel("Percentage deviation from network mean for vaccinations (%)")
 ax.set_xlim(-10,25)
 ax.set_ylim(-20,40)
 
