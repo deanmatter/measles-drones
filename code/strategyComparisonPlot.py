@@ -6,11 +6,11 @@ import pandas as pd
 from collections import OrderedDict
 
 STANDARDIZE_COLUMNS = True
-SAVE_FIGURE = False
+SAVE_FIGURE = True
 SHOW_ONCE = False
 vacc_type = 'untargeted'
 
-# Read in input from CSV
+# ---------- Read in input from CSV
 df_mono = pd.read_csv(f'results/strategies/strategy_comparisons_{vacc_type}_monocentric.csv')
 df_poly = pd.read_csv(f'results/strategies/strategy_comparisons_{vacc_type}_polycentric.csv')
 df_city = pd.read_csv(f'results/strategies/strategy_comparisons_{vacc_type}_city.csv')
@@ -37,7 +37,7 @@ else:
 df_capped = pd.concat([df_mono, df_poly, df_city, df_rural])
 print(df_capped.head())
 
-# Dicts for information
+# ---------- Dicts for information
 ts_names = {                        # Key: team allocation strategy shortname
     'I':'Infections',               # Value: team allocation strategy name
     'S':'Susceptible',
@@ -276,4 +276,85 @@ def plot_vacc_strats():
     if SHOW_ONCE:
         quit()
 
-plot_vacc_strats()
+def plot_uncapped_team_strats():
+    df_mono = pd.read_csv(f'results/strategies/strategy_comparisons_{vacc_type}_monocentric.csv')
+    df_poly = pd.read_csv(f'results/strategies/strategy_comparisons_{vacc_type}_polycentric.csv')
+    df_city = pd.read_csv(f'results/strategies/strategy_comparisons_{vacc_type}_city.csv')
+    df_rural = pd.read_csv(f'results/strategies/strategy_comparisons_{vacc_type}_rural.csv')
+    df_mono = df_mono[df_mono["Delivery strategy"]=='uncapped']
+    df_poly = df_poly[df_poly["Delivery strategy"]=='uncapped']
+    df_city = df_city[df_city["Delivery strategy"]=='uncapped']
+    df_rural = df_rural[df_rural["Delivery strategy"]=='uncapped']
+
+    if STANDARDIZE_COLUMNS:
+        # Change the columns to percentage change from average
+        for df in [df_mono, df_poly, df_city, df_rural]:
+            # Standardize each column
+            for col in ['Cases','Deaths','Vaccinations','Drone Deliveries']:
+                col_mean = df[col].mean()
+                df[col] = (df[col] - col_mean) / col_mean * 100
+        print("Standardized columns.")
+    else:
+        print("Using unstandardized columns.")
+
+    df_uncapped = pd.concat([df_mono, df_poly, df_city, df_rural])
+    print(df_uncapped)
+
+    global ax, scatters, sc_letters
+    fig, ax = plt.subplots()
+    scatters = []
+    sc_letters = []
+    ax.set_ylabel("Deviation from mean cases for network (%)")
+    ax.set_xlabel("Deviation from mean vaccinations for network (%)")
+
+    df_aggregated = df_uncapped.groupby(['Team strategy','Network type'],as_index=False).agg(
+        {
+            'Cases': 'mean',
+            'Deaths': 'mean',
+            'Vaccinations': 'mean',
+            'Drone Deliveries': 'mean'
+        }
+    )
+
+    for ts in ['I','S','N','EPE','I/N','spread']:
+        ts_df = df_aggregated[df_aggregated['Team strategy']==ts]
+        label_keys = ts_df['Network type'].values             
+        label_values = [network_markers[key] for key in label_keys]
+        
+        scatter_markers(                                # Call the custom scatter_markers method
+            vs=ts_df['Vaccinations'], 
+            cs=ts_df['Cases'], 
+            s=50,
+            col=team_colours[ts], 
+            ms=label_values,
+            l=ts_names[ts],
+            letter_names=network_marker_names
+        )
+
+    ax.set_xlim(ax.get_xlim()[0],ax.get_xlim()[1]*2.5)
+    ax.set_title(f"Comparison of team strategies - unlimited vaccines, {vacc_type}")
+        
+    # Delivery strategy legend, made using the labels added when calling ax.scatter()
+    handles, labels = plt.gca().get_legend_handles_labels()
+    by_label = OrderedDict(zip(labels,handles))
+    leg1 = ax.legend(by_label.values(), by_label.keys(), loc ='upper right', title="Team strategy (colour):")
+    plt.gca().add_artist(leg1)
+
+    # Team allocation strategy legend, made manually by adding scatter points and scatter markers to scatters,sc_letters
+    handles, labels = scatters, sc_letters
+    by_label = OrderedDict(zip(labels,handles))
+    leg2 = ax.legend(by_label.values(), by_label.keys(), loc ='lower right', title="Network type: (letter)")
+
+    if SAVE_FIGURE:
+        fig.savefig(f"results/strategies/team_strategy_uncapped_by_network_{vacc_type}.pdf",bbox_inches='tight')
+    
+    plt.show()
+    plt.close()
+    
+    if SHOW_ONCE:
+        quit()
+
+
+
+
+plot_uncapped_team_strats()
