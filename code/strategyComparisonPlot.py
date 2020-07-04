@@ -5,26 +5,10 @@ mpl.rcParams['figure.dpi'] = 150
 import pandas as pd
 from collections import OrderedDict
 
-STANDARDIZE_COLUMNS = False
-SAVE_FIGURE = True
+STANDARDIZE_COLUMNS = True
+SAVE_FIGURE = False
 SHOW_ONCE = False
-vacc_type = 'targeted'
-
-def scatter_markers(vs, cs, s, col, ms, l):
-    '''Arguments:
-        vs: list of vaccination floats
-        cs: list of cases floats
-        s: size of scatter point
-        col: colour of scatter point
-        ms: list of scatter markers
-        ls: list of scatter labels
-    '''    
-    for i in range(len(vs)):
-        v = vs.iloc[i]                                                      # num vaccines for this point
-        c = cs.iloc[i]                                                      # num cases for this point
-        m = ms[i]                                                           # the marker: like '$I$'
-        scatters.append(ax.scatter(v,c,s=50,color=col,marker=m,label=l))    # scatter a single point
-        sc_letters.append(vacc_strat_names[m])                              # append vacc strat name
+vacc_type = 'untargeted'
 
 # Read in input from CSV
 df_mono = pd.read_csv(f'results/strategies/strategy_comparisons_{vacc_type}_monocentric.csv')
@@ -88,8 +72,53 @@ vacc_strat_names = {                        # Key: scatter point marker
     '$S$':"Susceptible",
     '$N$':"Population"
 }
+vacc_names = {                    # Key: vaccine delivery strategy shortname
+    'I':'Infections / minute',                      # Value: scatter point marker
+    'S':'Susceptible / minute',  
+    'N':'Population / minute',
+    'EPE':'EPE Vaccine Delivery',
+    'absI':'Infections',
+    'absS':'Susceptible',
+    'absN':'Population',
+}
+vacc_colours = {                    # Key: team allocation strategy shortname
+    'I':'gold',                     # Value: scatter point colour
+    'S':'crimson',
+    'N':'k',
+    'EPE':'forestgreen',
+    'absI':'darkorange',
+    'absN':'grey',  #was cornflowerblue
+    'absS':'pink',
+}
+network_markers = {
+    'monocentric': '$M$',
+    'polycentric': '$P$',
+    'city': '$C$',
+    'rural': '$R$',
+}
+network_marker_names = {
+    '$M$':'Monocentric',
+    '$P$':'Polycentric',
+    '$C$':'City',
+    '$R$':'Rural'
+}
 
-# Iterate through input to scatter points
+def scatter_markers(vs, cs, s, col, ms, l, letter_names):
+    '''Arguments:
+        vs: list of vaccination floats
+        cs: list of cases floats
+        s: size of scatter point
+        col: colour of scatter point
+        ms: list of scatter markers
+        l: scatter label
+    '''    
+    for i in range(len(vs)):
+        v = vs.iloc[i]                                                      # num vaccines for this point
+        c = cs.iloc[i]                                                      # num cases for this point
+        m = ms[i]                                                           # the marker: like '$I$'
+        scatters.append(ax.scatter(v,c,s=s,color=col,marker=m,label=l))    # scatter a single point
+        sc_letters.append(letter_names[m])                              # append vacc strat name
+
 def plot_network(network_type):
     # Prepare the figure for scatters
     global ax, scatters, sc_letters
@@ -110,7 +139,8 @@ def plot_network(network_type):
             s=50,
             col=team_colours[ts], 
             ms=label_values,
-            l=ts_names[ts]
+            l=ts_names[ts],
+            letter_names=vacc_strat_names
         )
 
     ax.set_xlim(ax.get_xlim()[0],ax.get_xlim()[1]*1.23)
@@ -136,5 +166,114 @@ def plot_network(network_type):
     if SHOW_ONCE:
         quit()
 
-for network_type in ['monocentric','polycentric','city','rural']:
-    plot_network(network_type)
+def plot_team_strats():
+    global ax, scatters, sc_letters
+    fig, ax = plt.subplots()
+    scatters = []
+    sc_letters = []
+    ax.set_ylabel("Deviation from mean cases for network (%)")
+    ax.set_xlabel("Deviation from mean vaccinations for network (%)")
+
+    df_aggregated = df_capped.groupby(['Team strategy','Network type'],as_index=False).agg(
+        {
+            'Cases': 'mean',
+            'Deaths': 'mean',
+            'Vaccinations': 'mean',
+            'Drone Deliveries': 'mean'
+        }
+    )
+
+    for ts in ['I','S','N','EPE','I/N','spread']:
+        ts_df = df_aggregated[df_aggregated['Team strategy']==ts]
+        label_keys = ts_df['Network type'].values             
+        label_values = [network_markers[key] for key in label_keys]
+        
+        scatter_markers(                                # Call the custom scatter_markers method
+            vs=ts_df['Vaccinations'], 
+            cs=ts_df['Cases'], 
+            s=50,
+            col=team_colours[ts], 
+            ms=label_values,
+            l=ts_names[ts],
+            letter_names=network_marker_names
+        )
+
+    ax.set_xlim(ax.get_xlim()[0],ax.get_xlim()[1]*2.5)
+    ax.set_title(f"Comparison of team allocation strategies per network - {vacc_type}")
+        
+    # Delivery strategy legend, made using the labels added when calling ax.scatter()
+    handles, labels = plt.gca().get_legend_handles_labels()
+    by_label = OrderedDict(zip(labels,handles))
+    leg1 = ax.legend(by_label.values(), by_label.keys(), loc ='upper right', title="Team strategy (colour):")
+    plt.gca().add_artist(leg1)
+
+    # Team allocation strategy legend, made manually by adding scatter points and scatter markers to scatters,sc_letters
+    handles, labels = scatters, sc_letters
+    by_label = OrderedDict(zip(labels,handles))
+    leg2 = ax.legend(by_label.values(), by_label.keys(), loc ='lower right', title="Network type: (letter)")
+
+    if SAVE_FIGURE:
+        fig.savefig(f"results/strategies/team_strategy_scatter_by_network_{vacc_type}.pdf",bbox_inches='tight')
+    
+    plt.show()
+    plt.close()
+    
+    if SHOW_ONCE:
+        quit()
+
+def plot_vacc_strats():
+    global ax, scatters, sc_letters
+    fig, ax = plt.subplots()
+    scatters = []
+    sc_letters = []
+    ax.set_ylabel("Deviation from mean cases for network (%)")
+    ax.set_xlabel("Deviation from mean vaccinations for network (%)")
+
+    df_aggregated = df_capped.groupby(['Delivery strategy','Network type'],as_index=False).agg(
+        {
+            'Cases': 'mean',
+            'Deaths': 'mean',
+            'Vaccinations': 'mean',
+            'Drone Deliveries': 'mean'
+        }
+    )
+
+    for vs in ['I','S','N','EPE','absI','absS','absN']:
+        vs_df = df_aggregated[df_aggregated['Delivery strategy']==vs]
+        label_keys = vs_df['Network type'].values             
+        label_values = [network_markers[key] for key in label_keys]
+        
+        scatter_markers(                                # Call the custom scatter_markers method
+            vs=vs_df['Vaccinations'], 
+            cs=vs_df['Cases'], 
+            s=50,
+            col=vacc_colours[vs], 
+            ms=label_values,
+            l=vacc_names[vs],
+            letter_names=network_marker_names
+        )
+
+    ax.set_xlim(ax.get_xlim()[0],ax.get_xlim()[1]*2.5)
+    ax.set_title(f"Comparison of delivery allocation strategies per network - {vacc_type}")
+        
+    # Delivery strategy legend, made using the labels added when calling ax.scatter()
+    handles, labels = plt.gca().get_legend_handles_labels()
+    by_label = OrderedDict(zip(labels,handles))
+    leg1 = ax.legend(by_label.values(), by_label.keys(), loc ='upper right', title="Delivery strategy (colour):")
+    plt.gca().add_artist(leg1)
+
+    # Team allocation strategy legend, made manually by adding scatter points and scatter markers to scatters,sc_letters
+    handles, labels = scatters, sc_letters
+    by_label = OrderedDict(zip(labels,handles))
+    leg2 = ax.legend(by_label.values(), by_label.keys(), loc ='lower right', title="Network type: (letter)")
+
+    if SAVE_FIGURE:
+        fig.savefig(f"results/strategies/vacc_strategy_scatter_by_network_{vacc_type}.pdf",bbox_inches='tight')
+    
+    plt.show()
+    plt.close()
+    
+    if SHOW_ONCE:
+        quit()
+
+plot_vacc_strats()
