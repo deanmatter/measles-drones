@@ -990,6 +990,17 @@ maxDistance = 40                    #The distance in km that the max inter-locat
 vaccinationRate = 0.66              #66% vaccination rate in network
 populationMultiplier = 1            #Used for sensitivity analysis only. Multiplier for population size
 
+# Add drone investigation
+with open("results/sensitivity/drone_investigation.csv","a+") as f:
+    f.write("PopMultiplier,drones,Cases,Deaths,Vaccinations,Deliveries\n")
+    for populationMultiplier in [0.25,0.5,0.75,1,1.25,1.5,1.75]:
+        for numberOfDrones in [1,3,5,7,9,11,13,15,17,19,21,23,25]:
+            c,d,v,dd = simulateRepeatedly(f"Generic_network_monocentric.csv", 100)
+            f.write(f"{populationMultiplier},{numberOfDrones},{c},{d},{v},{dd}\n")
+            print(f"{populationMultiplier},{numberOfDrones},{c},{d},{v},{dd}\n")
+
+quit()
+
 # Sensitivity Analysis
 # epidemic_parameters = [
 #     "exposedDays",
