@@ -25,7 +25,8 @@ for pop_multiplier in df['PopMultiplier'].unique():
     plt.plot(
         df_scaled['drones'],
         df_scaled['Cases'],
-        label=str(int(pop_multiplier*100)) + '%'
+        label=str(int(pop_multiplier*100)) + '%',
+        marker='.'
         )
 
 plt.legend(title="Population level")
