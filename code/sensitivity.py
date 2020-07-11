@@ -31,6 +31,10 @@ param_names = {
 }
 
 def plot_param_set(p_set):
+    if p_set[0][0] != 'droneVaccineCapacity':
+        print(f"Not plotting param set containing {p_set[0][0]}")
+        return
+
     xs = [-50,-30,-20,-10,10,20,30,50]
     xlabel = f"Percentage change in parameter"
     metrics = ["cases","deaths","vaccines","drone deliveries"]

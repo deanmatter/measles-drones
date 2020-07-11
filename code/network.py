@@ -1016,13 +1016,13 @@ quit()
 #     "vaccinationRate"
 # ]
 
-intervention_parameters = [
+#intervention_parameters = [
     # "numTeams",
     # "workingMinutesPerDay",
     # "maxVaccsTeamDay",
-    "interventionCaseRatio",
-    "interventionLeadTime"
-]
+    #"interventionCaseRatio",
+    #"interventionLeadTime"
+#]
 
 # network_parameters = [
 #     "migrationIntensity",
