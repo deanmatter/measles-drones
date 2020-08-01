@@ -30,6 +30,6 @@ for vacc_targeting in df['VaccType'].unique():
         )
 
 plt.legend(title="Vaccination type")
-#plt.savefig(f"results/sensitivity/absN vaccStrat/numTeams_vaccs.pdf",bbox_inches='tight')
+plt.savefig(f"results/sensitivity/absN vaccStrat/numTeams_vaccs.pdf",bbox_inches='tight')
 plt.show()
 plt.close()
