@@ -11,25 +11,25 @@ print(df.head())
 
 # Set plot characteristics
 plt.xlabel('Number of teams')
-plt.ylabel('Change in number of vaccinations per epidemic (%)')
-plt.title('Impact of number of teams on vaccinations')
+plt.ylabel('Change in number of cases per epidemic (%)')
+plt.title('Impact of number of teams on cases')
 
 # Plot a curve for each population level
 for vacc_targeting in df['VaccType'].unique():
     df_filtered = df[df['VaccType']==vacc_targeting]
-    base_cases = df_filtered[df_filtered['Teams']==15]['Vaccinations'].values[0]
+    base_cases = df_filtered[df_filtered['Teams']==15]['Cases'].values[0]
     
     df_scaled = df_filtered
-    df_scaled['Vaccinations'] = df_filtered['Vaccinations'] / base_cases * 100 - 100
+    df_scaled['Cases'] = df_filtered['Cases'] / base_cases * 100 - 100
 
     plt.plot(
         df_scaled['Teams'],
-        df_scaled['Vaccinations'],
+        df_scaled['Cases'],
         label=vacc_targeting,
         marker='.'
         )
 
 plt.legend(title="Vaccination type")
-plt.savefig(f"results/sensitivity/absN vaccStrat/numTeams_vaccs.pdf",bbox_inches='tight')
+plt.savefig(f"results/sensitivity/absN vaccStrat/numTeams_cases.pdf",bbox_inches='tight')
 plt.show()
 plt.close()
