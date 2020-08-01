@@ -14,7 +14,8 @@
    viewBox="0 0 412.75 309.56249"
    version="1.1"
    id="svg8"
-   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)">
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
+   sodipodi:docname="map_polycentric.svg">
   <defs
      id="defs2" />
   <sodipodi:namedview
@@ -44,7 +45,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -55,16 +56,16 @@
      transform="translate(0,12.562438)">
     <circle
        id="path20"
-       cx="246.44054"
-       cy="35.44054"
-       r="5.2916665"
-       style="stroke-width:0.26458332" />
+       cx="246.14886"
+       cy="35.732208"
+       r="5"
+       style="stroke-width:0.25" />
     <circle
        id="path20-3"
-       cx="331.10706"
-       cy="49.803631"
-       r="5.2916665"
-       style="stroke-width:0.26458332" />
+       cx="309.64877"
+       cy="50.095299"
+       r="5"
+       style="stroke-width:0.25" />
     <circle
        id="path20-8"
        cx="270.70645"
@@ -73,10 +74,10 @@
        style="stroke-width:0.56696421" />
     <circle
        id="path20-8-5"
-       cx="310.772"
-       cy="220.34653"
-       r="5.2916665"
-       style="stroke-width:0.26458332" />
+       cx="310.48035"
+       cy="220.6382"
+       r="5"
+       style="stroke-width:0.25" />
     <circle
        id="path20-8-5-3"
        cx="245.00415"
@@ -85,10 +86,10 @@
        style="stroke-width:0.26458332" />
     <circle
        id="path20-8-5-7"
-       cx="80.130966"
-       cy="217.62505"
-       r="5.2916665"
-       style="stroke-width:0.26458332" />
+       cx="79.839302"
+       cy="217.91672"
+       r="5"
+       style="stroke-width:0.25" />
     <circle
        id="path20-8-5-0"
        cx="95.250015"
@@ -97,22 +98,22 @@
        style="stroke-width:0.49136904" />
     <circle
        id="path20-8-5-09"
-       cx="86.934525"
-       cy="136.73813"
-       r="5.2916665"
-       style="stroke-width:0.26458332" />
+       cx="86.64286"
+       cy="137.0298"
+       r="5"
+       style="stroke-width:0.25" />
     <circle
        id="path20-8-5-0-3"
-       cx="130.0238"
-       cy="200.99417"
-       r="5.2916665"
-       style="stroke-width:0.26458332" />
+       cx="129.73213"
+       cy="201.28584"
+       r="5"
+       style="stroke-width:0.25" />
     <circle
        id="path20-8-5-0-5"
-       cx="214.69051"
-       cy="78.529831"
-       r="5.2916665"
-       style="stroke-width:0.26458332" />
+       cx="214.39883"
+       cy="78.821495"
+       r="5"
+       style="stroke-width:0.25" />
     <circle
        id="path20-8-5-0-0"
        cx="264.58334"
@@ -121,34 +122,34 @@
        style="stroke-width:0.56696427" />
     <circle
        id="path20-8-5-0-9"
-       cx="294.06543"
-       cy="110.27983"
-       r="5.2916665"
-       style="stroke-width:0.26458332" />
+       cx="293.77377"
+       cy="110.5715"
+       r="5"
+       style="stroke-width:0.25" />
     <circle
        id="path20-8-5-0-4"
-       cx="260.1232"
-       cy="183.30484"
-       r="5.2916665"
-       style="stroke-width:0.26458332" />
+       cx="259.83154"
+       cy="183.59651"
+       r="5"
+       style="stroke-width:0.25" />
     <circle
        id="path20-8-5-0-96"
-       cx="140.6071"
-       cy="159.41673"
-       r="5.2916665"
-       style="stroke-width:0.26458332" />
+       cx="140.31543"
+       cy="159.7084"
+       r="5"
+       style="stroke-width:0.25" />
     <circle
        id="path20-8-5-0-9-5"
-       cx="237.36919"
-       cy="117.83927"
-       r="5.2916665"
-       style="stroke-width:0.26458332" />
+       cx="237.07751"
+       cy="118.13094"
+       r="5"
+       style="stroke-width:0.25" />
     <circle
        id="path20-8-5-09-0"
-       cx="43.089294"
-       cy="183.60721"
-       r="5.2916665"
-       style="stroke-width:0.26458332" />
+       cx="42.797626"
+       cy="183.89888"
+       r="5"
+       style="stroke-width:0.25" />
     <circle
        id="path20-8-5-0-3-3"
        cx="290.28571"
