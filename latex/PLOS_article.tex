@@ -169,7 +169,7 @@
 \begin{flushleft}
 {\Large
 \textbf\newline{
-Allocating epidemic response teams and vaccine deliveries by drone in generic network structures according to expected prevented exposures
+Allocating epidemic response teams and vaccine deliveries by drone in generic network structures, according to expected prevented exposures
 } 
 }
 \newline
@@ -188,7 +188,7 @@ Linke Potgieter\textsuperscript{1}.
 
 \section*{Abstract}
 The tumultuous inception of an epidemic is usually accompanied by difficulty in determining how to respond best. In developing nations, this can be compounded by logistical challenges, such as vaccine shortages and poor road infrastructure.
-To provide guidance towards improved epidemic response, various resource allocation models, in conjunction with a network-based SEIRVD epidemic model, are proposed. Further, the feasibility of using drones for vaccine delivery is evaluated, and assorted relevant parameters are discussed. For the sake of generality, these results are presented for multiple generic network structures, representing interconnected populations. The resource allocation models formulated maximise expected prevented exposures on each day of a simulated epidemic, by allocating response teams and vaccine deliveries according to the solutions of two respective integer programming problems -- thereby influencing the simulated epidemic through the SEIRVD model. These models, when compared with a range of alternative resource allocation strategies, were found to reduce both the number of cases per epidemic, and the number of vaccines required. Consequently, the recommendation is made that such models be used as decision support tools in epidemic response. In the absence thereof, prioritizing locations for vaccinations according to susceptible population, rather than total population or number of infections, is most effective for the majority of network types. 
+To provide guidance towards improved epidemic response, various resource allocation models, in conjunction with a network-based SEIRVD epidemic model, are proposed in this article. Further, the feasibility of using drones for vaccine delivery is evaluated, and assorted relevant parameters are discussed. For the sake of generality, these results are presented for multiple network structures, representing interconnected populations -- upon which repeated epidemic simulations are performed. The resource allocation models formulated maximise expected prevented exposures on each day of a simulated epidemic, by allocating response teams and vaccine deliveries according to the solutions of two respective integer programming problems -- thereby influencing the simulated epidemic through the SEIRVD model. These models, when compared with a range of alternative resource allocation strategies, were found to reduce both the number of cases per epidemic, and the number of vaccines required. Consequently, the recommendation is made that such models be used as decision support tools in epidemic response. In the absence thereof, prioritizing locations for vaccinations according to susceptible population, rather than total population or number of infections, is most effective for the majority of network types. 
 In other results, fixed-wing drones are demonstrated to be a viable delivery method for vaccines in the context of an epidemic, if sufficient drones can be promptly procured; the detrimental effect of intervention delay was discovered to be significant. In addition, the importance of well-documented routine vaccination activities is highlighted, due to the benefits of increased pre-epidemic immunity rates, and targeted vaccination.
 
 \linenumbers
@@ -244,7 +244,7 @@ The final undiscussed parameters used in Eq  (\ref{Eqn:SEIRVD_model_start})-(\re
 These recently-exposed individuals can be successfully immunized against measles, with the success rate thereof denoted by $\lambda_{E}$. The success rate of vaccinations given to susceptible individuals is denoted by $\lambda_{S}$.
 
 \subsection*{EPE strategy for team allocation}
-The number of response teams at each location, $\eta_{i,t}$, is one of the primary decision variables with a direct impact on $v_{i,t}$, in the epidemic model formulated. In this section, a resource allocation model is presented, for response team allocation between multiple subpopulations within a network. An integer programming problem is solved on each simulated day, to maximise expected prevented exposures (EPE) for the following day, by assigning teams to locations according to the highest marginal benefit arising from each assignment. This allows the allocation of teams to be dynamically adjusted as the epidemic progresses, ensuring that the allocation remains effective. This dynamic approach, and the objective of minimising total cases by considering the marginal benefit of allocations, is similar to that of Teytelman and Larson's telescope-to-the-future and greedy heuristics for vaccine allocation \cite{teytelman2013multiregional}. However, in this article, response teams and drone deliveries (under the constraint of limited delivery time) are allocated, instead of vaccines (under the constraint of a limited vaccine stockpile and uncertainty about future stock). Further, these allocations are performed in multiple generic network structures with heterogeneous population distributions. Their approaches can be seen as higher-level vaccine allocation strategies, perhaps to regions within a country, whereas the strategies in this article are more focused towards the actual delivery of vaccines to allocated response teams at points of dispensing.
+The number of response teams at each location, $\eta_{i,t}$, is one of the primary decision variables with a direct impact on $v_{i,t}$, in the epidemic model formulated. In this section, a resource allocation model is presented, for response team allocation between multiple subpopulations within a network. An integer programming problem is solved on each simulated day, to maximise expected prevented exposures (EPE) for the following day, by assigning teams to locations according to the highest marginal benefit arising from each assignment. This allows the allocation of teams to be dynamically adjusted as the epidemic progresses, ensuring that the allocation remains effective. This dynamic approach, and the objective of minimising total cases by considering the marginal benefit of allocations, is similar to that of Teytelman and Larson's telescope-to-the-future and greedy heuristics for vaccine allocation \cite{teytelman2013multiregional}. However, in this article, response teams and drone deliveries (under the constraint of limited delivery time) are allocated, instead of vaccines (under the constraint of a limited vaccine stockpile and uncertainty about future stock). Allocating deliveries, instead of simply vaccine stock, takes time into account -- which ensures that delivery time is most effectively used in the critical first few days and weeks of an epidemic intervention. Another difference of note is that these allocations are performed in multiple generic network structures with heterogeneous population distributions. Their approaches can be seen as higher-level vaccine allocation strategies, perhaps to regions within a country, whereas the strategies in this article are more focused towards the actual delivery of vaccines to allocated response teams at points of dispensing.
 
 Assuming that there are $\mathcal{N}$ vaccination teams in the network, a number $\eta_{i,t}$ of teams needs to be allocated to each location $i \in \{1, \dots, n\}$ on day $t$, such that $\sum_{i=1}^{n} \eta_{i,t} = \mathcal{N}, \, \forall{t} \in \{1, \dots, \mathcal{T}\}$.
 Recall that $\psi$ denotes the number of possible vaccinations per team, per day. In order to remove the dependency between team allocation and vaccine allocation, the number of vaccines in stock at each location is assumed to be unlimited in the calculation of EPE. With this assumption, and if $\eta_{i,t}$ teams are assigned to location $i$, the number of vaccinations possible at location $i$ is: $$v_{\eta_{i,t},i,t}  = \psi \,\eta_{i,t}.$$ 
@@ -290,7 +290,7 @@ Let $d_{i}$ denote the number of drone deliveries to location $i$ on the day con
     &x_{i} \leq v'_{i,t} + c - 1, \quad \forall{i} \in \{1, \dots,n \} \setminus \{i^*\},\\
     &d_{1}, d_{2}, \ldots, d_{n} \text{ integer}.
 \end{align}
-The limit of $\mathcal{H}$ minutes available per day for drone deliveries is the primary constraint on this problem. As aforementioned, this is in contrast to Teytelman and Larson's greedy heuristic and other literature, where vaccine stock is the primary constraint; here instead, the focus is on allocating the limited amount of daily delivery time best. The other constraint, (\ref{Eqn:EPE_deliveries_constraint_2}), ensures that no drone deliveries will occur to locations for which the amount of vaccines still needed there, $v'_{i,t}$, is already exceeded. Furthermore, since the DC, location $i^*$, is assumed to have unlimited vaccine stock, it is excluded from the delivery network and the problem formulated above.
+The limit of $\mathcal{H}$ minutes available per day for drone deliveries is the primary constraint on this problem. As aforementioned, this is in contrast to Teytelman and Larson's greedy heuristic and other literature, where vaccine stock is the primary constraint; here instead, the focus is on allocating the limited amount of daily delivery time best. The other constraint, (\ref{Eqn:EPE_deliveries_constraint_2}), ensures that no drone deliveries will occur to locations for which the amount of vaccines still needed there, $v'_{i,t}$, is already exceeded. Furthermore, since the distribution centre, location $i^*$, is assumed to have unlimited vaccine stock, it is excluded from the delivery network and the problem formulated above.
 
 This integer program can be solved by iteratively assigning deliveries to locations -- incrementing one $d_{i}$ value and adding $c$ to the vaccine stock there, $\nu_{i,t}$ -- where the location to be delivered to each time has the highest resultant EPE per minute of delivery time, of all locations. More explicitly, this location is $$i' = \text{max}_{i} \left\{ \frac{E^{*}_{c,i,t+1}}{\delta_{i}}, i \in \{1, \dots, n\} \right\}.$$ 
 Once a delivery is allocated and stock levels are updated accordingly, the EPE value is recalculated for that location (to become the EPE resulting from another delivery), and the next best location is selected to receive the next delivery. As in the team allocation problem's solution procedure, the highest payoff (EPE) per unit of cost (time) is repeatedly selected -- although due to the second constraint (\ref{Eqn:EPE_deliveries_constraint_2}), and the fact that (\ref{Eqn:EPE_deliveries_constraint_1}) may not always be a binding constraint, the solutions are not necessarily optimal.
@@ -311,15 +311,15 @@ As aforementioned, similar strategies are considered for vaccine delivery alloca
 \begin{itemize}
     \item Delivery allocation in descending order of total population, where the location $i'$ selected to receive the first delivery is:
     $$i' = \text{max}_{i}\left\{ N_{i,t}, \, i \in \{1, \dots, n \} \right\}.$$
-    \item Delivery allocation in descending order of susceptible population:
+    \item Delivery allocation in descending order of susceptible population, with:
     $$i' = \text{max}_{i}\left\{ S_{i,t}, \, i \in \{1, \dots, n \} \right\}.$$
-    \item Delivery allocation in descending order of infected population: 
+    \item Delivery allocation in descending order of infected population, with: 
     $$i' = \text{max}_{i}\left\{ I_{i,t}, \, i \in \{1, \dots, n \} \right\}.$$
     \item Delivery allocation in descending order of total population, per minute of delivery time. The division by delivery time is performed to ensure that this method also takes it into account when selecting a location. This division is also performed for the EPE delivery strategy. The location $i'$ selected to receive the first delivery is 
     $$i' = \text{max}_{i}\left\{ \frac{N_{i,t}}{\delta_{i}}, \, i \in \{1, \dots, n \} \right\}.$$
-    \item Delivery allocation in descending order of susceptible population, per minute of delivery time:
+    \item Delivery allocation in descending order of susceptible population, per minute of delivery time, with:
     $$i' = \text{max}_{i}\left\{ \frac{S_{i,t}}{\delta_{i}}, \, i \in \{1, \dots, n \} \right\}.$$
-    \item Delivery allocation in descending order of infected population, per minute of delivery time:
+    \item Delivery allocation in descending order of infected population, per minute of delivery time, with:
     $$i' = \text{max}_{i}\left\{ \frac{I_{i,t}}{\delta_{i}}, \, i \in \{1, \dots, n \} \right\}.$$
 \end{itemize}
 
@@ -350,7 +350,7 @@ Proportion of a location's population to be infected before epidemic declaration
 Working days per week, for deliveries and vaccinations                           & -             & 7                & - \\
 Delay in days between the declaration of an epidemic and intervention starting   & -             & 15               & \cite{grais2006exploring} \\
 Duration of intervention                                                     & -             & Unlimited        & - \\
-Initial number of delivery drones                                                                 & -             & 5       & -  \\
+Number of delivery drones                                                                 & -             & 5       & -  \\
 Average drone flight speed, in kilometres per hour                               & -             & 100              & \cite{zipline_impact} \\
 Time taken to launch each drone, in minutes                                        & -             & 10             & \cite{ackerman_koziol_2019}  \\
 Scaled diameter of monocentric network, in kilometres                                       & -             & 40               & -   \\
@@ -361,13 +361,13 @@ Population vaccination rate                                                   & 
 Targeted or untargeted vaccination                                 & -             & Untargeted       & - \\ \hline
 \end{tabular}%
 }
-\caption{Initial set of parameters used in epidemic and intervention simulations}
+\caption{Initial set of parameters used in epidemic and intervention simulations.}
 \label{tab:initial_params}
 \end{table}
 
 The epidemic model requires an input dataset containing information about a physical network of locations in a hypothetically affected area. This dataset contains Cartesian x- and y-coordinates and population sizes for each location in the network, as well as the number of (exposed, and infectious) index cases at the start of the simulation. The coordinates of each location are programmatically scaled such that the maximum distance between any two locations equals an adjustable parameter $\mathcal{D}$, the diameter of the network. Euclidean distances between each pair of locations are calculated based on these coordinates. These distances are used to select the distribution centre (DC) in the manner described below, and to calculate the drone delivery times, from the DC to each location. The total initial population, $N_{i,0}$, at each location $i$, is partitioned into the categories $S_{i,0}$ and $R_{i,0}$, or $V_{i,0}$, depending on the vaccination rate in each area, and on whether or not targeted vaccination is used. The quantity of vaccine stock $\nu_{i,0}$, and the number of response teams at each location $i \in \{1,\dots,n\}$, are initially set to zero.
 
-The input required is sufficiently general such that any geographical network of locations can be used as the affected area in the simulated epidemics. For the purposes of this article, four generic network structures are considered that are comparable to real-world population distribution structures: a dense city network with high, homogeneous population density, a sparse rural network with low, homogeneous population density, a monocentric urban network with decreasing density as distance from the centre increases, and a polycentric urban network with multiple centres from which the density reduces as distance from each centre increases. The input data for each of these four generic networks are supplied in \nameref{SI:S4_table_mono}, \nameref{SI:S5_table_poly}, \nameref{SI:S6_table_city}, and \nameref{SI:S7_table_rural}, and the networks are depicted in \nameref{si:mono}, \nameref{si:poly}, \nameref{si:city}, and \nameref{si:rural}. 
+The input required is sufficiently general such that any geographical network of locations can be used as the affected area in the simulated epidemics. For the purposes of this article, four generic network structures are considered that are comparable to real-world population distribution structures: a dense city network with high, homogeneous population density, a sparse rural network with low, homogeneous population density, a monocentric urban network with decreasing density as distance from the centre increases, and a polycentric urban network with multiple centres from which the density reduces as distance from each centre increases. The input data for each of these four generic networks are supplied in \nameref{SI:S4_table_mono}, \nameref{SI:S5_table_poly}, \nameref{SI:S6_table_city}, and \nameref{SI:S7_table_rural}, and the networks are depicted in \nameref{SI:S8_fig}. 
 
 Drone deliveries in each network are assumed to originate from a single DC, with an unlimited supply of vaccines available. This DC is selected from the locations defined in the network, using a minimax facility location problem. This problem is to choose a location $i^{*}$, such that the maximum distance from $i^{*}$ to any other location $j \neq i^{*}$, is minimized. This facility location method is selected, so that as many locations as possible lie within the delivery range of drones originating from the selected location. More formally, the DC is placed at $$i^{*} = \text{min}_{i} \, \text{max} \{\Delta_{i,j}, \, i, j \in \{1,\ldots,n\}, \, i \neq j\}.$$
 Using an average flight speed of 100km/h \cite{zipline_impact}, and a fixed launch time of 10 minutes per flight \cite{ackerman_koziol_2019}, along with the direct distance $\Delta_{i,j}$ between each pair of locations $i$ and $j$ as the flight distance, the return flight time (in minutes), from the DC to each location $i$ and back, is calculated to be $$\delta_{i} = 10 + \frac{2 \, \Delta_{i,i^{*}}}{100} \times 60, \quad \forall{i} \in \{1, \dots, n \}.$$ 
@@ -380,17 +380,17 @@ Prior to the presentation of simulation results, a description of the process of
 The validation for the model outlined in this article is performed on a measles outbreak in Niamey, Niger, which lasted from November 2003 until midway through 2004. 
 All parameters and data used for this validation are derived from those used by Grais \textit{et al.} in their presentation of a simulation model on the same epidemic \cite{grais2008time}, where possible.
 
-Niamey has an approximately monocentric population distribution, and as such the monocentric network structure defined previously is used. In the actual intervention undertaken, children aged 6-59 months were targeted, as they are the most susceptible to measles. Therefore, the population values specified in the input dataset provided in \nameref{SI:S12_table_niamey} refer only to this age group, for which a vaccination rate of 70\% is assumed -- a total population of 160\,000. Distances between locations are scaled such that the diameter of the network is 20km, and an initial 10 index cases are specified in the centre of the network to start the epidemic.
+Niamey has an approximately monocentric population distribution, and as such the monocentric network structure defined previously is used. In the actual intervention undertaken, children aged 6-59 months were targeted, as they are the most susceptible to measles. Therefore, the population values specified in the input dataset provided in \nameref{SI:S9_table_niamey} refer only to this age group, for which a vaccination rate of 70\% is assumed -- a total population of 160\,000. Distances between locations are scaled such that the diameter of the network is 20km, and an initial 10 index cases are specified in the centre of the network to start the epidemic.
 In accordance with the proportion estimated by the World Health Organization \cite{msf_1999}, and the work done by Grais \textit{et al.} \cite{grais2008time}, only 50\% of actual simulated cases are considered `detected' in the simulations, and are reported on in the validation results.
 
-The simulation of this Niamey outbreak is set to run for 40 weeks, with vaccination being performed for 10 days, as was the case in the actual intervention. In the simulation, an unlimited quantity of vaccine stock is available to the 33 response teams distributed throughout the network, and teams are allocated proportionally to the total population in each location; the common pro-rata strategy described previously. In order to match the total number performed in actuality, 256 vaccinations are performed by each team per day, without regard for potential previous vaccinations (i.e. untargeted vaccination is performed). After performing a grid search with repeated simulations with a step size of 0.05, a value of $R_{0} = 7.00$ was found to provide the best fit to the reported epidemic curve -- and is thus used in the validation simulations. In the same grid search, the ratio of infections to population at the epicentre, when the epidemic is declared, was estimated to be 9 cases in 1000. As a result, this value is used as the epidemic detection threshold for other simulations in this article.
+The simulation of this Niamey outbreak is set to run for 40 weeks, with vaccination being performed for 10 days, as was the case in the actual intervention. In the simulation, an unlimited quantity of vaccine stock is available to the 33 response teams distributed throughout the network, and teams are allocated proportionally to the total population in each location; the common pro-rata strategy described previously. In order to match the total number performed in actuality, 256 vaccinations are performed by each team per day, without regard for potential previous vaccinations (i.e. untargeted vaccination is performed). After performing a grid search with repeated simulations with a step size of 0.05, a value of $R_{0} = 7.00$ was found to provide the best fit to the reported epidemic curve -- and is thus used in the validation simulations. In the same grid search, the ratio of infections to population at the epicentre, when the epidemic is declared, was estimated to be 9 cases in 1000. As a result, this value is used as the epidemic detection threshold for other simulations in this article also.
 
-The best simulated match to the actual epidemic's progression is depicted in Figure \ref{fig:validation_histograms}. Over 100 such simulations, the average number of reported cases per epidemic is 10\,857 (with a sample standard deviation of just 0.049) -- which is very close to the 10\,880 actual recorded cases in Niamey. This was accomplished with exactly 84\,480 vaccinations per simulation, near to the 84\,563 actually performed. Since the number of teams and daily vaccinations per team are constant values, this number of vaccinations per simulation is also. 
+The best simulated match to the actual epidemic's progression is depicted in Fig \ref{fig:validation_histograms}. Over 100 such simulations, the average number of reported cases per epidemic is 10\,857 (with a sample standard deviation of just 0.049) -- which is very close to the 10\,880 actual recorded cases in Niamey. This was accomplished with exactly 84\,480 vaccinations per simulation, near to the 84\,563 actually performed. Since the number of teams and daily vaccinations per team are constant values, this number of vaccinations per simulation is also. 
 Given these results, it is clear that the SEIRVD model presented in this article, together with the resource allocation methods used, is able to successfully simulate an actual epidemic.
 
-\begin{figure}[ht!]{\textwidth}
-    \includegraphics[width=\textwidth]{figures/validation/niamey_histograms.pdf}
-    \caption{Comparison between actual and simulated Niamey epidemics}
+\begin{figure}[ht!]
+    %\includegraphics[width=\textwidth]{PLOS_figures/Fig1.pdf}
+    \caption{Comparison between actual and simulated weekly reported cases for Niamey epidemic.}
     \label{fig:validation_histograms}
 \end{figure}
 
@@ -399,7 +399,7 @@ Using the base set of parameters listed in the previous section, simulations wer
 $$N_{\text{sims}} = (\frac{\text{Z}_{(1-\alpha/2)} \, S_{x}}{\epsilon \, \Bar{x}})^{2}.$$
 In this formula, where $x_{i}$ is the i\textsuperscript{th} simulation's value for metric $x$, $\Bar{x} = \frac{1}{100} \sum^{100}_{i=1} x_{i}$ is the sample mean of the metric, and $S_{x} = \frac{1}{100-1} \sum^{100}_{i=1} (x_{i} - \Bar{x})^{2}$ is the sample standard deviation. The confidence level is $1 - \alpha = 0.95$, and the error level is $\epsilon = 0.05$.
 
-The aggregated results of these simulations for each network are contained in Table \ref{tab:base}, and the figures in \nameref{SI:S13_fig} depict the epidemic progression curves for each. It is clear in Table \ref{tab:base} that interventions employing targeted vaccination are more cost efficient (they require fewer vaccinations and drone deliveries), and more effective at reducing the number of cases and subsequent deaths -- particularly in less densely populated networks with slower epidemic progression. 
+The aggregated results of these simulations for each network are contained in Table \ref{tab:base}, and the figures in \nameref{SI:progression_plots} depict the epidemic progression curves for each. It is clear in Table \ref{tab:base} that interventions employing targeted vaccination are more cost efficient (they require fewer vaccinations and drone deliveries), and more effective at reducing the number of cases and subsequent deaths -- particularly in less densely populated networks with slower epidemic progression. 
 
 \begin{table}[ht!]
 \centering
@@ -419,7 +419,7 @@ Polycentric & None & 293785 & 9357  & 0        & 0         \\
 Polycentric & Untargeted & 278093 & 8858  & 824228   & 11830     \\
 Polycentric & Targeted & 255099 & 8126  & 379448        & 5736         \\\hline
 \end{tabular}
-\caption{Simulation results for various network structures with and without vaccination}
+\caption{Simulation results for various network structures with and without vaccination.}
 \label{tab:base}
 \end{table}
 
@@ -433,20 +433,20 @@ Fig \ref{fig:strat_scatter_unt_mono} depicts such a scatter plot, for the monoce
 
 Notably, for every team allocation strategy in this network besides EPE, the best delivery allocation strategy is EPE. This is followed by both delivery allocation strategies which prioritise locations by susceptible population. The worst-performing delivery allocation strategies in this network are those prioritising locations according to total population and number of infections. This is aligned with the findings of Mbah and Gilligan \cite{mbah2011resource}, Teytelman and Larson \cite{teytelman2013multiregional}, and Duijzer \textit{et al.} \cite{duijzer2018dose}, who all found the pro-rata population strategy to be inferior to other, perhaps less equitable, strategies. A likely hypothesis for the poor performance of the EPE team strategy, considering the superiority of the EPE delivery strategy, is the fact that the primary constraint on vaccinations when using the default parameter set is the amount of available delivery time, rather than the number of teams. Therefore, the selection of an appropriate delivery strategy is more important than that of a team strategy -- especially when inefficient untargeted vaccination is employed.
 
-\begin{figure}[ht!]{\textwidth}
+\begin{figure}[ht!]
 \begin{center}
-    \includegraphics[width=0.75\textwidth]{figures/strategies/team_vaccine_scatter_untargeted_monocentric.pdf}
-    \caption{Comparison of strategy pairs for untargeted vaccination on monocentric network}
+    %\includegraphics[width=0.75\textwidth]{PLOS_figures/Fig2.pdf}
+    \caption{Comparison of strategy pairs for untargeted vaccination on monocentric network.}
     \label{fig:strat_scatter_unt_mono}
 \end{center}
 \end{figure}
 
 Fig \ref{fig:strat_scatter_tar_mono} contains a scatter plot depicting the results for all strategy pairs, for a targeted intervention on the monocentric network. Once again, the results are largely clustered by team allocation strategy, and the results are similar to the untargeted intervention -- with the best strategies being team allocation proportional to population, or infections. If the minimisation of vaccinations is a factor, however, then team allocation according to either EPE, or susceptible population, is superior, since approximately 50\,000 fewer vaccines are used, for a marginally higher number of cases. As in the untargeted intervention, prioritising total population and the number of infections for delivery allocation results in an increase in cases, as well as an increase in cost. Note again that the best vaccine delivery strategy, for reducing both cases and vaccinations required, is EPE -- for all team allocation strategies, by a significant margin. 
 
-\begin{figure}[ht!]{\textwidth}
+\begin{figure}[ht!]
 \begin{center}
-    \includegraphics[width=0.75\textwidth]{figures/strategies/team_vaccine_scatter_targeted_monocentric.pdf}
-    \caption{Comparison of strategy pairs for targeted vaccination on monocentric network} 
+    %\includegraphics[width=0.75\textwidth]{PLOS_figures/Fig3.pdf}
+    \caption{Comparison of strategy pairs for targeted vaccination on monocentric network.} 
     \label{fig:strat_scatter_tar_mono}
 \end{center}
 \end{figure}
@@ -454,45 +454,27 @@ Fig \ref{fig:strat_scatter_tar_mono} contains a scatter plot depicting the resul
 Identical scatter plots are also presented for each of the three other network structures considered, in \nameref{SI:S1_fig}, \nameref{SI:S2_fig}, and \nameref{SI:S3_fig}. Each of the other networks have similar results to the monocentric one -- the EPE vaccine delivery strategy, for all team allocation strategies, usually results in the fewest number of cases and vaccinations. This superiority of the EPE delivery strategy is more prominent when interventions are targeted. It is clear that prioritising total population for vaccine deliveries to locations is a poor strategy, in comparison with all others presented.
 
 \subsubsection*{Comparison of team allocation strategies}
-When the base parameter set is used, the primary constraint on vaccinations at locations is vaccine stock availability, due to the limited delivery time available. To prevent this, and the delivery allocation strategies, from influencing the comparison of team allocation strategies, each location is assumed to have unlimited vaccine stock. Then, repeated simulations are performed for each team strategy and network type, with the mean number of cases and vaccinations recorded for each pair. These are compared with the overall mean values for cases and vaccinations for each network type, such that percentage deviations from the network's means for each metric are calculated. These percentage deviations are used as the coordinates of each point in the scatter plots depicted in Fig \ref{fig:team_uncapped_unt} and \ref{fig:team_uncapped_tar} -- representing untargeted and targeted interventions, respectively. These scatter plots thus show an aggregate view of which team strategy performs best for each network type, where vaccine availability is not a constraint.
+When the base parameter set is used, the primary constraint on vaccinations at locations is vaccine stock availability, due to the limited delivery time available. To prevent this, and the delivery allocation strategies, from influencing the comparison of team allocation strategies, each location is assumed to have unlimited vaccine stock. Then, repeated simulations are performed for each team strategy and network type, with the mean number of cases and vaccinations recorded for each pair. These are compared with the overall mean values for cases and vaccinations for each network type, such that percentage deviations from the network's means for each metric are calculated. These percentage deviations are used as the coordinates of each point in the scatter plots depicted in Fig \ref{fig:team_uncapped} -- representing untargeted and targeted interventions, respectively. These scatter plots thus show an aggregate view of which team strategy performs best for each network type, when vaccine availability is not a constraint.
 
 \begin{figure}[ht!]
-  \begin{subfigure}[b]{0.51\textwidth}
-    \includegraphics[width=\textwidth]{figures/strategies/team_strategy_uncapped_by_network_untargeted.pdf}
-    \caption{Untargeted interventions}
-    \label{fig:team_uncapped_unt}
-  \end{subfigure}
-  %
-  \begin{subfigure}[b]{0.49\textwidth}
-    \includegraphics[width=\textwidth]{figures/strategies/team_strategy_uncapped_by_network_targeted.pdf}
-    \caption{Targeted interventions}
-    \label{fig:team_uncapped_tar}
-  \end{subfigure}
-  \caption{Comparison of team allocation strategies for differing network types, with unlimited vaccine availability}
+    %\includegraphics[width=\textwidth]{PLOS_figures/Fig4.pdf}
+    \caption{Comparison of team allocation strategies for differing network types, with unlimited vaccine availability -- for untargeted (left), and targeted interventions (right).}
+  \label{fig:team_uncapped}
 \end{figure}
 
-It is evident that the polycentric and rural networks have the largest difference between team allocation strategies, for both targeted and untargeted interventions. With targeted vaccination, the EPE strategy results in the minimum number of cases for all network types -- and this is accomplished with the minimum vaccine usage in all networks besides the monocentric one. Results are similar for the untargeted intervention also, although slightly less prominent. Therefore, particularly where targeted vaccination is used, and sufficient vaccine stock is available, the EPE team allocation strategy is superior to the other strategies considered; minimising both the number of cases and vaccinations.
+It is evident that the polycentric and rural networks have the largest difference between team allocation strategies, for both targeted and untargeted interventions. With targeted vaccination, the EPE strategy results in the minimum number of cases for all network types -- and this is accomplished with the minimum vaccine usage in all networks besides the monocentric one. Results are similar for the untargeted intervention also, although slightly less prominent. Therefore, particularly where targeted vaccination is used, and sufficient vaccine stock is available, the EPE team allocation strategy is superior to the other strategies considered; minimising both the number of cases, and vaccinations.
 Aside from the EPE strategy, it is clear that proportional team allocation according to susceptible population is most effective -- particularly for reducing vaccine usage, while resulting in a similar, or lower, number of cases than other strategies. Allocating teams proportionally to total population also performs reasonably well, although results in more vaccines being used. Finally, allocating teams proportionally to the number of infections at each location appears to be a costly strategy, and is often less effective in reducing cases. It seems that the effectiveness of certain strategies depends on the network type, and as a result it is useful to consider the spatial population distribution of an area when allocating response teams in an epidemic intervention.
 
 \subsubsection*{Comparison of delivery allocation strategies}
-A similar comparison to the above is performed for the delivery allocation strategies also. The previously presented base simulation results, using each combination of team and delivery allocation strategies, are used; the results are grouped by delivery strategy and network type, and are aggregated over the team allocation strategies used. Fig \ref{fig:vacc_scatter_unt} and \ref{fig:vacc_scatter_tar} depict similar scatter plots to those previously presented -- where, in this case, each point represents the results of repeated simulations using a particular delivery strategy and network type. In these figures, the x- and y- axes represent the deviations of each point's results from the mean number of vaccinations and cases for that network, respectively. This allows the delivery strategies to be more easily compared, in a similar fashion to the team strategies.
+A similar comparison to the above is performed for the delivery allocation strategies also. The previously presented base simulation results, using each combination of team and delivery allocation strategies, are used; the results are grouped by delivery strategy and network type, and are aggregated over the team allocation strategies used. Fig \ref{fig:vacc_scatter} depicts similar scatter plots to those previously presented -- where, in this case, each point represents the results of repeated simulations using a particular delivery strategy and network type. In these figures, the x- and y- axes represent the deviations of each point's results from the mean number of vaccinations and cases for that network, respectively. This allows the delivery strategies to be more easily compared, in a similar fashion to the team strategies.
 
 \begin{figure}[ht!]
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/strategies/vacc_strategy_scatter_by_network_untargeted.pdf}
-    \caption{Untargeted interventions}
-    \label{fig:vacc_scatter_unt}
-  \end{subfigure}
-  %
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/strategies/vacc_strategy_scatter_by_network_targeted.pdf}
-    \caption{Targeted interventions}
-    \label{fig:vacc_scatter_tar}
-  \end{subfigure}
-  \caption{Comparison of delivery allocation strategies for differing network types, aggregated over team allocation strategies}
+    %\includegraphics[width=\textwidth]{PLOS_figures/Fig5.pdf}
+  \caption{Comparison of delivery allocation strategies for differing network types, aggregated over team allocation strategies -- for untargeted (left) and targeted interventions (right).}
+   \label{fig:vacc_scatter}
 \end{figure}
 
-As in the team strategy comparison, there is a larger difference between delivery strategies for the polycentric and rural networks than the others. For the rural network, there is a significant outlier; the strategy where vaccine deliveries are performed according to total population. In fact, in all four networks, prioritising either population, or population per minute of delivery time, is an ineffective delivery strategy. In comparison with others, when these strategies are used, vaccine usage is almost always higher, and the number of cases is usually higher also. This is also the case for the two strategies prioritising infected population; albeit to a lesser extent, and with the exception of the rural network type. This is unfortunate since pro-rata allocation of vaccines according to population size is seen as an intuitively fair strategy by many decision makers. These results, along with those of Mbah and Gilligan \cite{mbah2011resource}, Teytelman and Larson \cite{teytelman2013multiregional}, and Duijzer \textit{et al.} \cite{duijzer2018dose}, indicate that, while apparently equitable and politically acceptable, strategies prioritizing total population are often inferior to others.
+As in the team strategy comparison, there is a larger difference between delivery strategies for the polycentric and rural networks than the others. For the rural network, there is a significant outlier; the strategy where vaccine deliveries are performed according to total population. In fact, in all four networks, prioritising either population, or population per minute of delivery time, is an ineffective delivery strategy. In comparison with others, when these strategies are used, vaccine usage is almost always higher, and the number of cases is usually higher also. This is also the case for the two strategies prioritising infected population, albeit to a lesser extent, and with the exception of the rural network type. This is unfortunate since the allocation of vaccines according to population size is seen as an intuitively fair strategy by many decision makers. These results, along with those of Mbah and Gilligan \cite{mbah2011resource}, Teytelman and Larson \cite{teytelman2013multiregional}, and Duijzer \textit{et al.} \cite{duijzer2018dose}, indicate that, while apparently equitable and politically acceptable, strategies prioritizing total population are often inferior to others.
 
 In contrast to this, the two delivery strategies prioritising susceptible population usually result in consistently low cases and vaccine usage, for all network types. Selecting locations for deliveries based on susceptible population, per minute of delivery time, is a particularly effective strategy -- for many networks, resulting in the minimum number of cases, if the EPE strategy is disregarded. However, if it is possible to implement an EPE vaccine delivery strategy in a targeted epidemic intervention, simulations indicate that it minimises both cost and the number of cases, compared to all other strategies. In untargeted interventions, the EPE strategy is not as clearly superior, but still minimises both cost and cases in three of the four network types considered.
 
@@ -500,195 +482,334 @@ In contrast to this, the two delivery strategies prioritising susceptible popula
 A brief sensitivity analysis was performed on certain parameters, to evaluate the effect that changes in their default values have on the simulation results. Each parameter is varied individually, with the remaining parameters constant; for 100 simulations per parameter value. The metrics of most interest that are reported on in this analysis are the number of simulated cases, and the number of vaccines administered -- which is directly proportional to the cost of the intervention.
 
 \subsubsection*{Epidemic parameters}
-Four epidemic-related parameters are considered for sensitivity analysis; the average number of days between initial exposure and becoming infectious, the average number of days being infectious before recovery, the basic reproductive number $R_{0}$, and the morbidity rate. The effect of changes in these parameters on the average number of cases and vaccines administered, are depicted in Fig \ref{fig:sens_epi_cases}, and Fig \ref{fig:sens_epi_vaccs}, respectively. As both the number of days exposed and infectious increase, the number of cases reduce slightly; likely due to the epidemic progressing more slowly, allowing the intervention to be more timely and effective. As $R_{0}$ increases, the average number of cases also increases, as expected -- albeit increasing at a reducing rate as $R_{0}$ rises. The final notable result is the apparent near-exponential growth in the number of vaccines administered as the average number of days exposed rises. This is most likely the consequence of vaccines being ineffective on most asymptomatic, exposed individuals; the longer the duration of exposure, the more vaccines are wasted on exposed individuals.
+Four epidemic-related parameters are considered for sensitivity analysis; the average number of days between initial exposure and becoming infectious, the average number of days being infectious before recovery, the basic reproductive number $R_{0}$, and the morbidity rate. The effects of changes in these parameters on the average number of cases and vaccines administered are depicted in Fig \ref{fig:sens_epi}. As both the number of days exposed and infectious increase, the number of cases reduce slightly; likely due to the epidemic progressing more slowly, allowing the intervention to be more timely and effective. As $R_{0}$ increases, the average number of cases also increases, as expected -- albeit increasing at a reducing rate as $R_{0}$ rises. The final notable result is the apparent near-exponential growth in the number of vaccines administered as the average number of days exposed rises. This is most likely the consequence of vaccines being ineffective on most asymptomatic, exposed individuals; the longer the duration of exposure, the more vaccines are wasted on exposed individuals.
 
 \begin{figure}[ht!]
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/sensitivity/epidemic_param_cases.pdf}
-    \caption{Effect on cases}
-    \label{fig:sens_epi_cases}
-  \end{subfigure}
-  %
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/sensitivity/epidemic_param_vaccines.pdf}
-    \caption{Effect on vaccinations}
-    \label{fig:sens_epi_vaccs}
-  \end{subfigure}
-  \caption{Sensitivity of results to changes in epidemic parameters}
+    %\includegraphics[width=\textwidth]{PLOS_figures/Fig6.pdf}
+    \caption{Sensitivity of average cases (left) and vaccinations (right) to changes in epidemic parameters.}
+  \label{fig:sens_epi}
 \end{figure}
 
 \subsubsection*{Intervention parameters}
-The second set of parameters investigated are those relating to the intervention itself; the number of working hours for deliveries and vaccinations per day, the number of daily vaccinations per response team, the delay before an epidemic is declared, and the delay between epidemic declaration and the start of the intervention. The sensitivities of both cases and vaccinations to changes in these parameters are plotted in Fig \ref{fig:sens_int_cases} and \ref{fig:sens_int_vaccs}, respectively.
+The second set of parameters investigated are those relating to the intervention itself; the number of working hours for deliveries and vaccinations per day, the number of daily vaccinations per response team, the delay before an epidemic is declared, and the delay between epidemic declaration and the start of the intervention. The sensitivities of both cases and vaccinations to changes in these parameters are plotted in Fig \ref{fig:sens_int}.
 
 \begin{figure}[ht!]
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/sensitivity/intervention_param_cases.pdf}
-    \caption{Effect on cases}
-    \label{fig:sens_int_cases}
-  \end{subfigure}
-  %
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/sensitivity/intervention_param_vaccines.pdf}
-    \caption{Effect on vaccinations}
-    \label{fig:sens_int_vaccs}
-  \end{subfigure}
-  \caption{Sensitivity of results to changes in intervention parameters}
+    %\includegraphics[width=\textwidth]{PLOS_figures/Fig7.pdf}
+    \caption{Sensitivity of average cases (left) and vaccinations (right) to changes in intervention parameters.}
+  \label{fig:sens_int}
 \end{figure}
 
 The modelled effect of an increase in working hours is a proportional increase in daily vaccinations per team, as well as allowing more daily drone deliveries to be possible. Therefore, when either the daily working hours or the daily vaccinations per team is increased, the resultant near-identical slight reduction in cases is expected. 
-
 The two most notable results for this parameter set are the respective impacts of epidemic detection delay, and intervention delay, on the number of cases. If the epidemic is detected earlier, there is a large reduction in the number of cases. The same applies for intervention delay after epidemic detection; the sooner the intervention, the fewer cases occur on average. 
-Epidemic detection delay is near-impossible for decision-makers in an epidemic intervention to influence, and can only be reduced by more effective routine epidemic monitoring in healthcare systems. On the contrary, while difficult to reduce, the intervention delay is somewhat under the control of decision-makers. The effect of the intervention delay on the number of cases is so pronounced that, for each further day of delay (in the monocentric network), the number of cases in the epidemic increases by 1.5\%. For the polycentric, city, and rural networks modelled, this daily increase in total cases is 0.4\%, 0.6\%, and 2.7\%, respectively. These values were obtained as the respective slopes of least-squares linear regression approximations of each network's sensitivity plot for intervention delay, as depicted in Fig \ref{fig:sens_int_delay}. It is clear that reducing the intervention delay, by even a single day, can make a large difference in the number of total cases and deaths in an epidemic. As this difference is most significant for rural networks, the use of drones to perform prompt deliveries to hard-to-reach locations is an even more attractive prospect.
+Epidemic detection delay is near-impossible for decision-makers in an epidemic intervention to influence, and can only be reduced by more effective routine epidemic monitoring in healthcare systems. On the contrary, while difficult to reduce, the intervention delay is somewhat under the control of decision-makers. The effect of the intervention delay on the number of cases is so pronounced that, for each further day of delay (in the monocentric network), the number of cases in the epidemic increases by 1.5\%, for the range considered. For the polycentric, city, and rural networks modelled, this daily increase in total cases is 0.4\%, 0.6\%, and 2.7\%, respectively. These values were obtained as the respective slopes of least-squares linear regression approximations of each network's sensitivity plot for intervention delay, as depicted in Fig \ref{fig:sens_int_delay}. It is clear that reducing the intervention delay, by even a single day, can make a large difference in the number of total cases and deaths in an epidemic. As this difference is most significant for rural networks, the use of drones to perform prompt deliveries to hard-to-reach locations is an even more attractive prospect.
 
-\begin{figure}[ht!]{\textwidth}
+\begin{figure}[ht!]
 \begin{center}
-    \includegraphics[width=0.75\textwidth]{figures/sensitivity/int_delay_plot.pdf}
-    \caption{Effect of intervention delay on cases, for various network structures}
+    %\includegraphics[width=0.75\textwidth]{PLOS_figures/Fig8.pdf}
+    \caption{Effect of intervention delay on cases, for various network structures.}
     \label{fig:sens_int_delay}
 \end{center}
 \end{figure}
 
-The effects of changes in the number of response teams are depicted separately to the remainder of the parameter set, in Fig \ref{fig:sens_team_cases} and \ref{fig:sens_team_vaccs} -- since the results merit further discussion, and are presented for both an untargeted and a targeted intervention. As expected, as the number of response teams increases, there are fewer cases -- with a decreasing marginal benefit as more teams are added. This reduction in marginal benefit, which is most pronounced for targeted interventions, indicates that the benefit of using an additional team in an intervention should be weighed against the marginal cost thereof.
+The effects of changes in the number of response teams are depicted separately to the remainder of the parameter set, in Fig \ref{fig:sens_team} -- since the results merit further discussion, and are presented for both an untargeted and a targeted intervention. As expected, as the number of response teams increases, there are fewer cases -- with a decreasing marginal benefit as more teams are added. This reduction in marginal benefit, which is most pronounced for targeted interventions, indicates that the benefit of using an additional team in an intervention should be weighed against the marginal cost thereof.
 The effect of changes in the number of teams on vaccinations is, however, less intuitive. As expected, the addition of more teams results in slightly more vaccinations being possible, for both vaccination types. However, as the number of teams reduces, there is a sharp increase in the number of vaccines required for the untargeted intervention, while the targeted intervention's vaccinations continue to decrease. A likely hypothesis for this is that the reduction in teams, and ineffective untargeted vaccination, results in a failure to timeously control the epidemic. This perhaps-surprising result indicates that a failure to effectively control an epidemic initially may result in an increase in cost required to eventually do so. Furthermore, as previously discussed, this highlights the superiority of targeted vaccination to untargeted vaccination.
 
 \begin{figure}[ht!]
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/sensitivity/numteams_cases.pdf}
-    \caption{Sensitivity of cases to number of teams}
-    \label{fig:sens_team_cases}
-  \end{subfigure}
-  %
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/sensitivity/numteams_vaccines.pdf}
-    \caption{Sensitivity of vaccines to number of teams}
-    \label{fig:sens_team_vaccs}
-  \end{subfigure}
-  \caption{Sensitivity of results to changes in number of response teams}
+    %\includegraphics[width=\textwidth]{PLOS_figures/Fig9.pdf}
+  \caption{Sensitivity of average cases (left) and vaccinations (right) to changes in number of response teams.}
+  \label{fig:sens_team}
 \end{figure}
 
 \subsubsection*{Network parameters}
-The sensitivities of the result metrics to changes in three network-related parameters are depicted in Fig \ref{fig:sens_network_cases} and \ref{fig:sens_network_vaccs}.
+The sensitivities of the result metrics to changes in three network-related parameters are depicted in Fig \ref{fig:sens_network}.
 As the amount of migration (i.e. the migration multiplier $k_{m}$) is increased, there is a small increase in the average number of cases, and a small decrease in the number of vaccinations. This result is expected, since increased migration spreads the epidemic more quickly. Further investigation into the impact of reduced migration, perhaps using a more accurate migration model or agent-based simulation, may be insightful.
 As the diameter of the monocentric network increases, there is a slight decrease in the number of cases (since there is less migration between locations), and an even slighter reduction in the number of vaccinations. The larger the network, the longer drone deliveries take; which results in marginally lower vaccine stock levels.
 Naturally, increases in the total population of the network cause a proportional increase in the number of cases and vaccinations -- although, the former increases comparatively more than the latter.
 
 \begin{figure}[ht!]
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/sensitivity/network_param_cases.pdf}
-    \caption{Network parameters - cases}
-    \label{fig:sens_network_cases}
-  \end{subfigure}
-  %
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/sensitivity/network_param_vaccines.pdf}
-    \caption{Network parameters - vaccinations}
-    \label{fig:sens_network_vaccs}
-  \end{subfigure}
-  \caption{Sensitivity of results to changes in network parameters}
+   %\includegraphics[width=\textwidth]{PLOS_figures/Fig10.pdf}
+  \caption{Sensitivity of average cases (left) and vaccinations (right) to changes in network parameters.}
+  \label{fig:sens_network}
 \end{figure}
 
-An additional network-related parameter, the population vaccination rate at the start of an epidemic, obviously plays a significant role in the progression thereof. In simulations, it was found that, for each percentage point increase in the vaccination rate, the number of cases reduces by 3.32\%, and the number of vaccinations by 0.27\%. That is, if the epidemic even occurs at all -- the higher the vaccination rate, the less likely an epidemic, and its resultant cost, becomes. Consequently, it is imperative that routine vaccination activities achieve higher population vaccination rates.
+An additional network-related parameter, the population vaccination rate at the start of an epidemic, obviously plays a significant role in the progression thereof. In simulations, it was found that, for each percentage point increase in the vaccination rate within the range considered, the number of cases reduces by 3.32\%, and the number of vaccinations by 0.27\%. That is, if the epidemic even occurs at all -- the higher the vaccination rate, the less likely an epidemic, and its resultant cost, becomes. Consequently, it is imperative that routine vaccination activities achieve higher population vaccination rates.
 
 \subsubsection*{Drone parameters}
 A range of drone-related parameters were tested, to determine the sensitivity of results to changes in their values. The results found were fairly intuitive; as either the drone capacity or average speed increases, the number of possible vaccinations increases -- and subsequently, the number of cases decreases. Conversely, as the launch time per flight increases, the number of vaccinations reduces, and the number of cases increases. Although these results are expected, the extent to which these seemingly unimportant parameters affect the number of cases is notable. This is the case because, with a limited number of drones, every hour of delivery time is valuable. A 50\% decrease of the flight launch time (from 10 minutes, to 5 minutes) results in more than a 5\% increase in the number of vaccinations, and a reduction in total cases by over 2\%. If the average speed per flight is reduced from 100km/h to 50km/h, the mean total number of cases per simulation increases by 2.4\%. Similarly, if the number of vaccines delivered per flight is reduced from 60 to 30, the number of cases increases by 3.5\%. These results indicate that, due to their increased speed, fixed-wing drones are more effective than quadcopter drones for prompt vaccine delivery -- particularly for larger networks. It seems also that a sense of urgency must be maintained when performing deliveries, as every minute wasted can have an impact on the number of cases. These results do not, however, take into account response teams' potential need for travel time between locations, particularly in rural networks with hard-to-reach populations where team availability may be a constraint, instead of vaccine stock.
 
-% \begin{figure}[ht!]
-%   \begin{subfigure}[b]{0.5\textwidth}
-%     \includegraphics[width=\textwidth]{figures/sensitivity/drone_param_cases.pdf}
-%     \label{fig:sens_drone_cases}
-%   \end{subfigure}
-%   %
-%   \begin{subfigure}[b]{0.5\textwidth}
-%     \includegraphics[width=\textwidth]{figures/sensitivity/drone_param_vaccines.pdf}
-%     \label{fig:sens_drone_vaccs}
-%   \end{subfigure}
-%    \caption{Sensitivity of results to changes in drone parameters}
-% \end{figure}
-
 An additional parameter relating to drones was also investigated; the number of drones available for deliveries. This is a parameter of such importance in an intervention using drone delivery that results are presented separately, for a variety of population levels in the monocentric network, in Fig \ref{fig:sens_num_drones}. This allows the impact of increased population size on the number of required drones to be seen clearly. 
 As expected, as the number of drones is increased from the default value of 5, the number of cases decreases -- albeit with a much-reduced marginal benefit as more and more drones are added. It is also clear that the benefit of adding more drones is greater for networks with a smaller population, which is expected; the addition of a drone for a network with triple the population naturally affects proportionately fewer members of that network's population. The number of cases for most population levels appears to reach an equilibrium of sorts when 15 or more drones are used, although providing a general recommendation would be misleading, since the number of drones required is strongly dependent upon the population level and diameter of a network.
 
-\begin{figure}[ht!]{\textwidth}
+\begin{figure}[ht!]
 \begin{center}
-    \includegraphics[width=0.75\textwidth]{figures/sensitivity/numDrones.pdf}
-    \caption{Impact of number of drones on cases, for various population levels} 
+    %\includegraphics[width=0.75\textwidth]{PLOS_figures/Fig11.pdf} %was figures/sensitivity/numDrones.pdf
+    \caption{Impact of number of drones on cases, for various population levels.} 
     \label{fig:sens_num_drones}
 \end{center}
 \end{figure}
 
-% \subsubsection*{Vaccination parameters}
-% The final set of parameters investigated in this sensitivity analysis are those relating to vaccines. The parameters considered are the vaccine efficacies in both susceptible and recently-exposed individuals, and the number of days of vaccine potency before expiry.
-% Ranging from 1 to 5 days, each additional day of vaccine potency causes approximately a 0.65\% increase in the number of cases. This may be an unexpected result, but occurs due to the implementation of the simulation model; fewer days of vaccine potency require more frequent vaccine deliveries to each location. These more frequent deliveries allow for more accurate resource allocation, reducing the number of cases -- although this effect may not necessarily be seen in an actual epidemic intervention, and is dependent on the resource allocation method implemented.
-% The initial vaccine efficacy in susceptible individuals is assumed to be 95\%, and for each percentage point increase therein, there is a 0.07\% reduction in the total number of cases. Similarly, for each percentage point increase from the initial value of 83\% used as the vaccine efficacy in recently-exposed individuals, there is a 0.04\% reduction in cases per epidemic. Vaccine potency and efficacy can hardly be controlled by decision-makers, and small changes therein evidently don't make a large impact on the success of an intervention. Nevertheless, these results may be relevant for vaccine manufacturers.
-
 \section*{Conclusion}
 This article introduced some of the logistical challenges faced in epidemic interventions, and the possibility of using drones for the delivery of vaccines and other medical supplies, in the context of an epidemic.
-A network-based SEIRVD epidemic model was formulated, to investigate the feasibility of drone delivery, and the effect of certain strategies and parameters of interest on an epidemic. Repeated simulations were performed using this model, with four generic network structures as input; representing common population distributions. This allowed the results to be more general than if specific case studies had been considered.
+A network-based SEIRVD epidemic model was formulated, to investigate the feasibility of drone delivery, and the effect of certain resource allocation strategies and parameters of interest on an epidemic. Repeated simulations were performed using this model, with four generic network structures as input; representing common population distributions. This allowed the results to be more general than if specific case studies had been considered.
+
 Two resource allocation models were formulated and integrated with this simulation model. These models maximise expected prevented exposures (EPE), by optimising daily resource allocation decisions during each simulation. In order to evaluate the effectiveness of these models, they were compared with a variety of alternative resource allocation strategies, on the basis of cases and vaccines used.
 
-The simulation model was validated on a 2003-04 measles epidemic in Niger, and proved to replicate the actual epidemic's propagation accurately. Initial simulations with each of the four network structures indicated that using targeted vaccination reduces cases significantly, and requires approximately 50\% fewer vaccinations to do so. This result highlights the importance of documenting the vaccination history of individuals well.
-
-Simulations performed for sensitivity analysis revealed the devastating impact which each day of delay before epidemic intervention causes. Increases in both epidemic detection delay, and intervention delay, result in a notable increase in epidemic cases. For the latter, a single further day of delay was shown to increase cases by between 0.4\% and 2.7\%, depending on the network structure. The urgency of epidemic intervention is already well known, and this result confirms that notion. The impact of a failure to promptly control an epidemic, with insufficient response teams, was also demonstrated; with fewer teams, there are inevitably more cases, and an increase in cost when vaccination is untargeted. In addition to these conclusions, the importance of routine vaccination activities was highlighted by the result that, for each percentage point increase in the pre-epidemic vaccination rate within the range tested, there's a 3.32\% decrease in the average number of epidemic cases.
-
-Sensitivity analysis on four drone-related parameters revealed that, due to their superior speed and range, fixed-wing drones are more appropriate for epidemic response than quadcopters, for the network types considered; a reduction of the average drone speed from 100km/h to 50km/h caused a 2.4\% increase in the average simulated number of cases. It is difficult to provide a general recommendation for how many drones should be used in an epidemic response, since this depends on the population, network type and drone capacity. For the fixed-wing drones and networks considered though, 15 drones appear to suffice for most population levels, although the more, the better.
+The simulation model was validated on a 2003-04 measles epidemic in Niger, and proved to replicate the actual epidemic's propagation accurately. Initial simulations with each of the four network structures indicated that using targeted vaccination reduces cases significantly, and requires approximately 50\% fewer vaccinations to do so -- a result which highlights the importance of documenting the vaccination history of individuals well.
 
 Both EPE resource allocation models formulated in this article were shown to be highly effective in reducing epidemic cases, as well as vaccine usage -- particularly for targeted interventions. This is the case for all network types, although to varying extents; the efficiencies of the strategies considered appear somewhat inconsistent across network types.
 In the comparison of team allocation strategies, under the assumption of unlimited vaccine availability, the EPE team strategy performed above-average for all networks, for both targeted and untargeted interventions. In fact, for the former, the EPE strategy resulted in the minimum number of cases for all network types. Besides this, team allocation proportionally to total population and susceptible population were shown to be fairly effective strategies. Conversely, allocating teams uniformly, or proportionally to the number of infections per location, is ineffective, and results in an increased number of cases and vaccines required.
 When the vaccine delivery strategies were compared by aggregating results over the team strategies, the EPE delivery strategy was again found to be superior to the alternatives. With the exception of the rural network with untargeted vaccination, the EPE delivery strategy resulted in the minimum number of cases and vaccinations, for all networks and for both targeted and untargeted vaccination. Both delivery strategies prioritising locations according to susceptible population performed consistently well, whereas, in accordance with existing literature, the strategies prioritising total population and infections performed poorly, usually resulting in higher costs and more cases. 
-It is important to note, though, that since the effectiveness of the strategies vary according to network type, it is important to consider a network's population distribution when making resource allocation decisions.
+It is important to note, though, that since the effectiveness of the strategies varies according to network type, it is important to consider a network's population distribution when making resource allocation decisions.
+
+Simulations performed for sensitivity analysis revealed the devastating impact which each day of delay before epidemic intervention causes. Increases in both epidemic detection delay, and intervention delay, result in a notable increase in epidemic cases. For the latter, a single further day of delay was shown to increase cases by between 0.4\% and 2.7\%, depending on the network structure. The urgency of epidemic intervention is already well known, and this result confirms that notion. The impact of a failure to promptly control an epidemic, with insufficient response teams, was also demonstrated; with fewer teams, there are inevitably more cases, and an increase in cost when vaccination is untargeted. In addition to these conclusions, the importance of routine vaccination activities was highlighted by the result that, for each percentage point increase in the pre-epidemic vaccination rate within the range tested, there's a 3.32\% decrease in the average number of epidemic cases.
+
+Sensitivity analysis on four drone-related parameters revealed that, due to their superior speed and range, fixed-wing drones are more appropriate for epidemic response than quadcopters, for the network types considered; a reduction of the average drone speed from 100km/h to 50km/h caused a 2.4\% increase in the average simulated number of cases. It is difficult to provide a general recommendation for how many drones should be used in an epidemic response, since this depends on the population, network type and drone capacity. For the fixed-wing drones and networks considered though, 15 drones appear to suffice for most population levels; although the more, the better.
 
 To reiterate the conclusions drawn, and provide a recommendation for improved epidemic response thereon; the EPE models presented were the most effective resource allocation strategies for reducing cases, as well as cost. They are thus recommended for implementation in epidemic interventions. In the absence of such models, resource allocation according to susceptible population, rather than infections or total population, is best. Further, since targeted vaccination is superior to untargeted vaccination, and each day of intervention delay notably affects an epidemic's spread, a targeted intervention with minimal delay is advisable. Finally, fixed-wing drones are a viable option for vaccine delivery in an epidemic intervention, if a sufficient number of them are used -- and may be tremendously helpful in areas with poor road infrastructure.
+
+\section*{Acknowledgments}
+We primarily acknowledge God, for without Him any lives saved in epidemic interventions are purposeless and ephemeral. Therefore, above all, we thank Him for the eternal life we are offered through Jesus.
+We thank James Mba Azam and Prof. Juliet Pulliam for introducing us to the idea of vaccine delivery using drones, and for the useful consultations and literature references regarding the challenges faced in the vaccine supply chain. We thank our families for their continual support, and Matter specifically thanks Daniella Neville and Brandon Coetzer, for the inspiration to strive for excellence.
+
+\nolinenumbers
+
+%\bibliography{refs} -- use this to generate references from refs.bib if needed. Then copy-paste the contents from .bbl file to replace the below.
+
+\begin{thebibliography}{10}
+
+\bibitem{gwilliam2008burden}
+Gwilliam K, Foster V, Archondo-Callao R, Brice{\~n}o-Garmendia C, Nogales A,
+  Sethi K.
+\newblock The burden of maintenance: roads in sub-Saharan Africa.
+\newblock AICD Background Paper. 2008;14:4.
+
+\bibitem{hethcote1973optimal}
+Hethcote HW, Waltman P.
+\newblock Optimal vaccination schedules in a deterministic epidemic model.
+\newblock Mathematical \uppercase{B}iosciences. 1973;18(3-4):365--381.
+
+\bibitem{feldstein_1973}
+Feldstein MS, Piot MA, Sundaresan TK.
+\newblock The resource allocation model.
+\newblock Bulletin of the World Health Organization. 1973;48:79–--88.
+
+\bibitem{vitoriano2011multi}
+Vitoriano B, Ortu{\~n}o MT, Tirado G, Montero J.
+\newblock A multi-criteria optimization model for humanitarian aid
+  distribution.
+\newblock Journal of Global optimization. 2011;51(2):189--208.
+
+\bibitem{zaric_2002}
+Zaric GS, Brandeau ML.
+\newblock {Dynamic resource allocation for epidemic control in multiple
+  populations}.
+\newblock Mathematical Medicine and Biology: A Journal of the IMA.
+  2002;19(4):235--255.
+\newblock doi:{10.1093/imammb/19.4.235}.
+
+\bibitem{zaric2001resource}
+Zaric GS, Brandeau ML.
+\newblock Resource allocation for epidemic control over short time horizons.
+\newblock Mathematical Biosciences. 2001;171(1):33--58.
+
+\bibitem{duijzer2018dose}
+Duijzer LE, van Jaarsveld WL, Wallinga J, Dekker R.
+\newblock Dose-optimal vaccine allocation over multiple populations.
+\newblock Production and Operations Management. 2018;27(1):143--159.
+
+\bibitem{mbah2011resource}
+Mbah MLN, Gilligan CA.
+\newblock Resource allocation for epidemic control in metapopulations.
+\newblock PLoS one. 2011;6(9):e24577.
+
+\bibitem{mylius2008optimal}
+Mylius SD, Hagenaars TJ, Lugn{\'e}r AK, Wallinga J.
+\newblock Optimal allocation of pandemic influenza vaccine depends on age, risk
+  and timing.
+\newblock Vaccine. 2008;26(29-30):3742--3749.
+
+\bibitem{medlock2009optimizing}
+Medlock J, Galvani AP.
+\newblock Optimizing influenza vaccine distribution.
+\newblock Science. 2009;325(5948):1705--1708.
+
+\bibitem{matrajt2010optimizing}
+Matrajt L, Longini~Jr IM.
+\newblock Optimizing vaccine allocation at different points in time during an
+  epidemic.
+\newblock PloS one. 2010;5(11):e13767.
+
+\bibitem{matrajt2013optimal}
+Matrajt L, Halloran ME, Longini~Jr IM.
+\newblock Optimal vaccine allocation for the early mitigation of pandemic
+  influenza.
+\newblock PLoS Comput Biol. 2013;9(3):e1002964.
+
+\bibitem{teytelman2013multiregional}
+Teytelman A, Larson RC.
+\newblock Multiregional dynamic vaccine allocation during an influenza
+  epidemic.
+\newblock Service Science. 2013;5(3):197--215.
+
+\bibitem{murray2015flying}
+Murray CC, Chu AG.
+\newblock The flying sidekick traveling salesman problem:
+  \uppercase{O}ptimization of drone-assisted parcel delivery.
+\newblock Transportation Research Part C: Emerging Technologies.
+  2015;54:86--109.
+
+\bibitem{poikonen2017vehicle}
+Poikonen S, Wang X, Golden B.
+\newblock The vehicle routing problem with drones: \uppercase{E}xtended models
+  and connections.
+\newblock Networks. 2017;70(1):34--43.
+
+\bibitem{scott2017drone}
+Scott J, Scott C.
+\newblock Drone delivery models for healthcare.
+\newblock In: Proceedings of the 50th Hawaii international conference on system
+  sciences; 2017. p. 3297--3304.
+\newblock Available from: \url{http://hdl.handle.net/10125/41557}.
+
+\bibitem{world2017measles}
+{World Health Organisation}.
+\newblock Measles vaccines: \uppercase{WHO} position paper - \uppercase{A}pril
+  2017.
+\newblock Weekly Epidemiological Record. 2017;92(17):205--228.
+
+\bibitem{kraemer2019utilizing}
+Kraemer M, Golding N, Bisanzio D, Bhatt S, Pigott D, Ray S, et~al.
+\newblock Utilizing general human movement models to predict the spread of
+  emerging infectious diseases in resource poor settings.
+\newblock Scientific reports. 2019;9(1):5151.
+
+\bibitem{danet_fermon_2013}
+Danet C, Fermon F.
+\newblock Management of a measles epidemic.
+\newblock {\uppercase{M}\'edecins \uppercase{S}ans \uppercase{F}ronti\`eres};
+  2013.
+\newblock Available from:
+  \url{https://medicalguidelines.msf.org/viewport/mme/english/management-of-a-measles-epidemic-30542833.html}.
+
+\bibitem{winston2004operations}
+Winston WL, Goldberg JB.
+\newblock Operations research: applications and algorithms. vol.~3.
+\newblock \uppercase{T}homson/\uppercase{B}rooks/\uppercase{C}ole; 2004.
+
+\bibitem{kolesar1967branch}
+Kolesar PJ.
+\newblock A branch and bound algorithm for the knapsack problem.
+\newblock Management Science. 1967;13(9):723--735.
+
+\bibitem{avis_2002}
+Avis D.
+\newblock Branch and bound for knapsack problem. 2002. Available from:
+  \url{http://cgm.cs.mcgill.ca/~avis/courses/360/notes/knap_bb.pdf}.
+
+\bibitem{msf_ectc_2018}
+Juan A, Panunzi I, Alsalhani A, Lambert V, Barrie I, Van~Herp M.
+\newblock Evaluation of the stability of the measles vaccine for use in
+  \uppercase{E}xtended \uppercase{C}ontrolled \uppercase{T}emperature
+  \uppercase{C}onditions (\uppercase{ECTC}).
+\newblock MSF Access Campaign. 2018;.
+
+\bibitem{moss2007measles}
+Moss WJ.
+\newblock Measles still has a devastating impact in unvaccinated populations.
+\newblock PLoS medicine. 2007;4(1):e24.
+
+\bibitem{guerra2017basic}
+Guerra FM, Bolotin S, Lim G, Heffernan J, Deeks SL, Li Y, et~al.
+\newblock The basic reproduction number (R0) of measles: a systematic review.
+\newblock The Lancet Infectious Diseases. 2017;17(12):e420--e428.
+
+\bibitem{who_2019}
+{World \uppercase{H}ealth \uppercase{O}rganisation}.
+\newblock 2019.
+\newblock Available from:
+  \url{https://www.who.int/news-room/fact-sheets/detail/measles}.
+
+\bibitem{wolfson2009estimates}
+Wolfson LJ, Grais RF, Luquero FJ, Birmingham ME, Strebel PM.
+\newblock Estimates of measles case fatality ratios: a comprehensive review of
+  community-based studies.
+\newblock International journal of epidemiology. 2009;38(1):192--205.
+
+\bibitem{cdc_pinkbook_2018}
+{Centers For Disease Control And Prevention}.
+\newblock 2018.
+\newblock Available from:
+  \url{https://www.cdc.gov/vaccines/pubs/pinkbook/meas.html}.
+
+\bibitem{csiro_2009}
+Sheppeard V, Forssman B, Ferson MJ, Moreira C, Campbell-Lloyd S, Dwyer DE,
+  et~al.
+\newblock The effectiveness of prophylaxis for measles contacts in
+  \uppercase{NSW}. 2009. Available from:
+  \url{http://www.publish.csiro.au/nb/NB08014}.
+
+\bibitem{poncin2018implementation}
+Poncin M, Zulu G, Voute C, Ferreras E, Muleya CM, Malama K, et~al.
+\newblock Implementation research: reactive mass vaccination with single-dose
+  oral cholera vaccine, \uppercase{Z}ambia.
+\newblock Bulletin of the World Health Organization. 2018;96(2):86.
+
+\bibitem{zipline_impact}
+Zipline.
+\newblock 2019.
+\newblock Available from: \url{https://flyzipline.com/impact/}.
+
+\bibitem{grais2006exploring}
+Grais R, De~Radigu{\`e}s X, Dubray C, Fermon F, Guerin P.
+\newblock Exploring the time to intervene with a reactive mass vaccination
+  campaign in measles epidemics.
+\newblock Epidemiology \& Infection. 2006;134(4):845--849.
+
+\bibitem{ackerman_koziol_2019}
+Ackerman E, Koziol M.
+\newblock IEEE Spectrum; 2019.
+\newblock Available from:
+  \url{https://spectrum.ieee.org/robotics/drones/in-the-air-with-ziplines-medical-delivery-drones}.
+
+\bibitem{grais2008time}
+Grais RF, Conlan AJ, Ferrari MJ, Djibo A, Le~Menach A, Bj{\o}rnstad ON, et~al.
+\newblock Time is of the essence: exploring a measles outbreak response
+  vaccination in Niamey, Niger.
+\newblock Journal of the Royal Society Interface. 2008;5(18):67--74.
+
+\bibitem{msf_1999}
+{\uppercase{M}\'edecins \uppercase{S}ans \uppercase{F}ronti\`eres}. Management
+  of measles epidemics; 1999.
+
+\end{thebibliography}
+
 
 \section*{Supporting information}
 \paragraph*{S1 Fig.}
 \label{SI:S1_fig}
 {\bf Resource allocation strategy comparisons for the polycentric network structure}
 \begin{figure}[ht!]
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/strategies/team_vaccine_scatter_untargeted_polycentric.pdf}
-    \label{fig:strat_scatter_unt_poly}
-  \end{subfigure}
-  %
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/strategies/team_vaccine_scatter_targeted_polycentric.pdf}
-    \label{fig:strat_scatter_tar_poly}
-  \end{subfigure}
+  %\includegraphics[width=\textwidth]{PLOS_figures/S1Fig.pdf}
 \end{figure}
 
 \paragraph*{S2 Fig.}
 \label{SI:S2_fig}
 {\bf Resource allocation strategy comparisons for the city network structure}
 \begin{figure}[ht!]
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/strategies/team_vaccine_scatter_untargeted_city.pdf}
-    \label{fig:strat_scatter_unt_city}
-  \end{subfigure}
-  %
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/strategies/team_vaccine_scatter_targeted_city.pdf}
-    \label{fig:strat_scatter_tar_city}
-  \end{subfigure}
+  %\includegraphics[width=\textwidth]{PLOS_figures/S2Fig.pdf}
 \end{figure}
 
 \paragraph*{S3 Fig.}
 \label{SI:S3_fig}
 {\bf Resource allocation strategy comparisons for the rural network structure}
 \begin{figure}[ht!]
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/strategies/team_vaccine_scatter_untargeted_rural.pdf}
-    \label{fig:strat_scatter_unt_rural}
-  \end{subfigure}
-  %
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/strategies/team_vaccine_scatter_targeted_rural.pdf}
-    \label{fig:strat_scatter_tar_rural}
-  \end{subfigure}
+    %\includegraphics[width=\textwidth]{PLOS_figures/S3Fig.pdf}
 \end{figure}
 
 \paragraph*{S4 Table}
 \label{SI:S4_table_mono}
 {\bf Input dataset for monocentric network structure}
-\begin{table}[h]
+\begin{table}[ht!]
 \centering
 \resizebox{0.75\textwidth}{!}{%
 \begin{tabular}{|c|c|c|c|c|c|}
@@ -717,7 +838,7 @@ Outer 8 & 124 & 224 & 25000 & 0 & 0 \\ \hline
 \paragraph*{S5 Table}
 \label{SI:S5_table_poly}
 {\bf Input dataset for polycentric network structure}
-\begin{table}[h]
+\begin{table}[ht!]
 \centering
 \resizebox{0.75\textwidth}{!}{%
 \begin{tabular}{|c|c|c|c|c|c|}
@@ -745,11 +866,10 @@ Cluster 3, Location 6 & 209 & 213 & 30000 & 0 & 0 \\ \hline
 \label{tab:s5_poly}
 \end{table}
 
-
 \paragraph*{S6 Table}
 \label{SI:S6_table_city}
 {\bf Input dataset for city network structure}
-\begin{table}[h]
+\begin{table}[ht!]
 \centering
 \resizebox{0.75\textwidth}{!}{%
 \begin{tabular}{|c|c|c|c|c|c|}
@@ -773,11 +893,10 @@ Cluster 3, Location 6 & 209 & 213 & 30000 & 0 & 0 \\ \hline
 \label{tab:s6_city}
 \end{table}
 
-
 \paragraph*{S7 Table}
 \label{SI:S7_table_rural}
 {\bf Input dataset for rural network structure}
-\begin{table}[h]
+\begin{table}[ht!]
 \centering
 \resizebox{0.75\textwidth}{!}{%
 \begin{tabular}{|c|c|c|c|c|c|}
@@ -797,43 +916,19 @@ Cluster 3, Location 6 & 209 & 213 & 30000 & 0 & 0 \\ \hline
 \label{tab:s7_rural}
 \end{table}
 
-
 \paragraph*{S8 Fig.}
 \label{SI:S8_fig}
-{\bf Monocentric network}
-\begin{figure}[ht!]{\textwidth}
-    \includegraphics[width=\textwidth]{figures/maps/map_monocentric.pdf}
-    \label{si:mono}
+{\bf Generic network structure maps:}
+The population size at each network location is represented by the radius of the dot, and the epicentre is marked in red. The monocentric network is top left, the polycentric network is top right, the city-type network is bottom left, and the rural-type network is bottom right.
+
+\begin{figure}[ht!]
+    %\includegraphics[width=\textwidth]{PLOS_figures/S8Fig.pdf}
 \end{figure}
 
-\paragraph*{S9 Fig.}
-\label{SI:S9_fig}
-{\bf Polycentric network}
-\begin{figure}[ht!]{\textwidth}
-    \includegraphics[width=\textwidth]{figures/maps/map_polycentric.pdf}
-    \label{si:poly}
-\end{figure}
-
-\paragraph*{S10 Fig.}
-\label{SI:S10_fig}
-{\bf City-type network}
-\begin{figure}[ht!]{\textwidth}
-    \includegraphics[width=\textwidth]{figures/maps/map_city.pdf}
-    \label{si:city}
-\end{figure}
-
-\paragraph*{S11 Fig.}
-\label{SI:S11_fig}
-{\bf Rural-type network}
-\begin{figure}[ht!]{\textwidth}
-    \includegraphics[width=\textwidth]{figures/maps/map_rural.pdf}
-    \label{si:rural}
-\end{figure}
-
-\paragraph*{S12 Table}
-\label{SI:S12_table_niamey}
+\paragraph*{S9 Table}
+\label{SI:S9_table_niamey}
 {\bf Input dataset for Niamey epidemic validation}
-\begin{table}[h]
+\begin{table}[ht!]
 \centering
 \resizebox{0.75\textwidth}{!}{%
 \begin{tabular}{|c|c|c|c|c|c|}
@@ -856,59 +951,15 @@ Outer 7 & 81 & 139 & 7000 & 0 & 0 \\ \hline
 Outer 8 & 124 & 224 & 7000 & 0 & 0 \\ \hline
 \end{tabular}%
 }
-\label{tab:s4_niamey}
 \end{table}
 
-\paragraph*{S13 Fig.}
-\label{SI:S13_fig}
-{\bf Base simulation progression plots}
-The below figures depict epidemic progression curves for each of the generic network structures, using the base set of parameters and strategies.
+\paragraph*{S10 Fig.}
+\label{SI:progression_plots}
+{\bf Base simulation progression plots:}
+These plots depict the progression of the simulated epidemic using the base set of parameters, between the compartments outlined in the SEIRVD model, for each of the four network types. The monocentric network is top left, the polycentric network is top right, the city-type network is bottom left, and the rural-type network is bottom right.
 
 \begin{figure}[ht!]
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/base_vaccs/monocentric_40km_vaccs.pdf}
-    \label{si:vaccs_mono}
-    \caption{Monocentric}
-  \end{subfigure}
-  %
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/base_vaccs/polycentric_100km_vaccs.pdf}
-    \label{si:vaccs_poly}
-    \caption{Polycentric}
-  \end{subfigure}
-  \hspace{1cm}
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/base_vaccs/city_20km_vaccs.pdf}
-    \label{si:vaccs_city}
-    \caption{City}
-  \end{subfigure}
-  %
-  \begin{subfigure}[b]{0.5\textwidth}
-    \includegraphics[width=\textwidth]{figures/base_vaccs/rural_150km_vaccs.pdf}
-    \label{si:vaccs_rural}
-    \caption{Rural}
-  \end{subfigure}
+    %\includegraphics[width=\textwidth]{PLOS_figures/S10Fig.pdf}
 \end{figure}
-
-\section*{Acknowledgments}
-We primarily acknowledge God, for without Him any lives saved in epidemic interventions are purposeless and ephemeral. Therefore, above all, we thank Him for the eternal life we are offered through Jesus.
-We further thank James Mba Azam and Dr Juliet Pulliam for introducing us to the idea of vaccine delivery using drones, and for the useful consultations and literature references regarding the challenges faced in the vaccine supply chain.
-
-\nolinenumbers
-
-% Either type in your references using
-% \begin{thebibliography}{}
-% \bibitem{}
-% Text
-% \end{thebibliography}
-%
-% or
-%
-% Compile your BiBTeX database using our plos2015.bst
-% style file and paste the contents of your .bbl file
-% here. See http://journals.plos.org/plosone/s/latex for 
-% step-by-step instructions.
-% 
-\bibliography{refs}
 
 \end{document}
